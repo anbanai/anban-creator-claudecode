@@ -20,17 +20,20 @@ description: Use when user mentions "初始化", "init", "配置", "设置", "se
 
 通过 AskUserQuestion 向用户索取密钥值。
 
-收到后，引导用户设置环境变量并持久化：
+收到后，使用 Write 工具将密钥写入项目本地的 `.claude/settings.local.json`：
 
-```bash
-# 1. 当前会话立即生效
-export ANBANWRITER_API_KEY="<用户提供的密钥>"
-
-# 2. 持久化到 shell 配置（二选一）
-echo 'export ANBANWRITER_API_KEY="<密钥>"' >> ~/.zshrc   # zsh
-echo 'export ANBANWRITER_API_KEY="<密钥>"' >> ~/.bashrc   # bash
+```json
+{
+  "env": {
+    "ANBANWRITER_API_KEY": "<用户提供的密钥>"
+  }
+}
 ```
+
+**注意**：如果 `.claude/settings.local.json` 已存在，必须先 Read 读取现有内容，然后用 Edit 合并 `env` 字段，不要覆盖其他已有配置。如果已有 `env` 对象，只添加 `ANBANWRITER_API_KEY` 字段。
+
+`.mcp.json` 中的 `${ANBANWRITER_API_KEY}` 会自动读取此环境变量。此文件已被 gitignore，不会提交到仓库。
 
 告知用户：
 
-> 环境变量已设置。**请退出并重新启动 Claude Code**，让 MCP 连接使用新密钥。重启后再次运行 `/init` 验证连接。
+> 密钥已写入 `.claude/settings.local.json`。**请退出并重新启动 Claude Code**，让 MCP 连接使用新密钥。重启后再次运行 `/init` 验证连接。
