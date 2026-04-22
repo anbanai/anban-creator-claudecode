@@ -1,0 +1,37 @@
+{
+  "name": "anbanai",
+  "owner": {
+    "name": "Rick",
+    "email": "medivhzhan@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "anbanwriter-claudecode",
+      "source": "./",
+      "description": "Next-generation WeChat and Xiaohongshu (小红书) content creation suite powered by MCP server. Features AI-powered writing, intelligent formatting, multi-platform publishing, and visual design through Claude Code agents and skills.",
+      "author": {
+        "name": "Rick"
+      },
+      "homepage": "https://github.com/anbanai/anbanwriter-claudecode",
+      "repository": "https://github.com/anbanai/anbanwriter-claudecode",
+      "license": "MIT",
+      "keywords": [
+        "wechat",
+        "mcp-server",
+        "claude-code",
+        "ai-writing",
+        "content-generation",
+        "image-generation",
+        "workflow-automation",
+        "xiaolvshu",
+        "image-post",
+        "newspic",
+        "小绿书",
+        "rednote",
+        "xiaohongshu",
+        "小红书",
+        "cover-image"
+      ]
+    }
+  ]
+}
