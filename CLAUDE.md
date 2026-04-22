@@ -38,7 +38,7 @@ Key skill groups:
 - **RedNote**: `rednote`, `rednote-research`, `rednote-writing`, `rednote-visual-design`
 - **XLS**: `xls`, `xls-visual-design`, `xls-publishing`
 - **Flower**: `flower-content-design`, `flower-visual-design`
-- **Config**: `config` (account setup via MCP)
+- **Init**: `init` (first-time setup, key configuration, and connectivity verification)
 
 ### MCP Server (`.mcp.json`)
 
