@@ -62,7 +62,7 @@ maxTurns: 20
 
 ### 步骤 2：创建工作目录
 
-调用 `prepare_workspace` MCP 工具（参数：`content_type="flower"`, `task_id=TASK_ID`）创建隔离工作目录。
+调用 `prepare_workspace` MCP 工具（参数：`content_type="flower"`, `task_id=$TASK_ID`）创建隔离工作目录。**`$TASK_ID` 获取方式**：先检查 CWD 下是否存在 `.task-context` 文件，如果存在则从中读取 `TASK_ID=xxx` 的值；否则使用 CWD 目录名（通常是任务 UUID）。
 
 > 此命令自动归档残留文件，确保工作目录为空。后续所有文件保存在返回的路径内，变量记为 `$DIR`。
 
