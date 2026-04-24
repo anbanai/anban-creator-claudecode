@@ -2,7 +2,7 @@
   "mcpServers": {
     "anbanwriter": {
       "type": "http",
-      "url": "${ANBANWRITER_API_URL:-http://localhost:18060}/mcp",
+      "url": "${ANBANWRITER_API_URL:-http://localhost:8080}/mcp",
       "headers": {
         "Authorization": "Bearer ${ANBANWRITER_API_KEY}"
       }

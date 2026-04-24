@@ -12,6 +12,8 @@ tools:
   - Grep
   - Bash
 model: inherit
+mcpServers:
+  - anbanwriter
 memory: project
 skills:
   - xls
@@ -34,7 +36,7 @@ maxTurns: 25
 
 | 决策点 | 自动策略 |
 |--------|----------|
-| **图片数量** | 从配置读取（`get_account_info` MCP 工具，scope="xls"），默认 3 张 |
+| **图片数量** | 从配置读取（`get_channel_profile` MCP 工具，scope="xls"），默认 3 张 |
 | **视觉风格** | 有参考图 → 用 `--ref`；无参考图 → 动态设计 `$STYLE`，封面确立基准 |
 | **标题策略** | 关键词 + 好奇缺口 + 数字钩子，与封面内容独立优化 |
 | **封面设计** | 视觉钩子优先（可无文字），目标是 CTR，不是内容预告 |
@@ -44,13 +46,19 @@ maxTurns: 25
 
 决策过程透明记录在 `$DIR/*.md` 文件中，不向用户提问。
 
+## MCP 工具使用规则
+
+- **必须使用 Claude Code 内置的 MCP 工具调用服务端接口**（如 `list_channels`、`prepare_workspace`、`generate_image` 等）
+- **禁止编写 JavaScript/Node.js/Python 脚本或创建自定义 HTTP 客户端来调用 MCP 接口**
+- **如果 MCP 工具不可用或调用失败，立即停止并报告错误**，不要尝试自行发现、探测或创建替代连接方式
+
 ---
 
 ## 创作流程
 
 1. 调用 `list_channels` MCP 工具获取可用的 channel 列表，选择 platform 为 `xls` 的 channel，记为 `$CHANNEL_ID`
-2. 调用 `get_account_info` MCP 工具（参数：`channel_id=$CHANNEL_ID`, `scope="xls"`）获取账号信息
-3. 调用 `list_drafts` 和 `list_published` MCP 工具（参数：`channel_id=$CHANNEL_ID`）查看草稿箱和已发布文章，列出所有标题，后续选题应避开这些已有主题
+2. 调用 `get_channel_profile` MCP 工具（参数：`channel_id=$CHANNEL_ID`, `scope="xls"`）获取账号信息
+3. 调用 `list_drafts` 和 `list_published_articles` MCP 工具（参数：`channel_id=$CHANNEL_ID`）查看草稿箱和已发布文章，列出所有标题，后续选题应避开这些已有主题
 4. **创建内容目录**：调用 `prepare_workspace` MCP 工具（参数：`content_type="xls"`, `task_id=$TASK_ID`）生成隔离工作目录（自动归档残留文件，确保目录为空），后续所有图片保存在返回的路径内，变量记为 `$DIR`。**`$TASK_ID` 获取方式**：先检查 CWD 下是否存在 `.task-context` 文件，如果存在则从中读取 `TASK_ID=xxx` 的值；否则使用 CWD 目录名（通常是任务 UUID）。
 5. using the topic-research skill 结合账号关键词和用户需求搜索热门话题，分别规划三个独立元素：
    - **帖子标题**：优化算法推荐和搜索发现，用关键词/好奇缺口/数字钩子，与封面内容无需一致
@@ -75,7 +83,7 @@ maxTurns: 25
 
 ## 质量标准
 
-- 图片数量以 `get_account_info` MCP 工具输出的「图片数量」为准（配置项 `xls.count`，默认 4）
+- 图片数量以 `get_channel_profile` MCP 工具输出的「图片数量」为准（配置项 `xls.count`，默认 4）
 - 所有图片保持视觉一致性：封面确立基准风格，后续图片以封面为参考批量生成
 - 所有图片文件存在且可访问
 - 标题不为空，不超过 32 字符
@@ -122,7 +130,7 @@ maxTurns: 25
 - [ ] 封面信息密度过高（>1 个钩子）→ 需简化，聚焦视觉冲击
 - [ ] 内容图单页信息点 >1 个 → 需拆分或精简
 - [ ] 尾部图引入新内容 → 需移除，仅保留记忆点提炼
-- [ ] 图片数量与配置不符 → 需检查 `get_account_info` MCP 工具输出
+- [ ] 图片数量与配置不符 → 需检查 `get_channel_profile` MCP 工具输出
 - [ ] 封面与内容图风格明显不一致 → 需检查参考图链是否正确
 - [ ] 违禁词报告显示高风险词汇 → 需人工复核
 

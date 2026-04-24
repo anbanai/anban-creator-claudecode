@@ -41,6 +41,12 @@ maxTurns: 20
 
 决策过程透明记录在 `$DIR/*.md` 文件中，不向用户提问。
 
+## MCP 工具使用规则
+
+- **必须使用 Claude Code 内置的 MCP 工具调用服务端接口**（如 `list_channels`、`prepare_workspace`、`generate_image` 等）
+- **禁止编写 JavaScript/Node.js/Python 脚本或创建自定义 HTTP 客户端来调用 MCP 接口**
+- **如果 MCP 工具不可用或调用失败，立即停止并报告错误**，不要尝试自行发现、探测或创建替代连接方式
+
 ---
 
 ## 创作流程
@@ -48,7 +54,7 @@ maxTurns: 20
 ### 原创模式（默认）
 
 1. 调用 `list_channels` MCP 工具获取可用的 channel 列表，选择 platform 为 `rednote` 的 channel，记为 `$CHANNEL_ID`
-2. 调用 `get_account_info` MCP 工具（参数：`channel_id=$CHANNEL_ID`, `scope="rednote"`）获取账号信息
+2. 调用 `get_channel_profile` MCP 工具（参数：`channel_id=$CHANNEL_ID`, `scope="rednote"`）获取账号信息
 
 3. **研究选题**：using the rednote-research skill 采集热门笔记数据，自动选 Top 1 选题，评分结果与选题理由写入 `$DIR/topic-analysis.md`
 
@@ -65,7 +71,7 @@ maxTurns: 20
 ### 复刻模式（用户提供笔记 ID 或链接时）
 
 1. 调用 `list_channels` MCP 工具获取可用的 channel 列表，选择 platform 为 `rednote` 的 channel，记为 `$CHANNEL_ID`
-2. 调用 `get_account_info` MCP 工具（参数：`channel_id=$CHANNEL_ID`, `scope="rednote"`）获取账号信息
+2. 调用 `get_channel_profile` MCP 工具（参数：`channel_id=$CHANNEL_ID`, `scope="rednote"`）获取账号信息
 
 3. **获取源笔记**：using the rednote-research skill 先获取 xsec_token，再调用 MCP `get_feed_detail(feed_id="<ID>", xsec_token="<token>")` 获取笔记详情
 

@@ -12,6 +12,8 @@ tools:
   - Grep
   - Bash
 model: inherit
+mcpServers:
+  - anbanwriter
 memory: project
 skills:
   - flower-content-design
@@ -31,7 +33,7 @@ maxTurns: 20
 
 | 决策点 | 自动策略 |
 |--------|----------|
-| **花卉种数** | 从配置读取（`get_account_info` MCP 工具，scope="flower"），默认 5 种 |
+| **花卉种数** | 从配置读取（`get_channel_profile` MCP 工具，scope="flower"），默认 5 种 |
 | **花卉选择** | 根据用户描述的主题/场景，从调研数据库自动选出配置指定数量的视觉多样的花 |
 | **环境氛围** | 根据主题自动设计统一批次氛围（雨后/晨雾/黄金时刻等），增加画面故事性 |
 | **构图类型** | 按批次数量自动分配不同构图类型，following the flower-content-design skill 的构图分配策略 |
@@ -41,6 +43,12 @@ maxTurns: 20
 | **错误处理** | 自动重试 + 降级，不中断流程 |
 
 决策过程透明记录在 `$DIR/*.md` 文件中，不向用户提问。
+
+## MCP 工具使用规则
+
+- **必须使用 Claude Code 内置的 MCP 工具调用服务端接口**（如 `list_channels`、`prepare_workspace`、`generate_image` 等）
+- **禁止编写 JavaScript/Node.js/Python 脚本或创建自定义 HTTP 客户端来调用 MCP 接口**
+- **如果 MCP 工具不可用或调用失败，立即停止并报告错误**，不要尝试自行发现、探测或创建替代连接方式
 
 ---
 
@@ -56,7 +64,7 @@ maxTurns: 20
 
 ### 步骤 1.5：读取花卉配置
 
-调用 `list_channels` MCP 工具获取可用的 channel 列表，选择 platform 为 `flower` 的 channel，记为 `$CHANNEL_ID`。然后调用 `get_account_info` MCP 工具（参数：`channel_id=$CHANNEL_ID`, `scope="flower"`）获取账户花卉配置，确定本次生成的花卉种数。
+调用 `list_channels` MCP 工具获取可用的 channel 列表，选择 platform 为 `flower` 的 channel，记为 `$CHANNEL_ID`。然后调用 `get_channel_profile` MCP 工具（参数：`channel_id=$CHANNEL_ID`, `scope="flower"`）获取账户花卉配置，确定本次生成的花卉种数。
 
 从输出中提取 `flower.content.count` 字段作为本次生成的花卉种数 `$COUNT`。若 MCP 工具调用失败或字段不存在，使用默认值 5。
 
@@ -215,7 +223,7 @@ using the flower-content-design skill 生成图片。命令参考和参考图策
 
 流程中出现以下情况时需要特别关注：
 
-- [ ] 花卉种数与配置不符 → 需检查 `get_account_info` MCP 工具输出
+- [ ] 花卉种数与配置不符 → 需检查 `get_channel_profile` MCP 工具输出
 - [ ] Prompt 字数 < 150 字 → 需补充摄影细节描述
 - [ ] 缺少 `[ATMOSPHERE_DESCRIPTION]` → 需添加环境氛围描述
 - [ ] 构图类型重复 → 需重新分配（当 `$COUNT` ≤ 可用类型数时）
