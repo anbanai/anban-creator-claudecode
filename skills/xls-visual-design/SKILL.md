@@ -10,7 +10,7 @@ description: Generates cover and content images for WeChat Xiaolvshu (小绿书/
 | MCP 工具 | 说明 |
 |----------|------|
 | `generate_image` (channel_id, prompt, image_type="cover", output_path) | 生成封面（单张） |
-| `generate_batch_images` (channel_id, prompt, count, output_dir) | 批量生成内容图 |
+| `generate_images` (channel_id, prompt, count, output_dir) | 批量生成内容图 |
 | `upload_image` (channel_id, file_path) | 上传图片到微信素材库 |
 
 ---
@@ -26,11 +26,11 @@ description: Generates cover and content images for WeChat Xiaolvshu (小绿书/
 通过 MCP 工具调用：
 
 1. **生成封面（单张）**：调用 `generate_image`，image_type 设为 `"cover"`，prompt 中描述封面内容和风格
-2. **批量生成内容图**：调用 `generate_batch_images`，指定 count 和 prompt
+2. **批量生成内容图**：调用 `generate_images`，指定 count 和 prompt
 3. **带参考图保持一致**：提供参考图路径，保持视觉风格统一
 4. **带风格描述**：在 prompt 中加入风格描述（如"简约质感，米白色调"）
 
-**关键规则**：内容图使用 `generate_batch_images` 批量生成，不逐张调用。
+**关键规则**：内容图使用 `generate_images` 批量生成，不逐张调用。
 
 ---
 

@@ -12,7 +12,7 @@ description: Creates and manages WeChat news article drafts with HTML formatting
 | `upload_image` (channel_id, file_path) | 上传图片到微信素材库 |
 | `publish_draft` (channel_id, articles) | 创建图文文章草稿 |
 | `list_drafts` (channel_id) | 查看已有草稿 |
-| `list_published` (channel_id) | 查看已发布文章 |
+| `list_published_articles` (channel_id) | 查看已发布文章 |
 
 ---
 
@@ -20,7 +20,7 @@ description: Creates and manages WeChat news article drafts with HTML formatting
 
 ## 草稿管理
 
-查看发布历史：调用 `list_drafts` 和 `list_published` MCP 工具。
+查看发布历史：调用 `list_drafts` 和 `list_published_articles` MCP 工具。
 
 ## 使用方式
 

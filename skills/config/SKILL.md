@@ -35,4 +35,4 @@ description: Initializes, views, and modifies anbanwriter configuration settings
 
 ## 查看账号信息
 
-调用 `get_account_info` MCP 工具。
+调用 `get_channel_profile` MCP 工具。

@@ -31,7 +31,7 @@
 
 ## AI 图片批量提取
 
-调用 `batch_generate_from_markdown` MCP 工具从 Markdown 文件提取所有 AI 生成占位符，批量生成并可选上传。
+调用 `generate_images_from_markdown` MCP 工具从 Markdown 文件提取所有 AI 生成占位符，批量生成并可选上传。
 
 ---
 

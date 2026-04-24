@@ -7,7 +7,7 @@ description: Analyzes Xiaohongshu (小红书) topics and scores engagement poten
 
 ## 选题前必做：查看已有选题
 
-在开始选题研究前，调用 `list_topics(channel_id="$CHANNEL_ID")` 查看系统内已有选题列表，避免重复。
+在开始选题研究前，调用 `list_channel_topics(channel_id="$CHANNEL_ID")` 查看系统内已有选题列表，避免重复。
 
 ---
 

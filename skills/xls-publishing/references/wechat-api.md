@@ -28,7 +28,7 @@
 
 ### MCP 工具
 
-调用 `publish_xls`，传入 title、content、images 参数。
+调用 `publish_xls_draft`，传入 title、content、images 参数。
 
 ### 与图文草稿的区别
 

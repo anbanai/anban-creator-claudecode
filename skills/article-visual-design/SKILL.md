@@ -10,7 +10,7 @@ description: Manages images for WeChat article (公众号图文) content includi
 | MCP 工具 | 说明 |
 |----------|------|
 | `generate_image` (channel_id, prompt, image_type="cover"或"content", output_path) | 生成单张图片 |
-| `batch_generate_from_markdown` (channel_id, file_path, mode) | 从 Markdown 批量提取+生成图片 |
+| `generate_images_from_markdown` (channel_id, file_path, mode) | 从 Markdown 批量提取+生成图片 |
 | `upload_image` (channel_id, file_path) | 上传图片到微信素材库 |
 | `compress_image` (file_path) | 压缩图片 |
 
@@ -28,7 +28,7 @@ description: Manages images for WeChat article (公众号图文) content includi
 
 通过 MCP 工具调用：
 
-1. **文章内图片批量提取+生成（推荐）**：调用 `batch_generate_from_markdown`，传入 Markdown 文件路径
+1. **文章内图片批量提取+生成（推荐）**：调用 `generate_images_from_markdown`，传入 Markdown 文件路径
 2. **单张生成**：调用 `generate_image`，指定 image_type
 3. **上传已有图片**：调用 `upload_image`，传入文件路径
 4. **下载在线图片**：调用 `download_image`，传入 URL
@@ -49,7 +49,7 @@ description: Manages images for WeChat article (公众号图文) content includi
 继续正文...
 ```
 
-`batch_generate_from_markdown` 工具提取所有 `__generate:...` 占位符，批量生成图片并替换。
+`generate_images_from_markdown` 工具提取所有 `__generate:...` 占位符，批量生成图片并替换。
 
 ---
 

@@ -10,7 +10,7 @@ description: Generates cover and content images for Xiaohongshu (小红书) post
 | MCP 工具 | 说明 |
 |----------|------|
 | `generate_image` (channel_id, prompt, image_type="cover", output_path) | 生成封面（单张） |
-| `generate_batch_images` (channel_id, prompt, count, output_dir) | 批量生成内容图 |
+| `generate_images` (channel_id, prompt, count, output_dir) | 批量生成内容图 |
 | `upload_image` (channel_id, file_path) | 上传图片到微信素材库 |
 
 ---
@@ -166,9 +166,9 @@ description: Generates cover and content images for Xiaohongshu (小红书) post
 通过 MCP 工具调用：
 
 1. **生成封面（单张）**：调用 `generate_image`，image_type 设为 `"cover"`
-2. **批量生成内容图（N-2 张，不含尾图）**：调用 `generate_batch_images`，指定 count
+2. **批量生成内容图（N-2 张，不含尾图）**：调用 `generate_images`，指定 count
 3. **单独生成尾图**：调用 `generate_image`，传入封面作为参考图
 4. **带参考图（保持风格一致）**：提供参考图路径
 5. **带风格描述**：在 prompt 中加入风格描述（如"手绘感，暖色调，小清新"）
 
-**关键规则**：内容图必须用 `generate_batch_images` 批量生成，尾图单独生成（`tail.png`），封面单独生成（`cover.png`）。
+**关键规则**：内容图必须用 `generate_images` 批量生成，尾图单独生成（`tail.png`），封面单独生成（`cover.png`）。

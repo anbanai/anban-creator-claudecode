@@ -43,7 +43,7 @@ Key skill groups:
 ### MCP Server (`.mcp.json`)
 
 Connects to the `anbanwriter` MCP server at `$ANBANWRITER_API_URL` (default `localhost:18060`). Key MCP tools:
-- `list_channels`, `get_account_info`, `list_drafts`, `list_published`, `list_topics`
+- `list_channels`, `get_channel_profile`, `list_drafts`, `list_published_articles`, `list_channel_topics`
 - `prepare_workspace`, `archive_workspace`
 - `write_article`, `convert_markdown`, `humanize_article`
 - `image upload`, `draft article`, `draft xls`

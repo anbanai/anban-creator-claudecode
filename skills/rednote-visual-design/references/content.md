@@ -54,7 +54,7 @@
 
 基于选题方向、最终标题和目标受众，在生成图片前先独立规划每张图的具体内容，写入 `$DIR/image-plan.md`。
 
-**图片总数**：N 张（奇数，3-7 张），其中封面 1 张 + 内容图 N-2 张 + 尾图 1 张。封面和尾图单独生成，内容图使用 `generate_batch_images` 批量生成（count = N-2）。
+**图片总数**：N 张（奇数，3-7 张），其中封面 1 张 + 内容图 N-2 张 + 尾图 1 张。封面和尾图单独生成，内容图使用 `generate_images` 批量生成（count = N-2）。
 
 **格式模板**：
 
@@ -115,10 +115,10 @@
 全文概要：{full_outline}
 ```
 
-**生成方式（批量，必须使用 generate_batch_images）**：
+**生成方式（批量，必须使用 generate_images）**：
 
-调用 `generate_batch_images` MCP 工具，count 设为 N-2，传入封面作为参考图（ref）。
+调用 `generate_images` MCP 工具，count 设为 N-2，传入封面作为参考图（ref）。
 输出自动命名为 image_01.png, image_02.png ... image_0{N-2}.png
 尾图单独生成见 tail.md
 
-> **关键规则**：内容图必须用 `generate_batch_images` 批量生成，严禁逐张调用，否则视觉一致性无法保证。
+> **关键规则**：内容图必须用 `generate_images` 批量生成，严禁逐张调用，否则视觉一致性无法保证。

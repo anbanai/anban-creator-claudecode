@@ -10,13 +10,13 @@ description: Generates flower arrangement image series with sequential reference
 | MCP 工具 | 说明 |
 |----------|------|
 | `generate_image` (channel_id, prompt, image_type="content", output_path) | 生成花卉图片（单张） |
-| `generate_batch_images` (channel_id, prompt, count, output_dir) | 批量生成图片（不适用于花卉，因为每张 prompt 不同） |
+| `generate_images` (channel_id, prompt, count, output_dir) | 批量生成图片（不适用于花卉，因为每张 prompt 不同） |
 
 ---
 
 ## 核心 Gotcha
 
-花卉图片系列中每张花的 prompt 不同（不同花种），因此**不能用 `generate_batch_images` 批量模式**（该模式适用于同一 prompt 的多张变体）。必须逐张生成，但通过参考图（ref）保持风格一致。
+花卉图片系列中每张花的 prompt 不同（不同花种），因此**不能用 `generate_images` 批量模式**（该模式适用于同一 prompt 的多张变体）。必须逐张生成，但通过参考图（ref）保持风格一致。
 
 ---
 

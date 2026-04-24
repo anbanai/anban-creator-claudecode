@@ -10,7 +10,7 @@ description: Creates and manages WeChat Xiaolvshu (newspic) image post drafts wi
 | MCP 工具 | 说明 |
 |----------|------|
 | `upload_image` (channel_id, file_path) | 上传图片到微信素材库 |
-| `publish_xls` (channel_id, title, content, images) | 创建小绿书草稿 |
+| `publish_xls_draft` (channel_id, title, content, images) | 创建小绿书草稿 |
 
 ---
 
@@ -18,9 +18,9 @@ description: Creates and manages WeChat Xiaolvshu (newspic) image post drafts wi
 
 ## 草稿管理
 
-查看发布历史：调用 `list_drafts` 和 `list_published` MCP 工具。
+查看发布历史：调用 `list_drafts` 和 `list_published_articles` MCP 工具。
 
-## publish_xls 参数说明
+## publish_xls_draft 参数说明
 
 | 参数 | 说明 | 必填 |
 |------|------|------|
@@ -48,14 +48,14 @@ description: Creates and manages WeChat Xiaolvshu (newspic) image post drafts wi
 
 ### 直接使用本地图片
 
-1. 调用 `publish_xls`，传入图片文件路径列表，工具会自动上传到微信素材库
+1. 调用 `publish_xls_draft`，传入图片文件路径列表，工具会自动上传到微信素材库
 2. 可同时传入 `content` 文字描述和评论设置
 
 ### AI 生成图片完整工作流
 
 1. 调用 `generate_image` 生成封面图片
-2. 调用 `generate_batch_images` 批量生成内容图片
-3. 调用 `publish_xls`，传入生成的图片路径，工具会自动上传并创建草稿
+2. 调用 `generate_images` 批量生成内容图片
+3. 调用 `publish_xls_draft`，传入生成的图片路径，工具会自动上传并创建草稿
 
 ## 注意事项
 
