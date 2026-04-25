@@ -12,15 +12,15 @@ description: Use when user mentions "初始化", "init", "配置", "设置", "se
 - **成功** → 输出连接状态和可用频道，结束
 - **失败**（认证错误、连接失败）→ 进入下方密钥设置流程
 
-## 密钥设置
+## 用户级配置：API Key
 
 向用户说明：
 
-> anbanwriter MCP 服务器需要 API Key 进行认证。此密钥由 anbanwriter 服务管理员提供。
+> anbanwriter MCP 服务器需要 API Key 进行认证。请前往 https://creator.anbanai.com 注册账号并获取 API Key。
 
 通过 AskUserQuestion 向用户索取密钥值。
 
-收到后，使用 Write 工具将密钥写入项目本地的 `.claude/settings.json`：
+收到后，使用 Write/Edit 工具将密钥写入用户级别的 `~/.claude/settings.json` 的 `env` 字段中：
 
 ```json
 {
@@ -30,10 +30,45 @@ description: Use when user mentions "初始化", "init", "配置", "设置", "se
 }
 ```
 
-**注意**：如果 `.claude/settings.json` 已存在，必须先 Read 读取现有内容，然后用 Edit 合并 `env` 字段，不要覆盖其他已有配置。如果已有 `env` 对象，只添加 `ANBANWRITER_API_KEY` 字段。
+**注意**：
+- 如果 `~/.claude/settings.json` 已存在，必须先 Read 读取现有内容，然后用 Edit 合并 `env` 字段，不要覆盖其他已有配置。
+- 如果已有 `env` 对象，只添加 `ANBANWRITER_API_KEY` 字段。
+- 这是**用户级别**配置，对所有项目生效，无需在每个项目中重复设置。
 
-`.mcp.json` 中的 `${ANBANWRITER_API_KEY}` 会自动读取此环境变量。此文件已被 gitignore，不会提交到仓库。
+## 项目级配置
+
+API Key 设置完成后，提示用户进行项目级配置（写入项目本地的 `.claude/settings.local.json`）。
+
+### 服务地址（可选）
+
+如果用户使用的不是默认地址 `http://localhost:8080`（如远程服务器），写入 `ANBANWRITER_API_URL`：
+
+```json
+{
+  "env": {
+    "ANBANWRITER_API_URL": "<用户的服务地址>"
+  }
+}
+```
+
+### 默认频道（可选）
+
+如果 `list_channels` 返回多个频道，询问用户是否要设置默认频道，写入 `ANBANWRITER_DEFAULT_CHANNEL`：
+
+```json
+{
+  "env": {
+    "ANBANWRITER_DEFAULT_CHANNEL": "<频道 ID>"
+  }
+}
+```
+
+**项目级配置写入规则**：
+- 写入项目本地 `.claude/settings.local.json`（已被 gitignore，不会提交到仓库）。
+- 如果文件已存在，必须先 Read 读取现有内容，用 Edit 合并 `env` 字段，不覆盖已有配置。
+
+## 完成
 
 告知用户：
 
-> 密钥已写入 `.claude/settings.json`。**请退出并重新启动 Claude Code**，让 MCP 连接使用新密钥。重启后再次运行 `/init` 验证连接。
+> 配置完成。**请退出并重新启动 Claude Code**，让 MCP 连接生效。重启后再次运行 `/init` 验证连接。
