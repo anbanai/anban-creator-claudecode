@@ -64,7 +64,7 @@ maxTurns: 20
 
 ### 步骤 1.5：读取花卉配置
 
-调用 `list_channels` MCP 工具获取可用的 channel 列表，选择 platform 为 `flower` 的 channel，记为 `$CHANNEL_ID`。然后调用 `get_channel_profile` MCP 工具（参数：`channel_id=$CHANNEL_ID`, `scope="flower"`）获取账户花卉配置，确定本次生成的花卉种数。
+**获取频道 ID**：通过 Bash 执行 `echo $ANBANWRITER_DEFAULT_CHANNEL` 检查环境变量，若非空则直接使用其值作为 `$CHANNEL_ID`。若为空，调用 `list_channels` MCP 工具获取可用的 channel 列表，选择 platform 为 `flower` 的 channel，记为 `$CHANNEL_ID`。然后调用 `get_channel_profile` MCP 工具（参数：`channel_id=$CHANNEL_ID`, `scope="flower"`）获取账户花卉配置，确定本次生成的花卉种数。
 
 从输出中提取 `flower.content.count` 字段作为本次生成的花卉种数 `$COUNT`。若 MCP 工具调用失败或字段不存在，使用默认值 5。
 

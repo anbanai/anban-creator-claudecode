@@ -56,7 +56,7 @@ maxTurns: 25
 
 ## 创作流程
 
-1. 调用 `list_channels` MCP 工具获取可用的 channel 列表，选择 platform 为 `xls` 的 channel，记为 `$CHANNEL_ID`
+1. **获取频道 ID**：通过 Bash 执行 `echo $ANBANWRITER_DEFAULT_CHANNEL` 检查环境变量，若非空则直接使用其值作为 `$CHANNEL_ID`，跳到步骤 2。若为空，调用 `list_channels` MCP 工具获取可用的 channel 列表，选择 platform 为 `xls` 的 channel，记为 `$CHANNEL_ID`
 2. 调用 `get_channel_profile` MCP 工具（参数：`channel_id=$CHANNEL_ID`, `scope="xls"`）获取账号信息
 3. 调用 `list_drafts` 和 `list_published_articles` MCP 工具（参数：`channel_id=$CHANNEL_ID`）查看草稿箱和已发布文章，列出所有标题，后续选题应避开这些已有主题
 4. **创建内容目录**：调用 `prepare_workspace` MCP 工具（参数：`content_type="xls"`, `task_id=$TASK_ID`）生成隔离工作目录（自动归档残留文件，确保目录为空），后续所有图片保存在返回的路径内，变量记为 `$DIR`。**`$TASK_ID` 获取方式**：先检查 CWD 下是否存在 `.task-context` 文件，如果存在则从中读取 `TASK_ID=xxx` 的值；否则使用 CWD 目录名（通常是任务 UUID）。
