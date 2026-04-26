@@ -66,6 +66,8 @@ maxTurns: 20
 
    生成后检查每张图片：`$DIR/cover.png`（封面）、`$DIR/image_01.png` ... `$DIR/image_0{N-2}.png`（内容图）、`$DIR/tail.png`（尾图）
 
+7. **（可选）视频组装**：如用户要求生成视频版本，using the rednote-visual-design skill 的视频组装章节，将所有图片（封面 + 内容图 + 尾图）组装为 MP4 视频，保存到 `$DIR/video.mp4`
+
 ---
 
 ### 复刻模式（用户提供笔记 ID 或链接时）
@@ -83,9 +85,11 @@ maxTurns: 20
 
 7. **图片生成**：using the rednote-visual-design skill，传入 `$DIR/content.md`、改写模式和源笔记视觉结构，技能内部自动适配并完成规划与生成。保存到 `$DIR/`
 
-8. **违禁词合规检查**：using the rednote-writing skill 扫描标题与正文，生成 `$DIR/compliance-report.md`
+8. **（可选）视频组装**：如用户要求生成视频版本，using the rednote-visual-design skill 的视频组装章节，将所有图片（封面 + 内容图 + 尾图）组装为 MP4 视频，保存到 `$DIR/video.mp4`
 
-9. **归档工作目录**：从 `$DIR/content.md` 提取最终标题（第一行去掉 `# `），调用 `archive_workspace` MCP 工具（参数：`content_type="rednote"`, `name="{标题}"`）归档。归档后向用户报告完整的成果目录路径（如 `output/rednote/五个提升效率的方法/`）。
+9. **违禁词合规检查**：using the rednote-writing skill 扫描标题与正文，生成 `$DIR/compliance-report.md`
+
+10. **归档工作目录**：从 `$DIR/content.md` 提取最终标题（第一行去掉 `# `），调用 `archive_workspace` MCP 工具（参数：`content_type="rednote"`, `name="{标题}"`）归档。归档后向用户报告完整的成果目录路径（如 `output/rednote/五个提升效率的方法/`）。
 
 ---
 

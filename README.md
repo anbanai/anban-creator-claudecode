@@ -1,4 +1,4 @@
-# 案板创作助手 Claude Code 插件
+# Anban 智能创作助手 Claude Code 插件
 
 微信公众号 & 小红书 & 小绿书 AI 内容创作插件，基于 Claude Code Agent + Skill + MCP 架构。
 

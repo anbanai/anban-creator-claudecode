@@ -68,7 +68,7 @@ maxTurns: 25
 
 6. using the xls-visual-design skill 生成小绿书图片，以封面确立基准风格，后续图片以封面为参考批量生成，输出模式 `--mode xls`，保存到 `$DIR/`
 7. using the content-writing skill 对标题和描述文案执行违禁词合规检查
-8. **（可选）视频组装**：如用户要求生成视频版本，using the xls-visual-design skill 将图片组装为视频，保存到 `$DIR/video.mp4`
+8. **（可选）视频组装**：如用户要求生成视频版本，using the xls-visual-design skill 的视频组装章节，将所有图片组装为 MP4 视频，保存到 `$DIR/video.mp4`
 9. 逐一上传图片到微信素材库（`image upload $DIR/cover.png`），记录每张图的 media_id
 10. using the xls-publishing skill → `draft xls --media-ids` 用素材 ID 发布到微信公众号草稿箱
 

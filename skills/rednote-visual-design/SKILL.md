@@ -172,3 +172,69 @@ description: Generates cover and content images for Xiaohongshu (小红书) post
 5. **带风格描述**：在 prompt 中加入风格描述（如"手绘感，暖色调，小清新"）
 
 **关键规则**：内容图必须用 `generate_images` 批量生成，尾图单独生成（`tail.png`），封面单独生成（`cover.png`）。
+
+---
+
+## 视频组装（可选）
+
+当用户要求生成视频版本时，使用 FFmpeg 将图片组装为 MP4 幻灯片视频。
+
+### 前提条件
+
+- 需要安装 FFmpeg（Docker 容器中已预装，本地环境需自行安装）
+- 使用 `ffmpeg -version` 验证是否可用
+
+### 操作步骤
+
+1. 收集所有图片路径，按顺序排列（封面 + 内容图 + 尾图）
+2. 在 `$DIR` 下创建 `concat.txt` 文件，格式如下：
+   ```
+   file 'cover.png'
+   duration 3
+   file 'image_01.png'
+   duration 3
+   file 'tail.png'
+   file 'tail.png'
+   ```
+   注意：最后一帧必须重复一行（不带 duration），否则最后一帧会闪黑。
+
+3. 执行 FFmpeg 命令：
+   ```bash
+   ffmpeg -f concat -safe 0 -i $DIR/concat.txt \
+     -vf "scale=1080:1440:force_original_aspect_ratio=decrease,pad=1080:1440:(ow-iw)/2:(oh-ih)/2:black" \
+     -c:v libx264 -pix_fmt yuv420p -r 24 \
+     -y $DIR/video.mp4
+   ```
+
+### 参数说明
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `scale` | `1080:1440` | 输出分辨率，3:4 竖版 |
+| `duration` | 3 秒/张 | 每张图片展示时长 |
+| `-r` | 24 | 帧率 |
+| `-pix_fmt yuv420p` | — | 兼容性编码，确保各播放器可播放 |
+
+### 带淡入淡出效果
+
+如需更平滑的过渡，使用 filter_complex 方式（注意 fade 的 `st` 值为 `总时长 - 淡出时长`）：
+
+```bash
+ffmpeg -loop 1 -t 3 -i cover.png \
+  -loop 1 -t 3 -i image_01.png \
+  -loop 1 -t 3 -i tail.png \
+  -filter_complex \
+  "[0]fade=t=in:st=0:d=0.5,fade=t=out:st=2.5:d=0.5[v0]; \
+   [1]fade=t=in:st=0:d=0.5,fade=t=out:st=2.5:d=0.5[v1]; \
+   [2]fade=t=in:st=0:d=0.5,fade=t=out:st=2.5:d=0.5[v2]; \
+   [v0][v1][v2]concat=n=3:v=1:a=0[outv]" \
+  -map "[outv]" -c:v libx264 -pix_fmt yuv420p -r 24 \
+  -vf "scale=1080:1440:force_original_aspect_ratio=decrease,pad=1080:1440:(ow-iw)/2:(oh-ih)/2:black" \
+  -y $DIR/video.mp4
+```
+
+### 完成后
+
+- 验证文件存在：`ls -lh $DIR/video.mp4`
+- 报告文件路径和大小给用户
+- 清理临时文件 `concat.txt`
