@@ -2,49 +2,147 @@
 
 > 微信公众号 & 小红书 & 小绿书 AI 内容创作插件，基于 Claude Code Agent + Skill + MCP 架构。
 
-## 快速开始
+## 接入流程
 
-### 1. 安装插件
+按下面顺序操作，第一次接入最省事：
 
-在 Claude Code 中运行：
+1. 打开 [Anban Studio / Web 管理端](https://creator.anbanai.com) 注册或登录
+2. 在设置页创建 API Key
+3. 在 Claude Code 里安装插件
+4. 把 API Key 写入 Claude Code 配置
+5. 运行 `/init`
+6. 完全退出并重新启动 Claude Code
+7. 重启后再次运行 `/init` 验证连接
+8. 开始用自然语言或指定 Agent 创作
 
-```
+---
+
+## 1. 注册账号
+
+访问 [https://creator.anbanai.com](https://creator.anbanai.com)，先注册或登录你的 Anban 账号。
+
+如果你还没有 API Key，后面的插件无法连接平台服务。
+
+## 2. 创建 API Key
+
+登录后前往 [设置页](https://creator.anbanai.com/settings) 创建一个新的 API Key。
+
+- 建议给 Key 起一个容易识别的名字，例如 `My MacBook`、`Office Claude`
+- Key 只会在创建成功时完整展示一次
+- 如果当时没有复制完整 Key，需要回到设置页重新创建一个新的
+
+## 3. 安装插件
+
+推荐直接在 Claude Code 中安装：
+
+```bash
 /install-plugin anbanai/anbanwriter-claudecode
 ```
 
-### 2. 连接平台账号
+安装完成后，可以用 `/plugin` 或插件列表确认插件已经启用。
 
-安装后需要在 [Anban Web 管理端](https://creator.anbanai.com) 注册并创建 API Key，插件会通过 MCP 自动连接平台服务。
+## 4. 设置 API Key
 
-> 前往 [https://creator.anbanai.com/settings](https://creator.anbanai.com/settings) 创建 API Key。
+推荐把 Key 写到 Claude Code 的用户级配置里，这样所有项目都能直接复用。
 
-### 3. 初始化配置
+编辑 `~/.claude/settings.json`，确保有下面这段：
 
-安装完成后，在 Claude Code 中运行初始化命令，完成配置验证：
-
+```json
+{
+  "env": {
+    "ANBANWRITER_API_KEY": "你的完整 API Key"
+  }
+}
 ```
+
+如果你使用的是 Anban 官方在线服务，可以额外补上服务地址：
+
+```json
+{
+  "env": {
+    "ANBANWRITER_API_KEY": "你的完整 API Key",
+    "ANBANWRITER_API_URL": "https://api.creator.anbanai.com"
+  }
+}
+```
+
+如果你接的是自建或本地服务，就把 `ANBANWRITER_API_URL` 改成你自己的服务地址。
+
+如果 `~/.claude/settings.json` 原来已经有别的配置，只需要把 `env` 里的字段合并进去，不要覆盖其他内容。
+
+## 5. 运行 `/init`
+
+安装并写好 Key 后，在 Claude Code 中运行：
+
+```bash
 /init
 ```
 
-### 4. 开始使用
+`/init` 会帮你检查：
 
-用自然语言直接描述你的创作需求，插件会自动识别内容类型并启动对应的创作流程：
+- API Key 是否生效
+- MCP 服务是否连通
+- 当前账号下有哪些可用频道
 
-```
-"帮我写一篇关于 AI Agent 的文章"          → 微信公众号图文
-"小红书种草笔记，主题是降噪耳机"           → 小红书笔记
-"小绿书图片帖，主题是春日穿搭"             → 小绿书图片帖
-"帮我生成一组郁金香的鲜花图片"             → 鲜花图片
+## 6. 重启 Claude Code
+
+`/init` 完成后，请**完全退出并重新启动 Claude Code**。
+
+这是为了让新的环境变量和 MCP 连接真正生效。只刷新当前会话通常不够。
+
+重启以后，再运行一次：
+
+```bash
+/init
 ```
 
-也可以指定 Agent 直接启动：
+如果能看到频道列表或连接成功提示，就说明接入已经完成。
 
+## 7. 开始使用
+
+### 方式一：直接说需求
+
+你可以直接输入自然语言，让插件自动识别内容类型：
+
+```text
+帮我写一篇关于 AI Agent 的公众号文章
+小红书种草笔记，主题是降噪耳机
+小绿书图片帖，主题是春日穿搭
+帮我生成一组郁金香的鲜花图片
 ```
-claude --agent anbanwriter:article AI Agent 入门指南
-claude --agent anbanwriter:rednote 降噪耳机种草笔记
-claude --agent anbanwriter:xls 春日穿搭图片帖
-claude --agent anbanwriter:flower 春日鲜花摄影
+
+### 方式二：指定 Agent
+
+如果你想明确指定流程，也可以直接运行：
+
+```bash
+claude --dangerously-skip-permissions --verbose --agent anbanwriter:article AI Agent 入门指南
+claude --dangerously-skip-permissions --verbose --agent anbanwriter:rednote 降噪耳机种草笔记
+claude --dangerously-skip-permissions --verbose --agent anbanwriter:xls 春日穿搭图片帖
+claude --dangerously-skip-permissions --verbose --agent anbanwriter:flower 春日鲜花摄影
 ```
+
+## 常用命令
+
+- `/init`
+  初始化配置并验证连接
+- `/plugin`
+  查看插件是否已安装成功
+- `anbanwriter:article`
+  公众号图文创作
+- `anbanwriter:rednote`
+  小红书笔记创作
+- `anbanwriter:xls`
+  小绿书图片帖创作
+- `anbanwriter:flower`
+  鲜花图片创作
+
+## 遇到问题时先检查
+
+1. 是否已经在 [设置页](https://creator.anbanai.com/settings) 创建并复制了完整 API Key
+2. `~/.claude/settings.json` 里是否真的写入了 `ANBANWRITER_API_KEY`
+3. 是否已经完全退出并重启过 Claude Code
+4. 重启后是否重新执行过 `/init`
 
 ## 支持的创作类型
 
