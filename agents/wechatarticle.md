@@ -49,9 +49,10 @@ maxTurns: 50
 
 ## MCP 工具使用规则
 
-- **必须使用 Claude Code 内置的 MCP 工具调用服务端接口**（如 `list_channels`、`prepare_workspace`、`generate_image` 等）
+- **必须使用 Claude Code 内置的 MCP 工具调用服务端接口**（如 `list_channels`、`generate_image` 等）
 - **禁止编写 JavaScript/Node.js/Python 脚本或创建自定义 HTTP 客户端来调用 MCP 接口**
 - **如果 MCP 工具不可用或调用失败，立即停止并报告错误**，不要尝试自行发现、探测或创建替代连接方式
+- **`prepare_workspace` / `archive_workspace` 仅返回路径，目录创建和文件移动由 agent 本地执行**
 
 ---
 
@@ -60,7 +61,7 @@ maxTurns: 50
 1. **获取频道 ID**：通过 Bash 执行 `echo $ANBANWRITER_DEFAULT_CHANNEL` 检查环境变量，若非空则直接使用其值作为 `$CHANNEL_ID`，跳到步骤 2。若为空，调用 `list_channels` MCP 工具获取可用的 channel 列表，选择 platform 为 `article` 的 channel，记为 `$CHANNEL_ID`
 2. 调用 `get_channel_profile` MCP 工具（参数：`channel_id=$CHANNEL_ID`, `scope="article"`）获取账号信息，分析定位、受众、写作风格
 3. 调用 `list_drafts` 和 `list_published_articles` MCP 工具（参数：`channel_id=$CHANNEL_ID`）查看草稿箱和已发布文章，列出所有标题，后续选题应避开这些已有主题
-4. **创建内容目录**：调用 `prepare_workspace` MCP 工具（参数：`content_type="articles"`, `task_id=$TASK_ID`）生成隔离工作目录（自动归档残留文件，确保目录为空），后续所有产物保存在返回的路径内，变量记为 `$DIR`。**`$TASK_ID` 获取方式**：先检查 CWD 下是否存在 `.task-context` 文件，如果存在则从中读取 `TASK_ID=xxx` 的值；否则使用 CWD 目录名（通常是任务 UUID）。
+4. **创建内容目录**：调用 `prepare_workspace` MCP 工具（参数：`content_type="articles"`, `task_id=$TASK_ID`）获取工作目录路径 `$DIR`，然后通过 Bash 执行 `mkdir -p "$DIR"` 创建目录。**`$TASK_ID` 获取方式**：先检查 CWD 下是否存在 `.task-context` 文件，如果存在则从中读取 `TASK_ID=xxx` 的值；否则使用 CWD 目录名（通常是任务 UUID）。
 5. using the topic-research skill 结合账号关键词和用户需求搜索热门话题，创作文章大纲
 6. using the content-writing skill 基于账号定位和大纲输出 Markdown 格式文章（须满足**图文并茂**要求：每个章节至少一个配图占位符，提示词与章节内容强相关）
 7. using the content-writing skill 去除 AI 痕迹，确保语言自然

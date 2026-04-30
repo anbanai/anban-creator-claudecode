@@ -46,9 +46,10 @@ maxTurns: 20
 
 ## MCP 工具使用规则
 
-- **必须使用 Claude Code 内置的 MCP 工具调用服务端接口**（如 `list_channels`、`prepare_workspace`、`generate_image` 等）
+- **必须使用 Claude Code 内置的 MCP 工具调用服务端接口**（如 `list_channels`、`generate_image` 等）
 - **禁止编写 JavaScript/Node.js/Python 脚本或创建自定义 HTTP 客户端来调用 MCP 接口**
 - **如果 MCP 工具不可用或调用失败，立即停止并报告错误**，不要尝试自行发现、探测或创建替代连接方式
+- **`prepare_workspace` / `archive_workspace` 仅返回路径，目录创建和文件移动由 agent 本地执行**
 
 ---
 
@@ -70,9 +71,9 @@ maxTurns: 20
 
 ### 步骤 2：创建工作目录
 
-调用 `prepare_workspace` MCP 工具（参数：`content_type="flower"`, `task_id=$TASK_ID`）创建隔离工作目录。**`$TASK_ID` 获取方式**：先检查 CWD 下是否存在 `.task-context` 文件，如果存在则从中读取 `TASK_ID=xxx` 的值；否则使用 CWD 目录名（通常是任务 UUID）。
+调用 `prepare_workspace` MCP 工具（参数：`content_type="flower"`, `task_id=$TASK_ID`）获取工作目录路径 `$DIR`，然后通过 Bash 执行 `mkdir -p "$DIR"` 创建目录。**`$TASK_ID` 获取方式**：先检查 CWD 下是否存在 `.task-context` 文件，如果存在则从中读取 `TASK_ID=xxx` 的值；否则使用 CWD 目录名（通常是任务 UUID）。
 
-> 此命令自动归档残留文件，确保工作目录为空。后续所有文件保存在返回的路径内，变量记为 `$DIR`。
+> MCP 工具仅返回路径，agent 负责在本地创建目录。后续所有文件保存在 `$DIR` 内。
 
 ### 步骤 3：调研花卉
 

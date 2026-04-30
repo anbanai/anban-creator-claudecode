@@ -43,9 +43,10 @@ maxTurns: 20
 
 ## MCP 工具使用规则
 
-- **必须使用 Claude Code 内置的 MCP 工具调用服务端接口**（如 `list_channels`、`prepare_workspace`、`generate_image` 等）
+- **必须使用 Claude Code 内置的 MCP 工具调用服务端接口**（如 `list_channels`、`generate_image` 等）
 - **禁止编写 JavaScript/Node.js/Python 脚本或创建自定义 HTTP 客户端来调用 MCP 接口**
 - **如果 MCP 工具不可用或调用失败，立即停止并报告错误**，不要尝试自行发现、探测或创建替代连接方式
+- **`prepare_workspace` / `archive_workspace` 仅返回路径，目录创建和文件移动由 agent 本地执行**
 
 ---
 
@@ -58,7 +59,7 @@ maxTurns: 20
 
 3. **研究选题**：using the rednote-research skill 采集热门笔记数据，自动选 Top 1 选题，评分结果与选题理由写入 `$DIR/topic-analysis.md`
 
-4. **创建工作目录**：调用 `prepare_workspace` MCP 工具（参数：`content_type="rednote"`, `task_id=$TASK_ID`）生成隔离工作目录（自动归档残留文件，确保目录为空），后续所有文件保存在返回的路径内，变量记为 `$DIR`。**`$TASK_ID` 获取方式**：先检查 CWD 下是否存在 `.task-context` 文件，如果存在则从中读取 `TASK_ID=xxx` 的值；否则使用 CWD 目录名（通常是任务 UUID）。
+4. **创建工作目录**：调用 `prepare_workspace` MCP 工具（参数：`content_type="rednote"`, `task_id=$TASK_ID`）获取工作目录路径 `$DIR`，然后通过 Bash 执行 `mkdir -p "$DIR"` 创建目录。**`$TASK_ID` 获取方式**：先检查 CWD 下是否存在 `.task-context` 文件，如果存在则从中读取 `TASK_ID=xxx` 的值；否则使用 CWD 目录名（通常是任务 UUID）。
 
 5. **创作内容**：using the rednote-writing skill 生成标题、正文和话题标签，内容保存到 `$DIR/content.md`
 
@@ -79,7 +80,7 @@ maxTurns: 20
 
 4. **分析源笔记模板**：using the rednote-writing skill 分析源笔记，结果写入 `$DIR/source-analysis.md`。额外提取**视觉结构模板**：图片总张数（含封面）、各内容页主题关键词；若无法提取，记录"视觉结构：无法提取"，`tight` 模式图片规划自动降级为 `medium`
 
-5. **创建工作目录**：调用 `prepare_workspace` MCP 工具（参数：`content_type="rednote"`, `task_id=$TASK_ID`）生成隔离工作目录，自动归档残留文件，变量记为 `$DIR`。**`$TASK_ID` 获取方式**：先检查 CWD 下是否存在 `.task-context` 文件，如果存在则从中读取 `TASK_ID=xxx` 的值；否则使用 CWD 目录名（通常是任务 UUID）。
+5. **创建工作目录**：调用 `prepare_workspace` MCP 工具（参数：`content_type="rednote"`, `task_id=$TASK_ID`）获取工作目录路径 `$DIR`，然后通过 Bash 执行 `mkdir -p "$DIR"` 创建目录。**`$TASK_ID` 获取方式**：先检查 CWD 下是否存在 `.task-context` 文件，如果存在则从中读取 `TASK_ID=xxx` 的值；否则使用 CWD 目录名（通常是任务 UUID）。
 
 6. **按改写模式生成内容**：using the rednote-writing skill 根据用户指定或默认模式改写，内容保存到 `$DIR/content.md`，决策记录到 `$DIR/source-analysis.md`
 
@@ -89,7 +90,7 @@ maxTurns: 20
 
 9. **违禁词合规检查**：using the rednote-writing skill 扫描标题与正文，生成 `$DIR/compliance-report.md`
 
-10. **归档工作目录**：从 `$DIR/content.md` 提取最终标题（第一行去掉 `# `），调用 `archive_workspace` MCP 工具（参数：`content_type="rednote"`, `name="{标题}"`）归档。归档后向用户报告完整的成果目录路径（如 `output/rednote/五个提升效率的方法/`）。
+10. **归档工作目录**：从 `$DIR/content.md` 提取最终标题（第一行去掉 `# `），调用 `archive_workspace` MCP 工具（参数：`content_type="rednote"`, `name="{标题}"`）获取归档路径 `$ARCHIVE_DIR`，然后通过 Bash 执行 `mkdir -p "$ARCHIVE_DIR" && mv "$DIR"/* "$ARCHIVE_DIR/" 2>/dev/null` 移动文件。归档后向用户报告完整的成果目录路径。
 
 ---
 

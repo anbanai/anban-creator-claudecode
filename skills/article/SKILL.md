@@ -31,6 +31,7 @@ description: 微信公众号图文文章全自动创作。用户提到"写文章
 
 调用 MCP 工具：
 - `prepare_workspace(content_type="articles", task_id=TASK_ID)` → 获取工作目录路径，记为 `$DIR`
+- 通过 Bash 执行 `mkdir -p "$DIR"` 创建目录
 
 ### 步骤 3：选题研究
 

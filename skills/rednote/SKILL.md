@@ -30,6 +30,7 @@ description: 小红书图文全自动创作。用户提到"小红书"、"红书"
 
 调用 MCP 工具：
 - `prepare_workspace(content_type="rednote", task_id=TASK_ID)` → 获取工作目录路径，记为 `$DIR`
+- 通过 Bash 执行 `mkdir -p "$DIR"` 创建目录
 
 ### 步骤 3：研究选题
 
@@ -60,8 +61,9 @@ description: 小红书图文全自动创作。用户提到"小红书"、"红书"
 ### 步骤 7：归档
 
 - 从 `$DIR/content.md` 提取最终标题
-- 调用 `archive_workspace(content_type="rednote", name="{标题}")` 归档
-- 报告成果目录路径
+- 调用 `archive_workspace(content_type="rednote", name="{标题}")` 获取归档路径 `$ARCHIVE_DIR`
+- 通过 Bash 执行 `mkdir -p "$ARCHIVE_DIR" && mv "$DIR"/* "$ARCHIVE_DIR/" 2>/dev/null` 移动文件
+- 报告成果目录路径 `$ARCHIVE_DIR`
 
 ---
 

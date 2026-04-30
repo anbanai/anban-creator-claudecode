@@ -67,7 +67,7 @@ Lifecycle hooks for quality verification:
 ## Key Conventions
 
 - **Zero user interaction**: All agents run autonomously. Decisions are recorded in `$DIR/*.md` files, never by asking the user.
-- **Workspace isolation**: Each creation task uses `prepare_workspace` MCP tool to create an isolated `$DIR` under `output/{content_type}/`, with auto-archive of residual files.
+- **Workspace isolation**: Each creation task calls `prepare_workspace` MCP tool to obtain the canonical workspace path, then creates the directory locally with `mkdir -p`. The MCP tool only computes and returns the path — it does not create directories or move files.
 - **File naming**: Agents use numbered prefixes (`01-research.md`, `02-outline.md`...) or semantic names (`cover.png`, `content.md`, `image-plan.md`).
 - **Image reference chain**: First image establishes visual style; subsequent images use the first as `--ref` to maintain consistency.
 - **Skill references**: Agents invoke skills via `using the <skill-name> skill` phrasing, not the Skill tool.
