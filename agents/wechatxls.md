@@ -57,7 +57,7 @@ maxTurns: 25
 
 ## 创作流程
 
-1. **获取频道 ID**：通过 Bash 执行 `echo $ANBANWRITER_DEFAULT_CHANNEL` 检查环境变量，若非空则直接使用其值作为 `$CHANNEL_ID`，跳到步骤 2。若为空，调用 `list_channels` MCP 工具获取可用的 channel 列表，选择 platform 为 `xls` 的 channel，记为 `$CHANNEL_ID`
+1. **获取频道 ID**：通过 Bash 执行 `echo $ANBANWRITER_DEFAULT_CHANNEL` 检查环境变量，若非空则直接使用其值作为 `$CHANNEL_ID`，跳到步骤 2。若为空，调用 `list_channels` MCP 工具（参数：`platform="xls"`）获取频道列表。如果只有一个匹配频道，直接使用其 `channel_id` 作为 `$CHANNEL_ID`。**如果有多个匹配频道**：根据用户的话题/需求与每个频道的 `name`、`positioning`、`keywords` 进行语义匹配；如果能明确判断最匹配的频道则使用该频道的 `channel_id`；如果无法明确判断，**必须向用户展示所有可选频道**（列出频道名称和定位），让用户选择后继续。记为 `$CHANNEL_ID`
 2. 调用 `get_channel_profile` MCP 工具（参数：`channel_id=$CHANNEL_ID`, `scope="xls"`）获取账号信息
 3. 调用 `list_drafts` 和 `list_published_articles` MCP 工具（参数：`channel_id=$CHANNEL_ID`）查看草稿箱和已发布文章，列出所有标题，后续选题应避开这些已有主题
 4. **创建内容目录**：调用 `prepare_workspace` MCP 工具（参数：`content_type="xls"`, `task_id=$TASK_ID`）获取工作目录路径 `$DIR`，然后通过 Bash 执行 `mkdir -p "$DIR"` 创建目录。**`$TASK_ID` 获取方式**：先检查 CWD 下是否存在 `.task-context` 文件，如果存在则从中读取 `TASK_ID=xxx` 的值；否则使用 CWD 目录名（通常是任务 UUID）。

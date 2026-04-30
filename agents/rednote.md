@@ -54,7 +54,7 @@ maxTurns: 20
 
 ### 原创模式（默认）
 
-1. **获取频道 ID**：通过 Bash 执行 `echo $ANBANWRITER_DEFAULT_CHANNEL` 检查环境变量，若非空则直接使用其值作为 `$CHANNEL_ID`，跳到步骤 2。若为空，调用 `list_channels` MCP 工具获取可用的 channel 列表，选择 platform 为 `rednote` 的 channel，记为 `$CHANNEL_ID`
+1. **获取频道 ID**：通过 Bash 执行 `echo $ANBANWRITER_DEFAULT_CHANNEL` 检查环境变量，若非空则直接使用其值作为 `$CHANNEL_ID`，跳到步骤 2。若为空，调用 `list_channels` MCP 工具（参数：`platform="rednote"`）获取频道列表。如果只有一个匹配频道，直接使用其 `channel_id` 作为 `$CHANNEL_ID`。**如果有多个匹配频道**：根据用户的话题/需求与每个频道的 `name`、`positioning`、`keywords` 进行语义匹配；如果能明确判断最匹配的频道则使用该频道的 `channel_id`；如果无法明确判断，**必须向用户展示所有可选频道**（列出频道名称和定位），让用户选择后继续。记为 `$CHANNEL_ID`
 2. 调用 `get_channel_profile` MCP 工具（参数：`channel_id=$CHANNEL_ID`, `scope="rednote"`）获取账号信息
 
 3. **研究选题**：using the rednote-research skill 采集热门笔记数据，自动选 Top 1 选题，评分结果与选题理由写入 `$DIR/topic-analysis.md`
@@ -73,7 +73,7 @@ maxTurns: 20
 
 ### 复刻模式（用户提供笔记 ID 或链接时）
 
-1. **获取频道 ID**：通过 Bash 执行 `echo $ANBANWRITER_DEFAULT_CHANNEL` 检查环境变量，若非空则直接使用其值作为 `$CHANNEL_ID`，跳到步骤 2。若为空，调用 `list_channels` MCP 工具获取可用的 channel 列表，选择 platform 为 `rednote` 的 channel，记为 `$CHANNEL_ID`
+1. **获取频道 ID**：通过 Bash 执行 `echo $ANBANWRITER_DEFAULT_CHANNEL` 检查环境变量，若非空则直接使用其值作为 `$CHANNEL_ID`，跳到步骤 2。若为空，调用 `list_channels` MCP 工具（参数：`platform="rednote"`）获取频道列表。如果只有一个匹配频道，直接使用其 `channel_id` 作为 `$CHANNEL_ID`。**如果有多个匹配频道**：根据用户的话题/需求与每个频道的 `name`、`positioning`、`keywords` 进行语义匹配；如果能明确判断最匹配的频道则使用该频道的 `channel_id`；如果无法明确判断，**必须向用户展示所有可选频道**（列出频道名称和定位），让用户选择后继续。记为 `$CHANNEL_ID`
 2. 调用 `get_channel_profile` MCP 工具（参数：`channel_id=$CHANNEL_ID`, `scope="rednote"`）获取账号信息
 
 3. **获取源笔记**：using the rednote-research skill 先获取 xsec_token，再调用 MCP `get_feed_detail(feed_id="<ID>", xsec_token="<token>")` 获取笔记详情
