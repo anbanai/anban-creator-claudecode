@@ -19,70 +19,84 @@ description: 微信公众号图文文章全自动创作。用户提到"写文章
 
 按顺序执行以下步骤。每一步都必须调用对应的工具，不能跳过。
 
-### 步骤 1：获取账号信息
+### Phase 1: 信息收集
 
-调用 MCP 工具：
-- `list_channels()` → 找到 `platform` 为 `article` 的 channel，记为 `$CHANNEL_ID`
+### 步骤 1：获取频道信息与工作目录
+
+合并执行以下操作：
+
+- 检查 `$ANBANWRITER_DEFAULT_CHANNEL` 环境变量，非空则直接使用
+- 否则调用 `list_channels(platform="article")`，匹配或让用户选择 → `$CHANNEL_ID`
 - `get_channel_profile(channel_id="$CHANNEL_ID", scope="article")` → 获取账号定位、受众、写作风格
-- `list_drafts(channel_id="$CHANNEL_ID")` 和 `list_published_articles(channel_id="$CHANNEL_ID")` → 查看已有文章标题，后续选题避开
-- `list_channel_topics(channel_id="$CHANNEL_ID")` → 查看系统内已有选题，后续选题避开
+- `list_drafts(channel_id="$CHANNEL_ID")` 和 `list_published_articles(channel_id="$CHANNEL_ID")` → 已有文章标题
+- `prepare_workspace(content_type="articles", task_id=TASK_ID)` → 工作目录路径 `$DIR`
+- Bash 执行 `mkdir -p "$DIR"` 创建目录
 
-### 步骤 2：创建工作目录
-
-调用 MCP 工具：
-- `prepare_workspace(content_type="articles", task_id=TASK_ID)` → 获取工作目录路径，记为 `$DIR`
-- 通过 Bash 执行 `mkdir -p "$DIR"` 创建目录
-
-### 步骤 3：选题研究
+### 步骤 2：选题研究
 
 使用 `topic-research` skill：
 - 结合账号关键词和用户需求搜索热门话题
 - 生成文章大纲
 - 保存为 `$DIR/01-research.md` 和 `$DIR/02-outline.md`
 
-### 步骤 4：撰写文章
+### Phase 2: 内容创作
+
+### 步骤 3：撰写文章
 
 使用 `content-writing` skill：
 - 基于大纲输出 Markdown 格式文章
-- 每个章节至少一个配图占位符，提示词与章节内容强相关
+- **写作时不需要插入配图占位符**（配图由步骤 7 专门处理）
 - 保存为 `$DIR/03-article.md`
 
-### 步骤 5：AI 去痕与合规
+### 步骤 4：AI 去痕与合规检查
 
 使用 `content-writing` skill：
-- 检测并移除 AI 痕迹（`gentle` 模式）
-- 执行违禁词合规检查
+- 先执行 AI 去痕（`gentle` 模式）
+- 再执行违禁词合规检查
 - 保存为 `$DIR/04-article-final.md`
 
-### 步骤 6：SEO 优化
+### Phase 3: SEO 与视觉
+
+### 步骤 5：SEO 优化
 
 使用 `seo-optimization` skill：
 - 优化标题、关键词、摘要
+- 将优化后的标题和摘要保存为 `$DIR/seo-result.md`，供步骤 9 使用
 
-### 步骤 7：生成封面图
-
-使用 `article-visual-design` skill：
-- 生成文章封面，保存到 `$DIR/cover.png`
-- 上传到微信素材库：`image upload $DIR/cover.png` → 获取 media_id
-
-### 步骤 8：生成章节配图
+### 步骤 6：生成封面图
 
 使用 `article-visual-design` skill：
-- 验证章节配图覆盖率，补充缺失的配图占位符
-- 批量生成配图，输出到 `$DIR/images.json`
+- 根据 writer YAML 的 `cover_prompt` 模板生成封面
+- 调用 `generate_image(image_type="cover", output_path="$DIR/cover.png")`
+- 调用 `upload_image(file_path="$DIR/cover.png")` → 获取 `media_id`
+- 记录封面视觉风格（writer YAML 的 `cover_style`）→ `$COVER_STYLE`
 
-### 步骤 9：HTML 转换
+### 步骤 7：配图设计与生成
+
+使用 `article-visual-design` skill：
+
+- 逐章节分析 `$DIR/04-article-final.md` 的内容
+- 为每个 `##` 章节设计配图提示词（必须引用章节中的具体概念、比喻或案例）
+- 将 `![描述](__generate:英文提示词__)` 占位符插入到文章中，覆盖写回 `$DIR/04-article-final.md`
+- 基于 `$COVER_STYLE` 确定统一的 `style_prompt`
+- 调用 `generate_images_from_markdown(channel_id, markdown, task_id, style_prompt, upload=true)`
+- 输出保存为 `$DIR/images.json`
+
+### Phase 4: 组装发布
+
+### 步骤 8：HTML 转换
 
 使用 `content-writing` skill：
 - 转换为 WeChat 兼容 HTML
 - 图片链接自动替换为 CDN 链接
 - 保存为 `$DIR/05-article.html`
 
-### 步骤 10：发布草稿
+### 步骤 9：草稿发布
 
 使用 `article-publishing` skill：
-- 创建 `draft.json`
-- 发布到草稿箱：`draft article $DIR/draft.json`
+- 从 `$DIR/seo-result.md` 读取优化后的标题和摘要
+- 创建 `draft.json`（title 使用 SEO 优化标题，digest 使用 SEO 优化摘要）
+- 发布到草稿箱：`publish_draft $DIR/draft.json`
 
 ---
 
@@ -90,13 +104,14 @@ description: 微信公众号图文文章全自动创作。用户提到"写文章
 
 - 文章至少 3 个二级标题，结构清晰
 - 封面图必须成功生成并上传
+- **配图与内容关联**：每个配图提示词必须包含对应章节的具体概念
 - **图文并茂**：每个 `##` 章节至少一张配图
-- 同一篇文章内所有配图风格一致
+- 所有配图风格通过 `style_prompt` 保持一致
 - 无明显 AI 痕迹，无违禁词
-- 草稿创建成功
+- 草稿使用 SEO 优化后的标题和摘要
 
 ---
 
 ## 任务追踪要求
 
-流程启动时用 `TaskCreate` 创建任务列表，每个步骤对应一个任务。开始前 `TaskUpdate status → in_progress`，完成后 `TaskUpdate status → completed`。报告进度示例：`[5/10] AI去痕完成 → $DIR/04-article-final.md`
+流程启动时用 TaskCreate 创建任务列表，每个步骤对应一个任务。开始前 `TaskUpdate status → in_progress`，完成后 `TaskUpdate status → completed`。报告进度示例：`[3/9] 文章撰写完成 → $DIR/03-article.md`
