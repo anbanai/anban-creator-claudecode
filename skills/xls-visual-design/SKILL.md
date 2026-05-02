@@ -56,9 +56,9 @@ description: Generates cover and content images for WeChat Xiaolvshu (小绿书/
 
 ---
 
-## 视频组装（可选）
+## 视频合成（可选）
 
-当用户要求生成视频版本时，使用 FFmpeg 将图片组装为 MP4 幻灯片视频。
+生成图片后，如果用户要求生成视频版本，使用 FFmpeg 将图片组装为 MP4 幻灯片视频。
 
 ### 前提条件
 
