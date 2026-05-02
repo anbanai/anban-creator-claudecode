@@ -10,7 +10,7 @@ description: Generates flower arrangement image series with sequential reference
 | MCP 工具 | 说明 |
 |----------|------|
 | `generate_image` (channel_id, prompt, image_type="content", output_path) | 生成花卉图片（单张） |
-| `generate_images` (channel_id, prompt, count, output_dir) | 批量生成图片（不适用于花卉，因为每张 prompt 不同） |
+| `generate_images` (channel_id, prompts, output_dir) | 批量生成图片（不适用于花卉，因为每张 prompt 不同） |
 
 ---
 
