@@ -9,8 +9,7 @@ description: Generates cover and content images for Xiaohongshu (小红书) post
 
 | MCP 工具 | 说明 |
 |----------|------|
-| `generate_image` (channel_id, prompt, image_type="cover", output_path) | 生成封面（单张） |
-| `generate_images` (channel_id, prompts, output_dir) | 批量生成内容图（每张图独立 prompt） |
+| `generate_image` (channel_id, prompt, image_type, output_path, ref_image_path) | 生成单张图片 |
 | `upload_image` (channel_id, file_path) | 上传图片到微信素材库 |
 
 ---
@@ -141,7 +140,7 @@ description: Generates cover and content images for Xiaohongshu (小红书) post
 按 image-plan.md 逐一生成：
 
 1. **封面**：使用 [references/cover.md](references/cover.md) 的 Prompt 模板生成
-2. **内容图**：使用 [references/content.md](references/content.md) 的 Prompt 模板，为每张图构造独立 prompt，通过 `generate_images` 的 `prompts` 数组批量传入
+2. **内容图**：使用 [references/content.md](references/content.md) 的 Prompt 模板逐张生成，每张传入对应的信息点和布局，以封面作为参考图
 3. **尾图**：使用 [references/tail.md](references/tail.md) 的 Prompt 模板单独生成
 
 ### 步骤 6：质量验证
@@ -166,12 +165,12 @@ description: Generates cover and content images for Xiaohongshu (小红书) post
 通过 MCP 工具调用：
 
 1. **生成封面（单张）**：调用 `generate_image`，image_type 设为 `"cover"`
-2. **批量生成内容图（N-2 张，不含尾图）**：调用 `generate_images`，传入 `prompts` 数组（每张图一个独立 prompt）
+2. **逐张生成内容图（N-2 张，不含尾图）**：逐张调用 `generate_image`，每张使用 image-plan.md 中对应的信息点构造 prompt，以封面作为参考图（ref_image_path）
 3. **单独生成尾图**：调用 `generate_image`，传入封面作为参考图
 4. **带参考图（保持风格一致）**：提供参考图路径
 5. **带风格描述**：在 prompt 中加入风格描述（如"手绘感，暖色调，小清新"）
 
-**关键规则**：内容图必须用 `generate_images` 批量生成，每张图通过 `prompts` 数组传入独立的 prompt（对应 image-plan.md 中该图的信息点），尾图单独生成（`tail.png`），封面单独生成（`cover.png`）。
+**关键规则**：内容图逐张调用 `generate_image` 生成，每张使用 image-plan.md 中对应的信息点构造独立 prompt（output_path 设为 `image_01.png`、`image_02.png` ...），以封面作为参考图保持视觉一致性。尾图单独生成（`tail.png`），封面单独生成（`cover.png`）。
 
 ---
 

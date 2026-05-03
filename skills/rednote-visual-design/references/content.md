@@ -54,7 +54,7 @@
 
 基于选题方向、最终标题和目标受众，在生成图片前先独立规划每张图的具体内容，写入 `$DIR/image-plan.md`。
 
-**图片总数**：N 张（奇数，3-7 张），其中封面 1 张 + 内容图 N-2 张 + 尾图 1 张。封面和尾图单独生成，内容图使用 `generate_images` 批量生成（`prompts` 数组，每项对应一张图）。
+**图片总数**：N 张（奇数，3-7 张），其中封面 1 张 + 内容图 N-2 张 + 尾图 1 张。所有图片逐张调用 `generate_image` 生成。
 
 **格式模板**：
 
@@ -115,20 +115,12 @@
 全文概要：{full_outline}
 ```
 
-**生成方式（批量，必须使用 generate_images）**：
+**生成方式（逐张调用 generate_image）**：
 
-调用 `generate_images` MCP 工具，传入 `prompts` 数组（长度 = N-2），每项使用 image-plan.md 中对应内容图的信息点构造独立 prompt。传入封面作为参考图（ref_image_path）。
-输出自动命名为 image_01.png, image_02.png ... image_0{N-2}.png
+按 image-plan.md 逐张调用 `generate_image` MCP 工具：
+- 每张使用对应 section 的信息点填充 `{page_content}` 和 `{page_type}`
+- `output_path` 设为 `$DIR/image_01.png`、`$DIR/image_02.png` ... `$DIR/image_0{N-2}.png`
+- `ref_image_path` 传入封面路径保持视觉一致性
 尾图单独生成见 tail.md
-
-**prompts 数组构造方法**：
-```
-prompts = [
-  "image_01 的信息点 + 布局 + 风格指令（按上方 Prompt 模板）",
-  "image_02 的信息点 + 布局 + 风格指令（按上方 Prompt 模板）",
-  ...
-]
-```
-每项的 `{page_content}` 使用对应 image_plan section 的信息点，`{page_type}` 使用对应的布局模式，`{topic}` 使用对应 section 的主题。`{style}` 和 `{full_outline}` 各项保持一致。
 
 > **关键规则**：每张内容图必须使用对应信息点构造独立 prompt，确保内容差异化。通过封面参考图保持视觉一致性。

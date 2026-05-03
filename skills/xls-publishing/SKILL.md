@@ -54,7 +54,7 @@ description: Creates and manages WeChat Xiaolvshu (newspic) image post drafts wi
 ### AI 生成图片完整工作流
 
 1. 调用 `generate_image` 生成封面图片
-2. 调用 `generate_images` 批量生成内容图片（`prompts` 数组，每张图独立 prompt）
+2. 逐张调用 `generate_image` 生成内容图片，每张使用独立 prompt
 3. 调用 `publish_xls_draft`，传入生成的图片路径，工具会自动上传并创建草稿
 
 ## 注意事项
