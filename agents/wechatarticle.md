@@ -121,39 +121,32 @@ using the article-visual-design skill：
 
 #### 步骤 7：配图设计与生成
 
-using the article-visual-design skill 执行完整的配图分析与生成流程。**这是确保配图与文章内容关联性的关键步骤。**
+using the article-visual-design skill 逐章节分析文章内容，设计配图提示词，逐张生成并上传。**这是确保配图与文章内容关联性的关键步骤。**
 
-**子步骤**：
+**流程**：对每个 `##` 章节，执行以下操作：
 
-1. **逐章节分析**：读取 `$DIR/04-article-final.md`，对每个 `##` 章节执行：
+1. **分析章节内容**：读取 `$DIR/04-article-final.md`
    - 提取核心论点（1句话）
    - 识别情感基调（理性分析/温暖鼓励/犀利批判/诗意沉思等）
    - 提取章节中使用的具体案例、比喻或场景
-   - 判断章节在全文中的位置和作用（开头引入/核心论述/案例说明/总结升华等）
 
-2. **设计配图提示词**：为每个章节设计配图内容：
-   - **具体场景/物体**：优先使用章节中已有的比喻或案例
-   - **视觉隐喻**：将核心论点转化为视觉语言（非字面翻译）
-   - **情绪色调**：与章节情感基调匹配的色彩和氛围
-   - **构图重点**：突出主体和层次
+2. **设计配图提示词**：
+   - 基于 `$COVER_STYLE`（步骤 6 记录的封面视觉风格）确定统一风格前缀
+   - 提示词 = 风格前缀 + 章节具体内容（150-300 字符英文）
+   - 优先使用章节中已有的比喻或案例作为视觉主体
+   - 情绪色调与章节情感基调匹配
 
-3. **撰写提示词并插入文章**：
-   - 每个章节至少一个 `![描述](__generate:英文提示词__)` 占位符
-   - 提示词长度 150-300 字符（英文），包含章节中的具体概念而非通用描述
-   - 如果章节使用了比喻，配图应视觉化该比喻
-   - 提示词放在关键段落之后，不紧跟 `##` 标题也不在章节末尾
-   - 将含配图占位符的文章覆盖写回 `$DIR/04-article-final.md`
+3. **生成并上传**：
+   - 调用 `generate_image`（`channel_id=$CHANNEL_ID`, `prompt=风格前缀+章节提示词`, `image_type="content"`, `output_path="$DIR/img_N.png"`, `task_id=$TASK_ID`）
+   - 调用 `upload_image`（`channel_id=$CHANNEL_ID`, `file_path="$DIR/img_N.png"`）→ 获取 CDN URL
+   - 将 `![描述](CDN_URL)` 插入到章节关键段落之后
+   - 记录到 `images` 列表
 
-4. **确定统一 style_prompt**：
-   - 基于 `$COVER_STYLE`（步骤 6 记录的封面视觉风格）扩展为配图适用的风格前缀
-   - 格式：`[视觉风格名称], [色调], [构图风格], [技术风格]`
-   - 示例：`Victorian woodcut etching style, black and white with cross-hatching, dramatic composition with negative space, editorial illustration`
+4. **保存结果**：
+   - 将含配图的文章覆盖写回 `$DIR/04-article-final.md`
+   - 将 images 列表保存为 `$DIR/images.json`
 
-5. **批量生成**：
-   - 调用 `generate_images_from_markdown`（`channel_id=$CHANNEL_ID`, `markdown`, `task_id=$TASK_ID`, `style_prompt=$STYLE_PROMPT`, `upload=true`）
-   - 输出保存为 `$DIR/images.json`
-
-**产出**：更新后的 `$DIR/04-article-final.md`, `$DIR/images.json`
+**产出**：更新后的 `$DIR/04-article-final.md`（含 CDN 图片链接）, `$DIR/images.json`
 
 ### Phase 4: 组装发布
 
@@ -205,7 +198,7 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 | **选题与历史文章重复** | 自动跳过重复选题，选择次优候选 |
 | **文章结构不清晰** | 自动匹配结构模板，确保至少 3 个二级标题 |
 | **封面生成失败** | 重试两次（不同 prompt 措辞），仍失败则请求用户协助 |
-| **配图提示词设计质量差** | 按 5 步流程严格分析，提示词必须引用章节具体内容 |
+| **配图提示词设计质量差** | 提示词必须引用章节具体内容，风格前缀统一 |
 | **单张配图生成失败** | 重试一次（更换提示词），仍失败则标记该章节缺图，继续后续章节 |
 | **超过一半章节配图失败** | 暂停流程，请求用户协助 |
 | **AI 去痕过度** | 使用 `gentle` 模式，保留作者风格 |
@@ -225,11 +218,10 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 - [ ] `seo-result.md` 包含优化后的标题和摘要
 - [ ] 封面图 `$DIR/cover.png` 存在且可访问
 - [ ] 封面图已上传，获得有效 `media_id`
-- [ ] `04-article-final.md` 中每个 `##` 章节都有 `__generate:prompt__` 占位符
+- [ ] `04-article-final.md` 中每个 `##` 章节都有 CDN 图片链接
 - [ ] 每个配图提示词包含对应章节的具体概念（非通用描述）
-- [ ] 所有章节配图生成成功（每个 `##` 章节至少一张）
+- [ ] 所有章节配图生成并上传成功（每个 `##` 章节至少一张）
 - [ ] `images.json` 包含所有配图的 CDN 链接
-- [ ] `generate_images_from_markdown` 调用时包含 `style_prompt` 参数
 - [ ] `05-article.html` 转换成功，图片链接有效
 - [ ] `draft.json` 使用了 SEO 优化后的标题和摘要
 - [ ] 草稿创建成功，可通过公众号后台查看
@@ -241,7 +233,7 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 流程中出现以下情况时需要特别关注：
 
 - [ ] 文章缺少二级标题（<3 个）→ 需补充结构
-- [ ] 章节缺少配图占位符 → 需在步骤 7 补充
+- [ ] 章节缺少配图 → 需在步骤 7 补充
 - [ ] 配图提示词为通用描述（如"美丽风景"、"商务场景"）→ 需重写为章节具体内容
 - [ ] 配图提示词未引用章节中的比喻或案例 → 需加强关联
 - [ ] 封面图包含马赛克/播放标记 → 需重新生成
@@ -249,7 +241,7 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 - [ ] 文章字数过短（<500 字）→ 需扩展内容
 - [ ] AI 痕迹明显（5 类模式检测得分低）→ 需加强去痕
 - [ ] 违禁词报告显示高风险词汇 → 需人工复核
-- [ ] `style_prompt` 未传递给 `generate_images_from_markdown` → 配图风格可能不一致
+- [ ] 配图风格不一致 → 检查风格前缀是否统一
 - [ ] HTML 文件过大（>1MB）→ 需精简内联样式
 
 ---
