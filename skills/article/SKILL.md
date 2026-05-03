@@ -77,10 +77,9 @@ description: 微信公众号图文文章全自动创作。用户提到"写文章
 
 - 逐章节分析 `$DIR/04-article-final.md` 的内容
 - 为每个 `##` 章节设计配图提示词（必须引用章节中的具体概念、比喻或案例）
-- 将 `![描述](__generate:英文提示词__)` 占位符插入到文章中，覆盖写回 `$DIR/04-article-final.md`
-- 基于 `$COVER_STYLE` 确定统一的 `style_prompt`
-- 调用 `generate_images_from_markdown(channel_id, markdown, task_id, style_prompt, upload=true)`
-- 输出保存为 `$DIR/images.json`
+- 基于 `$COVER_STYLE` 确定统一的风格前缀
+- 对每个章节：调用 `generate_image` 生成 → `upload_image` 上传 → 插入 CDN URL 到文章
+- 覆盖写回 `$DIR/04-article-final.md`，保存 `$DIR/images.json`
 
 ### Phase 4: 组装发布
 
