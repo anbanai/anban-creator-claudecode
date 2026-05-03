@@ -108,5 +108,3 @@ Victorian woodcut etching style, black and white with cross-hatching. A figure s
 - 正文配图：16:9 或 4:3 横版
 - 封面图（公众号封面）：2.35:1（900x383px 标准）
 - 正方形配图：1:1
-
-见 [references/image-syntax.md](references/image-syntax.md) 查看完整图片语法参考。
