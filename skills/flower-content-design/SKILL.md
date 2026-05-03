@@ -206,8 +206,6 @@ shallow to medium depth of field, rich color gradients, 9:16 portrait format
 后续图片: 继续使用第1张（基准图）作为参考图
 ```
 
-**注意**：花卉图的 prompt 依赖上一张生成的图片作为参考（ref 链），必须逐张调用 `generate_image`，不能使用 `generate_images` 批量模式。
-
 ---
 
 ## D. 工具参考

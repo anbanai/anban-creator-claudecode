@@ -15,7 +15,7 @@ description: Generates flower arrangement image series with sequential reference
 
 ## 核心 Gotcha
 
-花卉图片系列中每张花的 prompt 不同（不同花种），因此**不能用 `generate_images` 批量模式**（该模式适用于同一 prompt 的多张变体）。必须逐张生成，但通过参考图（ref）保持风格一致。
+花卉图片系列中每张花的 prompt 不同（不同花种），必须逐张生成，可通过参考图（ref）保持风格一致。
 
 ---
 
