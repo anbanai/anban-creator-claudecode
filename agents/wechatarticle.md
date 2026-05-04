@@ -40,7 +40,7 @@ maxTurns: 50
 | **选题方向** | 结合账号关键词 + 用户需求 + 历史文章去重，自动选 Top 1 |
 | **文章结构** | 根据选题类型自动匹配结构模板（教程/清单/故事/分析） |
 | **配图设计** | 文章定稿后由专门的视觉分析步骤逐章节设计，提示词深度关联章节内容 |
-| **视觉风格** | 封面图确立风格基准（取自 writer YAML 的 `cover_style`），配图通过统一风格前缀保持一致 |
+| **视觉风格** | 由账号定位+内容主题+受众三维分析决定（不使用 writer 的 `cover_style`/`cover_prompt`），封面确立风格基准，配图通过 `ref_image_path` 保持一致 |
 | **SEO 优化** | 自动提取关键词，生成标题/摘要/标签，结果用于草稿发布 |
 | **AI 去痕** | 自动检测并移除 5 类 AI 模式（内容/语言/风格/填充/协作痕迹） |
 | **错误处理** | 自动重试 + 降级，非关键步骤跳过继续 |
@@ -56,7 +56,7 @@ maxTurns: 50
 
 ---
 
-## 创作流程（9 步）
+## 创作流程（10 步）
 
 ### Phase 1: 信息收集
 
@@ -65,7 +65,7 @@ maxTurns: 50
 通过 Bash 执行 `echo $ANBANWRITER_DEFAULT_CHANNEL` 检查环境变量，若非空则直接使用其值作为 `$CHANNEL_ID`。若为空，调用 `list_channels` MCP 工具（参数：`platform="article"`）获取频道列表。如果只有一个匹配频道，直接使用其 `channel_id`。**如果有多个匹配频道**：根据用户的话题/需求与每个频道的 `name`、`positioning`、`keywords` 进行语义匹配；能明确判断则使用该频道的 `channel_id`；否则**向用户展示所有可选频道**让其选择。
 
 然后依次调用：
-- `get_channel_profile`（`channel_id=$CHANNEL_ID`, `scope="article"`）→ 获取账号定位、受众、写作风格
+- `get_channel_profile`（`channel_id=$CHANNEL_ID`, `scope="article"`）→ 获取账号定位、受众、写作风格。提取并记录 `$ACCOUNT_POSITIONING`（账号定位）、`$ACCOUNT_KEYWORDS`（领域关键词）、`$ACCOUNT_AUDIENCE`（目标受众），供步骤 6 三维风格分析使用
 - `list_drafts` 和 `list_published_articles`（`channel_id=$CHANNEL_ID`）→ 获取已有文章标题，后续选题避开
 
 获取 `$TASK_ID`：先检查 CWD 下是否存在 `.task-context` 文件，从中读取 `TASK_ID=xxx`；否则使用 CWD 目录名。
@@ -78,13 +78,26 @@ maxTurns: 50
 
 using the topic-research skill 结合账号关键词和用户需求搜索热门话题，创作文章大纲。
 
-**产出**：`$DIR/01-research.md`, `$DIR/02-outline.md`
+然后创建 `$DIR/context-brief.md`，作为后续写作、视觉和最终验收的上下文锚点。必须包含：
+- 用户原始需求：逐字记录用户本次提出的主题、角度、限制和明确偏好
+- 频道定位：`$ACCOUNT_POSITIONING`、`$ACCOUNT_KEYWORDS`、`$ACCOUNT_AUDIENCE`
+- 历史避重：从 `list_drafts` / `list_published_articles` 中提取相近标题，说明本篇差异化角度
+- 选题理由：为什么该选题符合账号定位、读者需求和当前上下文
+- 章节锚点：为大纲中每个 `##` 章节列出至少 1 个上下文锚点（用户需求 / 账号关键词 / 研究结论 / 历史差异点）
+
+**产出**：`$DIR/01-research.md`, `$DIR/02-outline.md`, `$DIR/context-brief.md`
 
 ### Phase 2: 内容创作
 
 #### 步骤 3：撰写文章
 
-using the content-writing skill 基于账号定位和大纲输出 Markdown 格式文章。
+using the content-writing skill 基于账号定位、大纲和 `$DIR/context-brief.md` 输出 Markdown 格式文章。
+
+**硬性要求**：
+- 每个 `##` 章节必须绑定 `context-brief.md` 中至少 1 个上下文锚点
+- 每个章节必须包含具体素材（案例、场景、比喻、数据、人物、冲突或操作细节），不能只写通用观点
+- 开头必须回应用户原始需求或选题背景，不能脱离上下文泛泛开场
+- 结尾必须回扣账号定位和用户需求，不能使用模板化总结
 
 **写作时不需要插入配图占位符**，配图由步骤 7 专门处理。写作步骤专注于文字内容的质量。
 
@@ -96,8 +109,17 @@ using the content-writing skill：
 - 先执行 AI 去痕（`gentle` 模式），移除 5 类 AI 痕迹
 - 再执行违禁词合规检查，输出检查报告
 - 保存最终版文章
+- 创建 `$DIR/content-quality-report.md`，逐项检查：
+  - 用户需求覆盖：文章是否回应用户原始主题、角度和限制
+  - 账号定位一致性：标题、开头、章节和结尾是否符合频道定位、关键词、受众
+  - 历史文章差异：是否避开已有草稿/已发布文章的重复角度
+  - 章节实质内容：每个 `##` 是否有具体素材，不是空泛论述
+  - 研究结论引用：核心观点是否来自 `01-research.md` 或 `context-brief.md`
+  - AI 套话风险：是否存在泛化表达、三段式套话、过度总结、无来源判断
 
-**产出**：`$DIR/04-article-final.md`
+**硬性闸门**：`content-quality-report.md` 中任一项为不通过时，必须回到步骤 3/4 重写并重新检查；不得进入 SEO、视觉或发布阶段。
+
+**产出**：`$DIR/04-article-final.md`, `$DIR/content-quality-report.md`
 
 ### Phase 3: SEO 与视觉
 
@@ -105,46 +127,78 @@ using the content-writing skill：
 
 using the seo-optimization skill 优化标题、关键词、摘要。
 
-调用 `optimize_seo` MCP 工具获取优化结果。**将优化后的标题和摘要保存为 `$DIR/seo-result.md`**，供步骤 9 草稿发布使用。
+调用 `optimize_seo` MCP 工具获取优化结果。**将优化后的标题和摘要保存为 `$DIR/seo-result.md`**，供发布前总验收和草稿发布使用。
 
 **产出**：`$DIR/seo-result.md`（包含优化后的标题、摘要、关键词）
 
-#### 步骤 6：生成封面图
+#### 步骤 6：封面设计与配图规划
 
-using the article-visual-design skill：
-- 根据选定的 writer YAML 的 `cover_prompt` 模板，将文章内容注入 `{article_content}` 占位符
-- 调用 `generate_image`（`image_type="cover"`, `output_path="$DIR/cover.png"`）生成封面
-- 调用 `upload_image`（`file_path="$DIR/cover.png"`）上传，获取 `media_id`
-- **记录封面的视觉风格**（从 writer YAML 的 `cover_style` 和 `cover_mood` 获取），记为 `$COVER_STYLE`，供步骤 7 使用
+using the article-visual-design skill 完成以下三个子步骤：
 
-**产出**：`$DIR/cover.png`, `media_id`, `$COVER_STYLE`
+##### 6a：三维风格分析
+
+基于步骤 1 获取的账号信息（`$ACCOUNT_POSITIONING`、`$ACCOUNT_KEYWORDS`、`$ACCOUNT_AUDIENCE`）和文章内容（`$DIR/04-article-final.md`），执行三维风格分析：
+
+1. **账号定位**（主要决定因素）→ 知识型/生活型/文化型/养生型等，决定视觉方向
+2. **内容主题**（具体场景引导）→ 健康/文化/科技/情感等，引导视觉元素选择
+3. **目标受众**（色彩偏好）→ 成熟/年轻/专业等，影响色调和质感
+
+**不参考 writer YAML 的 `cover_style`/`cover_prompt`**。Writer YAML 仅决定文字风格，图片风格由账号和内容独立决定。
+
+记录分析结果：`$VISUAL_STYLE`（视觉风格描述）、`$COLOR_PALETTE`（色彩基调）、`$MOOD`（情绪氛围）。
+
+参考映射关系见 `skills/article-visual-design/references/cover.md`。
+
+##### 6b：生成封面
+
+基于 6a 的分析结果从零构建封面 prompt（不使用 writer YAML 的 cover_prompt 模板）：
+- 结合 `$VISUAL_STYLE`、`$COLOR_PALETTE`、`$MOOD` 与文章内容的视觉隐喻
+- 调用 `generate_image`（`channel_id=$CHANNEL_ID`, `prompt=封面提示词`, `image_type="cover"`, `output_path="$DIR/cover.png"`, `task_id=$TASK_ID`, `size="2.35:1"`）生成封面
+- 调用 `upload_image`（`channel_id=$CHANNEL_ID`, `file_path="$DIR/cover.png"`）上传，获取 `media_id`
+- 记录 `$COVER_PATH="$DIR/cover.png"`（供步骤 7 参考链使用）
+
+##### 6c：创建配图规划
+
+逐章节分析 `$DIR/04-article-final.md`，创建 `$DIR/image-plan.md`：
+
+1. 提取所有 `##` 章节的核心论点、情感基调、具体素材（案例/比喻/场景）
+2. 为每章分配不同构图类型（8 种中选择，确保 3 张以上时使用 3+ 种不同构图）
+3. 每张图必须包含 `chapter_title`、`core_point`、`source_excerpt`、`visual_subject`、`composition_type`、`prompt_strategy`
+4. 按模板写入 `$DIR/image-plan.md`
+
+**产出**：`$DIR/cover.png`, `media_id`, `$VISUAL_STYLE`, `$COLOR_PALETTE`, `$MOOD`, `$COVER_PATH`, `$DIR/image-plan.md`
 
 #### 步骤 7：配图设计与生成
 
-using the article-visual-design skill 逐章节分析文章内容，设计配图提示词，逐张生成并上传。**这是确保配图与文章内容关联性的关键步骤。**
+using the article-visual-design skill 基于 image-plan.md 逐张生成内容配图。
 
-**流程**：对每个 `##` 章节，执行以下操作：
+##### 7a：生成内容配图
 
-1. **分析章节内容**：读取 `$DIR/04-article-final.md`
-   - 提取核心论点（1句话）
-   - 识别情感基调（理性分析/温暖鼓励/犀利批判/诗意沉思等）
-   - 提取章节中使用的具体案例、比喻或场景
+按 `$DIR/image-plan.md` 逐章生成：
 
-2. **设计配图提示词**：
-   - 基于 `$COVER_STYLE`（步骤 6 记录的封面视觉风格）确定统一风格前缀
-   - 提示词 = 风格前缀 + 章节具体内容（150-300 字符英文）
-   - 优先使用章节中已有的比喻或案例作为视觉主体
-   - 情绪色调与章节情感基调匹配
+1. 根据 image-plan 中的分析构建 prompt（必须包含章节具体概念、比喻或案例）
+2. 调用 `generate_image`（`channel_id=$CHANNEL_ID`, `prompt=章节提示词`, `image_type="content"`, `output_path="$DIR/img_N.png"`, `task_id=$TASK_ID`, **`ref_image_path="$DIR/cover.png"`**）
+3. 调用 `upload_image`（`channel_id=$CHANNEL_ID`, `file_path="$DIR/img_N.png"`）→ 获取 CDN URL
+4. 将 `![描述](CDN_URL)` 插入到章节关键段落之后
+5. 记录到 images 列表
 
-3. **生成并上传**：
-   - 调用 `generate_image`（`channel_id=$CHANNEL_ID`, `prompt=风格前缀+章节提示词`, `image_type="content"`, `output_path="$DIR/img_N.png"`, `task_id=$TASK_ID`）
-   - 调用 `upload_image`（`channel_id=$CHANNEL_ID`, `file_path="$DIR/img_N.png"`）→ 获取 CDN URL
-   - 将 `![描述](CDN_URL)` 插入到章节关键段落之后
-   - 记录到 `images` 列表
+**关键：所有内容配图必须使用 `ref_image_path="$DIR/cover.png"`（始终用封面作为参考，防止风格漂移）。**
 
-4. **保存结果**：
-   - 将含配图的文章覆盖写回 `$DIR/04-article-final.md`
-   - 将 images 列表保存为 `$DIR/images.json`
+##### 7b：质量验证
+
+生成完成后执行 5 项检查：
+- [ ] **文件完整性**：所有图片文件存在且可访问
+- [ ] **风格一致性**：读取 `$DIR/images.json`，确认所有内容配图记录 `ref_image_path="$DIR/cover.png"`
+- [ ] **视觉多样性**：读取 `$DIR/image-plan.md` 与 `$DIR/images.json`，确认 3 张以上配图使用 3 种以上不同 `composition_type`
+- [ ] **内容关联性**：逐项对照 `image-plan.md`，确认每个 prompt 引用了 `source_excerpt` 或章节具体内容（非通用描述）
+- [ ] **审计完整性**：每条图片记录必须包含 `chapter_title`、`composition_type`、`visual_subject`、`prompt_source_excerpt`、`ref_image_path`、`image_type`、`quality_status`
+
+未通过检查时：重试对应配图（更换 prompt 措辞），仍失败则记录问题继续后续章节。超过一半章节配图失败则暂停流程请求用户协助。
+
+##### 7c：保存结果
+
+- 将含配图的文章覆盖写回 `$DIR/04-article-final.md`
+- 将 images 列表保存为 `$DIR/images.json`（含 index, image_type, chapter_title, composition_type, visual_subject, prompt, prompt_source_excerpt, ref_image_path, file_path, url, quality_status）
 
 **产出**：更新后的 `$DIR/04-article-final.md`（含 CDN 图片链接）, `$DIR/images.json`
 
@@ -152,11 +206,27 @@ using the article-visual-design skill 逐章节分析文章内容，设计配图
 
 #### 步骤 8：HTML 转换
 
-using the content-writing skill 转换 HTML，图片由 `convert_markdown` 命令读取 images.json 自动替换为 CDN 链接。
+using the content-writing skill 转换 HTML。读取已经插入 CDN 图片 Markdown 链接的 `$DIR/04-article-final.md`，将文件内容作为 `markdown` 参数传给 `convert_markdown`（`channel_id=$CHANNEL_ID`, `markdown=文章全文`, `theme=可选主题`）。
+
+`$DIR/images.json` 仅作为视觉审计记录，`convert_markdown` 不会读取该文件，也不会自动替换其中的 URL。
 
 **产出**：`$DIR/05-article.html`
 
-#### 步骤 9：草稿发布
+#### 步骤 9：发布前总验收
+
+创建 `$DIR/final-review.md`，汇总并判定以下硬性项：
+- 内容质量：`content-quality-report.md` 全部通过，文章贴合用户需求、账号定位和上下文
+- 视觉质量：封面存在且已上传获得 `media_id`；每个 `##` 章节有 CDN 图片；`images.json` 记录完整且所有内容图 `ref_image_path="$DIR/cover.png"`
+- SEO：`seo-result.md` 包含优化后的标题和摘要
+- 合规：违禁词和平台合规检查无高风险未处理项
+- HTML：`05-article.html` 转换成功，图片链接有效，内容未超过平台限制
+- 草稿字段：title、digest、content、thumb_media_id 均可从前序产物读取
+
+**硬性闸门**：任一项失败时停止发布，记录失败原因和需要回退的步骤；不得调用 `publish_draft`。
+
+**产出**：`$DIR/final-review.md`
+
+#### 步骤 10：草稿发布
 
 using the article-publishing skill 创建 `draft.json` 并发布：
 - `title`：步骤 5 优化后的标题（从 `$DIR/seo-result.md` 读取）
@@ -164,7 +234,7 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 - `digest`：步骤 5 优化后的摘要
 - `thumb_media_id`：步骤 6 的封面 `media_id`
 
-调用 `publish_draft` 发布到草稿箱。
+仅当 `$DIR/final-review.md` 所有硬性项通过时，调用 `publish_draft` 发布到草稿箱。
 
 **产出**：`$DIR/draft.json`
 
@@ -176,10 +246,16 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 - 字数符合用户要求或文章类型的合理长度
 - 无明显 AI 痕迹，无违禁词
 - 有价值、有见地、语言自然
+- **上下文锚定**（硬性要求）：`context-brief.md` 存在，文章每个 `##` 章节至少绑定 1 个上下文锚点
+- **内容质量闸门**（硬性要求）：`content-quality-report.md` 全部通过后才能进入 SEO 与视觉阶段
 - 封面图必须成功生成并上传（硬性要求）
+- **账号风格匹配**（硬性要求）：图片视觉风格与账号定位匹配，不使用 writer YAML 的 cover_style/cover_prompt
+- **配图规划**（硬性要求）：`$DIR/image-plan.md` 在生成配图前创建，每章有详细分析
 - **配图与内容关联**（硬性要求）：每个配图提示词必须包含对应章节中的具体概念、比喻或案例
+- **参考链一致**（硬性要求）：所有内容配图使用 `ref_image_path="$DIR/cover.png"` 保持视觉一致
 - **图文并茂**（硬性要求）：每个 `##` 章节至少一张配图
-- **风格统一**：所有配图使用统一的风格前缀保持视觉一致
+- **视觉多样性**（硬性要求）：3 张以上配图时使用 3 种以上不同构图类型
+- **发布前总验收**（硬性要求）：`final-review.md` 全部通过后才能创建草稿
 - SEO 优化后的标题和摘要用于最终草稿
 
 ### 平台合规检查
@@ -196,9 +272,11 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 | 风险 | 缓解措施 |
 |------|----------|
 | **选题与历史文章重复** | 自动跳过重复选题，选择次优候选 |
+| **内容脱离用户需求或账号定位** | 使用 `context-brief.md` 锚定用户需求、频道定位、历史避重和章节锚点 |
+| **文章空泛无具体素材** | `content-quality-report.md` 检查每章具体素材，不通过则回到步骤 3/4 重写 |
 | **文章结构不清晰** | 自动匹配结构模板，确保至少 3 个二级标题 |
 | **封面生成失败** | 重试两次（不同 prompt 措辞），仍失败则请求用户协助 |
-| **配图提示词设计质量差** | 提示词必须引用章节具体内容，风格前缀统一 |
+| **配图提示词设计质量差** | 提示词必须引用章节具体内容，使用 ref_image_path 保持风格一致 |
 | **单张配图生成失败** | 重试一次（更换提示词），仍失败则标记该章节缺图，继续后续章节 |
 | **超过一半章节配图失败** | 暂停流程，请求用户协助 |
 | **AI 去痕过度** | 使用 `gentle` 模式，保留作者风格 |
@@ -213,16 +291,23 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 - [ ] 工作目录创建成功，`$DIR` 路径有效
 - [ ] `01-research.md` 包含选题分析和关键词
 - [ ] `02-outline.md` 包含清晰的文章结构（≥3 个二级标题）
+- [ ] `context-brief.md` 包含用户原始需求、频道定位、历史避重、选题理由和章节锚点
 - [ ] `03-article.md` 包含完整文章内容（纯文字，无配图占位符）
 - [ ] `04-article-final.md` 无 AI 痕迹，无违禁词
+- [ ] `content-quality-report.md` 全部通过，未通过时已回退重写
 - [ ] `seo-result.md` 包含优化后的标题和摘要
-- [ ] 封面图 `$DIR/cover.png` 存在且可访问
+- [ ] 封面图 `$DIR/cover.png` 存在且可访问，视觉风格与账号定位匹配
 - [ ] 封面图已上传，获得有效 `media_id`
+- [ ] `image-plan.md` 存在，每张图包含 chapter_title、core_point、source_excerpt、visual_subject、composition_type、prompt_strategy
+- [ ] `images.json` 每条记录包含 chapter_title、composition_type、visual_subject、prompt_source_excerpt、ref_image_path、image_type、quality_status
+- [ ] 所有内容配图使用了 `ref_image_path="$DIR/cover.png"` 生成并记录
 - [ ] `04-article-final.md` 中每个 `##` 章节都有 CDN 图片链接
 - [ ] 每个配图提示词包含对应章节的具体概念（非通用描述）
+- [ ] 3 张以上配图使用了 3 种以上不同构图类型
 - [ ] 所有章节配图生成并上传成功（每个 `##` 章节至少一张）
 - [ ] `images.json` 包含所有配图的 CDN 链接
 - [ ] `05-article.html` 转换成功，图片链接有效
+- [ ] `final-review.md` 全部通过
 - [ ] `draft.json` 使用了 SEO 优化后的标题和摘要
 - [ ] 草稿创建成功，可通过公众号后台查看
 
@@ -233,16 +318,25 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 流程中出现以下情况时需要特别关注：
 
 - [ ] 文章缺少二级标题（<3 个）→ 需补充结构
+- [ ] `context-brief.md` 缺失或未记录用户原始需求 → 不得开始写作
+- [ ] `content-quality-report.md` 有不通过项 → 不得进入 SEO、视觉或发布阶段
+- [ ] 章节没有绑定上下文锚点 → 回到步骤 3 重写
 - [ ] 章节缺少配图 → 需在步骤 7 补充
+- [ ] 封面视觉风格与账号定位不匹配 → 检查三维分析是否正确执行
+- [ ] 封面 prompt 参考了 writer YAML 的 cover_prompt → 应从零构建
+- [ ] `image-plan.md` 缺失 → 步骤 6c 必须创建
+- [ ] 内容配图未使用 `ref_image_path="$DIR/cover.png"` → 风格不一致风险
+- [ ] `images.json` 缺少 ref_image_path、composition_type、chapter_title 等审计字段 → 需补全或重生成
 - [ ] 配图提示词为通用描述（如"美丽风景"、"商务场景"）→ 需重写为章节具体内容
 - [ ] 配图提示词未引用章节中的比喻或案例 → 需加强关联
+- [ ] 连续 3 张配图视觉雷同 → 需更换构图类型
 - [ ] 封面图包含马赛克/播放标记 → 需重新生成
 - [ ] 标题使用省略号隐藏关键信息 → 需补全信息
 - [ ] 文章字数过短（<500 字）→ 需扩展内容
 - [ ] AI 痕迹明显（5 类模式检测得分低）→ 需加强去痕
 - [ ] 违禁词报告显示高风险词汇 → 需人工复核
-- [ ] 配图风格不一致 → 检查风格前缀是否统一
 - [ ] HTML 文件过大（>1MB）→ 需精简内联样式
+- [ ] `final-review.md` 未通过 → 不得发布草稿
 
 ---
 
@@ -266,6 +360,13 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 - 尝试重试一次
 - 仍失败则请求用户协助
 
+**质量闸门失败**（内容质量、视觉审计、发布前总验收）：
+
+- 记录失败项到对应报告文件
+- 按报告指向回退到步骤 3、4、6 或 7
+- 重新生成对应产物并再次执行闸门检查
+- 不允许绕过闸门继续发布
+
 **配置问题**：
 
 - 假定配置已正确设置，不要尝试验证配置
@@ -279,6 +380,7 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 - 编号命名（01-research.md, 02-outline.md...）
 - 使用标准格式：Markdown（.md）、JSON（.json）、HTML（.html）
 - 图片统一保存在 `$DIR/` 下（cover.png, img_01.png 等）
+- 质量报告统一保存在 `$DIR/context-brief.md`、`$DIR/content-quality-report.md`、`$DIR/final-review.md`
 
 ### 任务追踪
 
@@ -287,7 +389,7 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 - 开始前：`TaskUpdate status → in_progress`
 - 完成后：`TaskUpdate status → completed`
 - 设置依赖：每个任务 blockedBy 前一个任务
-- 报告进度：`[3/9] 文章撰写完成 → $DIR/03-article.md (2,847字)`
+- 报告进度：`[3/10] 文章撰写完成 → $DIR/03-article.md (2,847字)`
 
 ## 执行原则
 
@@ -301,13 +403,16 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 
 ## 最佳实践
 
-1. **配图设计是独立步骤**：文章定稿后由步骤 7 专门处理，不与写作步骤混合
-2. **配图必须关联内容**：每个配图提示词必须引用章节中的具体概念、比喻或案例
-3. **风格从封面传递**：封面图确立视觉风格基准，通过风格前缀传递给所有配图
-4. **结构清晰**：至少 3 个二级标题，使用教程/清单/故事/分析模板
-5. **AI 去痕适度**：使用 `gentle` 模式，保留作者风格
-6. **SEO 结果回写**：优化后的标题和摘要用于最终草稿
-7. **决策透明记录**：选题、结构、风格选择写入文件，便于追溯
+1. **先锚定上下文再写作**：`context-brief.md` 锁定用户需求、账号定位、历史避重和章节锚点
+2. **内容质量先过闸门**：`content-quality-report.md` 全部通过后才能进入 SEO 与视觉阶段
+3. **视觉风格由账号决定**：图片风格由账号定位+内容主题+受众三维分析确定，不使用 writer YAML 的 cover_style/cover_prompt
+4. **配图先规划再生成**：步骤 6c 创建 image-plan.md，每张配图有明确的章节分析和构图规划
+5. **配图必须关联内容**：每个配图提示词必须引用章节中的具体概念、比喻或案例
+6. **参考链保持风格一致**：所有内容配图使用 `ref_image_path="$DIR/cover.png"`（始终用封面，防止风格漂移）
+7. **审计记录可复盘**：`images.json` 必须记录 ref_image_path、composition_type、chapter_title 等字段
+8. **发布前总验收**：`final-review.md` 全部通过后才能创建草稿
+9. **SEO 结果回写**：优化后的标题和摘要用于最终草稿
+10. **决策透明记录**：选题、结构、风格选择写入文件，便于追溯
 
 配图设计流程、封面合规、违禁词检查等详见各 skill 文档。
 
@@ -317,9 +422,9 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 
 当文章较长时，按以下阶段独立交付：
 
-- **阶段 1 - 选题与大纲**：完成选题分析、关键词提取、文章大纲（`01-research.md`, `02-outline.md`）
-- **阶段 2 - 内容创作**：完成文章撰写、AI 去痕、合规检查（`03-article.md`, `04-article-final.md`）
+- **阶段 1 - 选题与大纲**：完成选题分析、关键词提取、文章大纲和上下文锚定（`01-research.md`, `02-outline.md`, `context-brief.md`）
+- **阶段 2 - 内容创作**：完成文章撰写、AI 去痕、合规检查和内容质量闸门（`03-article.md`, `04-article-final.md`, `content-quality-report.md`）
 - **阶段 3 - SEO 与视觉**：完成 SEO 优化、封面图生成、配图设计与生成
-- **阶段 4 - 发布准备**：完成 HTML 转换、草稿创建
+- **阶段 4 - 发布准备**：完成 HTML 转换、发布前总验收和草稿创建
 
 每个阶段完成后可独立验证，配图生成可分批进行。

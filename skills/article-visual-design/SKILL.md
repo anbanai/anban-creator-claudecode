@@ -9,91 +9,131 @@ description: Manages images for WeChat article (公众号图文) content includi
 
 | MCP 工具 | 说明 |
 |----------|------|
-| `generate_image` (channel_id, prompt, image_type, output_path, task_id) | 生成单张图片，返回 download_url 和 file_path |
+| `generate_image` (channel_id, prompt, image_type, output_path, task_id, ref_image_path) | 生成单张图片，返回 download_url 和 file_path |
 | `upload_image` (channel_id, file_path) | 上传图片到微信 CDN，返回 CDN URL |
 | `download_image` (channel_id, url) | 下载在线图片 |
 | `compress_image` (file_path) | 压缩图片 |
 
 ---
 
-## 封面图生成
+## 核心原则：账号驱动，非 Writer 驱动
 
-封面图使用 writer YAML 中的 `cover_prompt` 模板。流程：
+**Writer YAML 定义文字风格（语气、结构、修辞），不定义图片风格。**
 
-1. 读取对应的 writer YAML 文件（`writers/{style_name}.yaml`）
-2. 将文章内容注入 `{article_content}` 占位符
-3. 封面 prompt 会自动分析文章 → 提炼主题 → 设计视觉隐喻 → 输出结构化提示词
-4. 调用 `generate_image(image_type="cover", output_path="$DIR/cover.png")` 生成
-5. 调用 `upload_image(file_path="$DIR/cover.png")` 上传，获取 `media_id`
+图片的视觉风格由账号定位、内容主题和目标受众三个维度独立确定，与 writer 选择无关。即使使用 dan-koe（犀利深刻写作风格）为养生账号写文章，图片也应使用温暖自然的视觉风格，而非维多利亚版画。
 
-**封面视觉风格记录**：从 writer YAML 的 `cover_style` 和 `cover_mood` 字段提取，作为章节配图的风格基准。
+三维风格分析详见 [references/cover.md](references/cover.md)。
 
 ---
 
-## 章节配图设计与生成
+## 封面图生成
 
-章节配图设计是独立的分析步骤，在文章定稿后执行。这是确保配图与文章内容关联性的核心环节。
+封面设计规范详见 [references/cover.md](references/cover.md)。
 
-### 为什么要独立分析
+### 流程
 
-写作步骤专注于文字质量，配图需要专门的视觉设计分析：
-- 写作 LLM 同时写文章和配图提示词时，提示词通常过于简短和通用
-- 独立分析步骤可以充分理解每个章节的上下文和全文脉络
-- 可以确保所有配图风格一致且与封面协调
+1. 从 `get_channel_profile` 结果中读取账号定位、关键词、受众信息
+2. 读取文章内容（`$DIR/04-article-final.md`）提取主题和关键意象
+3. 执行三维风格分析（账号定位 + 内容主题 + 目标受众）→ 确定视觉风格、色彩基调、情绪氛围
+4. 从零构建封面 prompt（**不使用 writer YAML 的 cover_prompt**）
+5. 调用 `generate_image(channel_id="$CHANNEL_ID", prompt=封面提示词, image_type="cover", output_path="$DIR/cover.png", task_id="$TASK_ID", size="2.35:1")` 生成
+6. 调用 `upload_image(channel_id="$CHANNEL_ID", file_path="$DIR/cover.png")` 上传，获取 `media_id`
 
-### 设计流程
+### 产出
 
-对文章中每个 `##` 章节，按以下步骤执行：
+- `$DIR/cover.png` — 封面图文件
+- `media_id` — 微信素材 ID
+- `$VISUAL_STYLE` — 三维分析确定的视觉风格描述
+- `$COLOR_PALETTE` — 色彩基调
+- `$COVER_PATH` — 封面图路径（供配图参考链使用）
 
-#### 步骤 1：确定统一风格前缀
+---
 
-基于封面视觉风格（`$COVER_STYLE`），确定适用于所有配图的风格前缀：
+## 图片内容规划
 
-格式：`[视觉风格名称], [色调], [构图风格], [技术风格]`
+在生成任何内容配图之前，必须先创建 `image-plan.md`，为每张配图规划具体内容和视觉方向。这是确保配图与文章内容关联性的核心环节。
 
-示例映射：
-- `cover_style: "Victorian Woodcut / Etching"` → `Victorian woodcut etching style, black and white with cross-hatching, dramatic composition with negative space, editorial illustration`
-- `cover_style: "中国水墨画"` → `Chinese ink wash painting style, monochrome with subtle color accents, flowing composition with generous white space, traditional brushwork`
+设计规范详见 [references/content.md](references/content.md)。
 
-#### 步骤 2：逐章节分析与生成
+### 规划流程
 
-对每个 `##` 章节执行：
+#### 步骤 1：提取章节内容
 
-**2a. 提取章节上下文**
+读取 `$DIR/04-article-final.md`，对每个 `##` 章节提取：
 
-- **核心论点**：该章节要传达的关键信息（1句话）
+- **核心论点**：该章节要传达的关键信息（1 句话）
 - **情感基调**：理性分析、温暖鼓励、犀利批判、诗意沉思、轻松幽默等
 - **具体素材**：章节中使用的案例、比喻、场景描述、引用等
+- **原文摘录**：可直接支撑配图 prompt 的章节原句或短段（写入 `source_excerpt`）
 
-**2b. 设计提示词**
+#### 步骤 2：分配构图类型
 
-将风格前缀 + 章节分析整合为英文提示词（150-300字符）：
+从 8 种构图类型中为每章配图选择不同类型（参见 [references/content.md](references/content.md)）：
+- 中心聚焦、对角线流动、三分法、前景/背景、俯拍、特写、留白主导、重复图案
+- 3 张以上配图时，必须使用 3 种以上不同构图
+
+#### 步骤 3：写入 image-plan.md
+
+按模板写入 `$DIR/image-plan.md`，包含总体策略和每章配图的详细规划。每张图必须包含 `chapter_title`、`core_point`、`source_excerpt`、`visual_subject`、`composition_type`、`prompt_strategy`。
+
+### 产出
+
+- `$DIR/image-plan.md` — 配图内容规划文档
+
+---
+
+## 内容配图设计与生成
+
+设计规范详见 [references/content.md](references/content.md)。
+
+### 参考链
+
+**所有内容配图使用封面图作为参考锚点**：
 
 ```
-[风格前缀] + [具体场景/物体描述] + [视觉隐喻或细节] + [情绪色调和氛围] + [构图指导]
+所有内容配图：ref_image_path="$DIR/cover.png"（始终用封面，不用上一张）
 ```
 
-要求：
-- 优先使用章节中已有的比喻或案例作为视觉主体
+为什么始终用封面：使用上一张会导致风格漂移（每张图的微小差异累积放大），封面是风格锚点。
+
+### 生成流程
+
+对 `image-plan.md` 中每个章节配图执行：
+
+1. 根据 image-plan 中的分析构建 prompt（必须包含章节具体概念、比喻或案例）
+2. 调用 `generate_image`（`channel_id="$CHANNEL_ID"`, `prompt=章节提示词`, `image_type="content"`, `output_path="$DIR/img_N.png"`, `task_id="$TASK_ID"`, `ref_image_path="$DIR/cover.png"`）
+3. 调用 `upload_image`（`channel_id="$CHANNEL_ID"`, `file_path="$DIR/img_N.png"`）→ 获取 CDN URL
+4. 将 `![描述](CDN_URL)` 插入到章节关键段落之后（不紧跟 `##` 标题，不在章节末尾）
+5. 将生成信息写入 `$DIR/images.json`，用于后续视觉质量审计
+
+### Prompt 要求
+
+- 必须包含章节中的具体概念、比喻或案例作为视觉主体
+- 必须引用 `image-plan.md` 的 `source_excerpt` 或等价章节原文信息
 - 避免抽象通用描述（如"商务场景"、"科技背景"）
-- 不同章节的提示词必须有明显区别
+- 不同章节的 prompt 必须有明显区别
+- 视觉风格和色彩与封面一致
 
-**2c. 生成并上传**
+---
 
-1. 调用 `generate_image`（`channel_id`, `prompt`, `image_type="content"`, `output_path="$DIR/img_N.png"`, `task_id`）
-2. 调用 `upload_image`（`channel_id`, `file_path="$DIR/img_N.png"`）→ 获取 CDN URL
-3. 将 `![描述](CDN_URL)` 插入到章节关键段落之后（不紧跟 `##` 标题，不在章节末尾）
+## 质量验证
 
-**示例**（假设章节讨论"拖延的本质是自我保护"，风格为维多利亚版画）：
+生成完成后执行 5 项检查：
 
-```
-Victorian woodcut etching style, black and white with cross-hatching. A figure standing at the edge of a thick fog, reaching out but hesitating, the fog forming soft protective walls around them. Contemplative and empathetic atmosphere, dramatic composition with negative space, editorial illustration
-```
+- [ ] **文件完整性**：所有图片文件存在且可访问
+- [ ] **风格一致性**：读取 `$DIR/images.json`，确认所有内容配图记录 `ref_image_path="$DIR/cover.png"`
+- [ ] **视觉多样性**：读取 `$DIR/image-plan.md` 与 `$DIR/images.json`，确认 3 张以上配图使用 3 种以上不同 `composition_type`
+- [ ] **内容关联性**：逐项对照 `image-plan.md`，确认每个 prompt 引用了 `source_excerpt` 或章节具体内容（非通用描述）
+- [ ] **审计完整性**：每条图片记录必须包含 `chapter_title`、`composition_type`、`visual_subject`、`prompt_source_excerpt`、`ref_image_path`、`image_type`、`quality_status`
 
-#### 步骤 3：保存结果
+未通过检查时：重试对应配图（更换 prompt 措辞），仍失败则记录问题继续后续章节。
+
+---
+
+## 保存结果
 
 - 将含 CDN 图片链接的文章覆盖写回 `$DIR/04-article-final.md`
-- 将所有配图信息保存为 `$DIR/images.json`（含 index, prompt, file_path, url）
+- 将所有配图信息保存为 `$DIR/images.json`（含 index, image_type, chapter_title, composition_type, visual_subject, prompt, prompt_source_excerpt, ref_image_path, file_path, url, quality_status）
 
 ---
 
