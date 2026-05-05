@@ -52,7 +52,7 @@ Connects to the `anbanwriter` MCP server at `$ANBANWRITER_API_URL` (default `htt
 
 ### Themes (`themes/`)
 
-YAML files defining visual styling for article排版. Each has `name`, `type` (api), `description`, and `api_theme`. Themes are referenced by the MCP server's article publishing tools.
+YAML files defining visual styling for article排版. Each has `name`, `type: ai`, `description`, and a `prompt` field containing the full LLM conversion prompt. Built-in themes: `autumn-warm`, `spring-fresh`, `ocean-calm`, `custom`.
 
 ### Writers (`writers/`)
 
@@ -77,5 +77,5 @@ Lifecycle hooks for quality verification:
 
 - **Adding a new agent**: Create `agents/<name>.md` with frontmatter (name, tools, skills, mcpServers, maxTurns) and pipeline definition following existing agent structure.
 - **Adding a new skill**: Create `skills/<name>/SKILL.md` with frontmatter name/description. Add `references/` for detailed guides.
-- **Adding a new theme**: Add `themes/<name>.yaml` with `name`, `type: api`, `api_theme`, `description`.
+- **Adding a new theme**: Add `themes/<name>.yaml` with `name`, `type: ai`, `description`, `colors`, and a `prompt` field containing the LLM conversion instructions.
 - **Adding a new writer style**: Add `writers/<name>.yaml` with required `name`, `english_name`, `writing_prompt`.
