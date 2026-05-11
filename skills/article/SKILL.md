@@ -131,3 +131,20 @@ description: 微信公众号图文文章全自动创作。用户提到"写文章
 ## 任务追踪要求
 
 流程启动时用 TaskCreate 创建任务列表，每个步骤对应一个任务。开始前 `TaskUpdate status → in_progress`，完成后 `TaskUpdate status → completed`。报告进度示例：`[3/10] 文章撰写完成 → $DIR/03-article.md`
+
+---
+
+## 子技能调用顺序
+
+| 步骤 | 调用技能 | 产出 |
+|------|----------|------|
+| 1 | 直接 MCP 调用 | `$CHANNEL_ID`, `$DIR` |
+| 2 | `topic-research` | `01-research.md`, `02-outline.md`, `context-brief.md` |
+| 3 | `content-writing` | `03-article.md` |
+| 4 | `content-writing` | `04-article-final.md`, `content-quality-report.md` |
+| 5 | `seo-optimization` | `seo-result.md` |
+| 6 | `article-visual-design` | `cover.png`, `image-plan.md` |
+| 7 | `article-visual-design` | `images.json`, 更新 `04-article-final.md` |
+| 8 | `content-writing` | `05-article.html` |
+| 9 | 直接检查 | `final-review.md` |
+| 10 | `article-publishing` | 微信草稿箱 |

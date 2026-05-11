@@ -1,6 +1,6 @@
 ---
 name: rednote-visual-design
-description: Generates cover and content images for Xiaohongshu (小红书) posts with 3:4 ratio design norms. Use when creating rednote visual content including covers, content pages, and tail pages.
+description: Generates cover (封面), content pages (内容图), and tail pages (尾图) for Xiaohongshu (小红书) posts with 3:4 ratio design norms. Use when creating rednote visual content including covers, content pages, and tail pages. Also use when user mentions '小红书图片', '红书配图', '封面生成', '内容图', '尾图', '图片规划', or when the rednote pipeline calls for image generation.
 ---
 
 # 小红书图片生成
@@ -150,6 +150,17 @@ description: Generates cover and content images for Xiaohongshu (小红书) post
 - [ ] 封面、内容图、尾图视觉风格一致
 - [ ] 内容图之间有视觉多样性（不同背景、构图、焦点位置）
 - [ ] 每张内容图信息点与 image-plan.md 一致
+
+---
+
+## 常见失败与修复
+
+| 问题 | 原因 | 修复 |
+|------|------|------|
+| 风格不一致 | 未使用封面作为参考图 | 确保所有后续图片传入封面路径 |
+| 封面文字渲染错误 | 图片生成模型不擅长中文文字 | 减少封面文字量，依赖视觉设计而非图片内文字 |
+| 内容图信息点模糊 | prompt 中信息点描述过于抽象 | 使用 image-plan 中的具体数据/场景作为视觉主体 |
+| 尾图与正文调性断裂 | 尾图 prompt 未沿用统一风格 | 尾图也使用封面作为参考图 |
 
 ### 复刻模式适配
 

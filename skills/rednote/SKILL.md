@@ -85,4 +85,18 @@ description: 小红书图文全自动创作。用户提到"小红书"、"红书"
 
 ## 任务追踪要求
 
-流程启动时用 `TaskCreate` 创建任务列表，每个步骤对应一个任务。开始前 `TaskUpdate status → in_progress`，完成后 `TaskUpdate status → completed`。
+流程启动时用 `TaskCreate` 创建任务列表，每个步骤对应一个任务。开始前 `TaskUpdate status → in_progress`，完成后 `TaskUpdate status → completed`。报告进度示例：`[3/7] 内容创作完成 → $DIR/content.md`
+
+---
+
+## 子技能调用顺序
+
+| 步骤 | 调用技能 | 产出 |
+|------|----------|------|
+| 1 | 直接 MCP 调用 | `$CHANNEL_ID` |
+| 2 | 直接 MCP 调用 | `$DIR` |
+| 3 | `rednote-research` | `topic-analysis.md`（原创）或 `source-analysis.md`（复刻） |
+| 4 | `rednote-writing` | `content.md` |
+| 5 | `rednote-visual-design` | `cover.png`, `image_0*.png`, `tail.png`, `image-plan.md` |
+| 6 | `rednote-writing` | `compliance-report.md`（仅复刻模式） |
+| 7 | 直接 MCP 调用 | 归档到 `$ARCHIVE_DIR` |

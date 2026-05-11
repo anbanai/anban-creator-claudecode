@@ -50,13 +50,21 @@ Connects to the `anbanwriter` MCP server at `$ANBANWRITER_API_URL` (default `htt
 - `image upload`, `draft article`, `draft xls`
 - `get_feed_detail` (RedNote source note fetching)
 
-### Themes (`themes/`)
+### Themes (Server-managed)
 
-YAML files defining visual styling for article排版. Each has `name`, `type: ai`, `description`, and a `prompt` field containing the full LLM conversion prompt. Built-in themes: `autumn-warm`, `spring-fresh`, `ocean-calm`, `custom`.
+Themes define visual styling for article排版. Themes are managed server-side via the MCP server's `convert_markdown` tool. Each channel has a configured theme that is applied automatically during Markdown-to-WeChat-HTML conversion.
 
 ### Writers (`writers/`)
 
-YAML files defining writing styles. Each has `name`, `english_name`, `writing_prompt` (required), plus optional `cover_prompt`, `core_beliefs`, `title_formulas`. Built-in styles: `dan-koe`, `cultural-depth`, `casual-science`.
+YAML files defining writing styles. Each has `name`, `english_name`, `writing_prompt` (required), plus optional `cover_prompt`, `core_beliefs`, `title_formulas`, `quote_templates`. Built-in styles: `dan-koe`, `cultural-depth`, `casual-science`.
+
+### Layout Modules (`layouts/`)
+
+YAML files defining structured article layout modules (callout, steps, timeline, metrics, CTA, etc.). Agents use these as reference when writing articles to add visual richness. Each module specifies `when_to_use`, `markdown_syntax`, and concrete `example`. All modules use standard Markdown syntax (not md2wechat's `:::` fenced blocks) that the server-side LLM converter interprets and renders as WeChat HTML.
+
+### Image Prompt Presets (`prompts/image/`)
+
+YAML files defining reusable image generation prompt templates for covers and infographics. Each preset has `{{VARIABLES}}` that agents fill with article context. Categories: cover presets (default, hero, metaphor, editorial, minimal) and infographic presets (comparison, timeline, process, bento, handdrawn).
 
 ### Hooks (`hooks/hooks.json`)
 
@@ -77,5 +85,7 @@ Lifecycle hooks for quality verification:
 
 - **Adding a new agent**: Create `agents/<name>.md` with frontmatter (name, tools, skills, mcpServers, maxTurns) and pipeline definition following existing agent structure.
 - **Adding a new skill**: Create `skills/<name>/SKILL.md` with frontmatter name/description. Add `references/` for detailed guides.
-- **Adding a new theme**: Add `themes/<name>.yaml` with `name`, `type: ai`, `description`, `colors`, and a `prompt` field containing the LLM conversion instructions.
+- **Adding a new theme**: Themes are managed server-side. Contact the server admin to add new themes.
 - **Adding a new writer style**: Add `writers/<name>.yaml` with required `name`, `english_name`, `writing_prompt`.
+- **Adding a new layout module**: Add `layouts/<name>.yaml` with `name`, `category`, `serves`, `description`, `when_to_use`, `markdown_syntax`, and `example`.
+- **Adding a new image prompt preset**: Add `prompts/image/<name>.yaml` with `name`, `kind: image`, `archetype`, `primary_use_case`, `variables`, and `template`.

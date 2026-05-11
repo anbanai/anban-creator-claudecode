@@ -1,11 +1,44 @@
 ---
 name: flower-content-design
-description: Researches flower varieties and generates professional photography-level prompts for flower image generation. Use when creating flower image prompts, researching flower types, or designing floral photography concepts.
+description: Researches flower varieties (花卉调研) and generates professional photography-level prompts (摄影级提示词) for flower image generation. Use when creating flower image prompts, researching flower types, or designing floral photography concepts. Also use when user mentions '花卉调研', '花的选择', '花prompt', '花卉提示词', '鲜花摄影', or when the flower pipeline calls for prompt engineering or flower research.
 ---
 
 # 花卉图片设计工具
 
 专业的花卉摄影图片 prompt 工程工具，提供花卉调研指南、摄影级 prompt 模板、风格一致性规则。
+
+## 快速参考
+
+**Prompt 核心结构**：
+```
+A detailed, vertical photograph captures [FLOWER_NAME] in [COMPOSITION_TYPE].
+[BLOOM_DESCRIPTION]. [FOLIAGE_DESCRIPTION]. [ATMOSPHERE_DESCRIPTION].
+[BACKGROUND_DESCRIPTION]. [COMPOSITION_DESCRIPTION].
+The textures are hyper-realistic and vivid. This is a [MOOD] portrait of [FLOWER_NAME].
+9:16 portrait format
+```
+
+**风格一致性**：首图无参考图确立基准，后续所有图使用首图作为 ref。始终用首图，不用上一张。
+
+**构图多样性**：1-3 张图用全景+中景+特写；4-6 张在此基础上增加俯视、动感等变体。
+
+---
+
+## 构图分配示例
+
+**3 张批次**：
+1. 全景/散落（首图）
+2. 中景/多茎错落
+3. 特写/局部溢出
+
+**5 张批次**：
+1. 全景/散落（首图）
+2. 中景/多茎错落
+3. 特写/局部溢出
+4. 俯视/松散排列
+5. 单茎/动感微摇
+
+**7 张批次**：上述 5 种 + 浮于水面 + 从上方倾泻
 
 ---
 

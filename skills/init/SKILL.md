@@ -72,3 +72,20 @@ API Key 设置完成后，提示用户进行项目级配置（写入项目本地
 告知用户：
 
 > 配置完成。**请退出并重新启动 Claude Code**，让 MCP 连接生效。重启后再次运行 `/init` 验证连接。
+
+## 重启后验证
+
+用户重启 Claude Code 后，`/init` 的预检步骤应自动执行。预期结果：
+- `list_channels` 调用成功，返回可用频道列表
+- 输出每个频道的 platform、name 和 ID
+
+## 常见问题
+
+**Q: 重启后 `list_channels` 仍然失败？**
+A: 检查 `~/.claude/settings.json` 中 `ANBANWRITER_API_KEY` 是否正确写入（无多余空格或换行）。检查网络是否能访问 `https://api.creator.anbanai.com`（如使用自建服务器，检查 `ANBANWRITER_API_URL` 是否正确）。
+
+**Q: 想切换到另一个 API 地址？**
+A: 编辑 `.claude/settings.local.json`，修改 `ANBANWRITER_API_URL` 的值，然后重启 Claude Code。
+
+**Q: 已有 API Key 但忘了存在哪里？**
+A: 检查 `~/.claude/settings.json` 的 `env` 字段。项目级配置在 `.claude/settings.local.json`。

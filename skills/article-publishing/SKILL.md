@@ -1,6 +1,6 @@
 ---
 name: article-publishing
-description: Creates and manages WeChat news article drafts with HTML formatting. Use when creating or managing WeChat news article drafts.
+description: Creates and manages WeChat news article drafts (图文草稿) with HTML formatting. Use when creating or managing WeChat news article drafts. Also use when user mentions '发草稿', '发布文章', '创建草稿', 'publish draft', '草稿箱', or when the article pipeline reaches the draft publishing step.
 ---
 
 # 微信公众号图文文章发布
@@ -63,12 +63,41 @@ description: Creates and manages WeChat news article drafts with HTML formatting
 3. 调用 `upload_image` 上传封面图到微信素材库，记录返回的 media_id
 4. 调用 `publish_draft` 创建草稿
 
+## 流水线集成
+
+本 skill 是 article 流水线的最后一步。前置条件：
+
+| 前置产出 | 来源 | 用途 |
+|----------|------|------|
+| `$DIR/05-article.html` | content-writing skill | 作为 articles[0].content |
+| `$DIR/cover.png` 的 `media_id` | article-visual-design skill | 作为 articles[0].thumb_media_id |
+| `$DIR/seo-result.md` | seo-optimization skill | 提取优化后的标题和摘要 |
+
+## 发布前验证
+
+创建草稿前，确认以下所有项：
+
+- [ ] HTML 文件存在且内容完整
+- [ ] 封面 `media_id` 已获取（非空）
+- [ ] 标题使用 SEO 优化标题（来自 seo-result.md）
+- [ ] 摘要使用 SEO 优化摘要（来自 seo-result.md）
+- [ ] 内容大小 < 20,000 字符或 1MB
+
 ## 注意事项
 
 - 内容格式为 HTML，所有 CSS 必须内联
 - 封面图需通过 thumb_media_id 指定
 - 内容大小限制：< 20,000 字符或 1MB
 - 安全标签：section, p, span, strong, em, h1-h6, ul, ol, li, blockquote, pre, code, table, img, br, hr
+
+## 常见失败与修复
+
+| 问题 | 原因 | 修复 |
+|------|------|------|
+| 草稿创建失败 | media_id 无效或过期 | 重新上传封面图获取新 media_id |
+| 内容超限 | HTML 超过 20,000 字符 | 精简文章内容或拆分为多篇 |
+| 标题过长 | 超过 64 字符 | 缩短标题 |
+| 摘要过长 | 超过 120 字符 | 缩短摘要 |
 
 ## 参考文档
 

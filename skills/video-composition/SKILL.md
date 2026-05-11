@@ -1,6 +1,6 @@
 ---
 name: video-composition
-description: Composes images into MP4 slideshow videos using FFmpeg. Supports transitions and extensible for future video features (music, subtitles, effects). Use when assembling images into video.
+description: Composes images into MP4 slideshow videos (视频合成) using FFmpeg. Supports transitions and extensible for future video features. Use when assembling images into video. Also use when user mentions '合成视频', '视频', 'MP4', 'slideshow', '图片转视频', '幻灯片视频', or when any pipeline calls for video composition.
 ---
 
 # 图片视频合成
@@ -64,3 +64,16 @@ description: Composes images into MP4 slideshow videos using FFmpeg. Supports tr
 - 验证文件存在：`ls -lh $DIR/video.mp4`
 - 报告文件路径和大小给用户
 - 清理临时文件 `concat.txt`
+
+## 常见错误
+
+| 错误 | 原因 | 修复 |
+|------|------|------|
+| `ffmpeg: command not found` | FFmpeg 未安装 | Docker 容器中已预装；本地环境需 `brew install ffmpeg` |
+| 输出视频最后一帧闪黑 | concat.txt 最后一帧未重复 | 确保最后一帧在 concat.txt 中出现两次（第二次不带 duration） |
+| 输出视频有黑边 | 图片比例与 RESOLUTION 不匹配 | 使用 `force_original_aspect_ratio=decrease` + `pad` 自动填充，或调整 RESOLUTION |
+| 输出文件过大 | 图片分辨率高或时长过长 | 降低 RESOLUTION 或减少 duration |
+
+## 与流水线的集成
+
+本 skill 由 rednote 和 xls 流水线在图片生成完成后调用。输入为流水线产出的图片序列（cover.png + image_01...N + tail.png），输出为 `$DIR/video.mp4`。

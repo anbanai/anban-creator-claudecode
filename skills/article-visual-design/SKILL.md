@@ -1,6 +1,6 @@
 ---
 name: article-visual-design
-description: Manages images for WeChat article (公众号图文) content including AI generation, compression, and CDN upload. Use when generating or processing images for WeChat articles.
+description: Manages images for WeChat article (公众号图文) content including cover generation (封面), content illustration (配图), compression, and CDN upload. Use when generating or processing images for WeChat articles. Also use when user mentions '封面', '配图', '插图', '视觉设计', '图片上传', 'generate cover', or when the article pipeline calls for image planning, generation, or uploading.
 ---
 
 # 公众号图文图片管理
@@ -36,8 +36,9 @@ description: Manages images for WeChat article (公众号图文) content includi
 2. 读取文章内容（`$DIR/04-article-final.md`）提取主题和关键意象
 3. 执行三维风格分析（账号定位 + 内容主题 + 目标受众）→ 确定视觉风格、色彩基调、情绪氛围
 4. 从零构建封面 prompt（**不使用 writer YAML 的 cover_prompt**）
-5. 调用 `generate_image(channel_id="$CHANNEL_ID", prompt=封面提示词, image_type="cover", output_path="$DIR/cover.png", task_id="$TASK_ID", size="2.35:1")` 生成
-6. 调用 `upload_image(channel_id="$CHANNEL_ID", file_path="$DIR/cover.png")` 上传，获取 `media_id`
+5. 构建 prompt 时（如 MCP 工具可用）可调用 `list_resources(category="image_presets")` 获取封面预设模板列表，再用 `get_resource(category="image_presets", name="cover-default")` 等获取具体预设模板，将 `{{ARTICLE_TITLE}}`、`{{ARTICLE_SUMMARY}}`、`{{VISUAL_STYLE}}`、`{{ASPECT_RATIO}}` 等变量替换为实际内容。如果工具不可用，直接从零构建 prompt
+6. 调用 `generate_image(channel_id="$CHANNEL_ID", prompt=封面提示词, image_type="cover", output_path="$DIR/cover.png", task_id="$TASK_ID", size="2.35:1")` 生成
+7. 调用 `upload_image(channel_id="$CHANNEL_ID", file_path="$DIR/cover.png")` 上传，获取 `media_id`
 
 ### 产出
 
@@ -148,3 +149,31 @@ description: Manages images for WeChat article (公众号图文) content includi
 - 正文配图：16:9 或 4:3 横版
 - 封面图（公众号封面）：2.35:1（900x383px 标准）
 - 正方形配图：1:1
+
+---
+
+## 构图类型选择指南
+
+根据章节内容主题推荐构图类型：
+
+| 章节主题 | 推荐构图 | 原因 |
+|----------|----------|------|
+| 开篇引入 / 总述 | 中心聚焦 | 建立视觉焦点，统领全文 |
+| 过程 / 变化 / 方法 | 对角线流动 | 表达动态感和方向性 |
+| 平衡分析 / 多角度 | 三分法 | 自然和谐，适合并列观点 |
+| 层次 / 上下文 / 环境 | 前景/背景 | 表达深度和空间关系 |
+| 细节 / 数据 / 质感 | 特写 | 强调微观细节和真实感 |
+| 沉思 / 哲理 / 极简 | 留白主导 | 营造意境和呼吸感 |
+| 节奏 / 规律 / 重复 | 重复图案 | 表达秩序感和韵律感 |
+| 总览 / 全貌 / 结构 | 俯拍 | 展现整体结构和关系 |
+
+---
+
+## 常见失败与修复
+
+| 问题 | 原因 | 修复 |
+|------|------|------|
+| 配图与内容无关 | prompt 使用抽象通用描述 | 从章节中提取具体概念/比喻/案例作为视觉主体 |
+| 风格不一致 | 未使用封面作为参考图 | 确保所有内容图传入 `ref_image_path="$DIR/cover.png"` |
+| 所有配图构图雷同 | 未在 image-plan 中分配不同构图 | 3+ 张图时强制使用 3+ 种构图类型 |
+| 封面与文章主题脱节 | 封面 prompt 缺少内容主题关联 | 在封面 prompt 中包含文章的视觉隐喻 |
