@@ -1,17 +1,17 @@
 ---
-name: rednote
-description: 小红书图文全自动创作。用户提到"小红书"、"红书"、"rednote"、"种草"、"复刻"、"仿写"、"改写笔记"、"爆款改写"、"克隆"、"clone"时使用此 skill。
+name: seednote
+description: 种草笔记图文全自动创作。用户提到"种草笔记"、"seednote"、"种草"、"复刻"、"仿写"、"改写笔记"、"爆款改写"、"克隆"、"clone"时使用此 skill。
 ---
 
-# /rednote 小红书内容创作命令
+# /seednote 种草笔记内容创作命令
 
 ## 强制执行声明
 
-**你正在执行小红书内容创作任务。你必须使用工具（MCP 工具、Write、Bash、TaskCreate 等）完成完整的创作流水线。**
+**你正在执行种草笔记内容创作任务。你必须使用工具（MCP 工具、Write、Bash、TaskCreate 等）完成完整的创作流水线。**
 
-**禁止直接用文字回答用户的主题问题。** 你不是在回答问题，你是在创作一篇小红书笔记。如果你直接输出文字回答而没有使用任何工具，说明你理解错了任务。
+**禁止直接用文字回答用户的主题问题。** 你不是在回答问题，你是在创作一篇种草笔记。如果你直接输出文字回答而没有使用任何工具，说明你理解错了任务。
 
-用户输入 `/rednote` 后面的内容是创作主题，不是让你回答的问题。
+用户输入 `/seednote` 后面的内容是创作主题，不是让你回答的问题。
 
 ---
 
@@ -22,32 +22,32 @@ description: 小红书图文全自动创作。用户提到"小红书"、"红书"
 ### 步骤 1：获取账号信息
 
 调用 MCP 工具：
-- `list_channels()` → 找到 `platform` 为 `rednote` 的 channel，记为 `$CHANNEL_ID`
-- `get_channel_profile(channel_id="$CHANNEL_ID", scope="rednote")` → 获取账号定位、关键词等信息
+- `list_channels()` → 找到 `platform` 为 `seednote` 的 channel，记为 `$CHANNEL_ID`
+- `get_channel_profile(channel_id="$CHANNEL_ID", scope="seednote")` → 获取账号定位、关键词等信息
 - `list_channel_topics(channel_id="$CHANNEL_ID")` → 查看系统内已有选题，后续选题避开
 
 ### 步骤 2：创建工作目录
 
 调用 MCP 工具：
-- `prepare_workspace(content_type="rednote", task_id=TASK_ID)` → 获取工作目录路径，记为 `$DIR`
+- `prepare_workspace(content_type="seednote", task_id=TASK_ID)` → 获取工作目录路径，记为 `$DIR`
 - 通过 Bash 执行 `mkdir -p "$DIR"` 创建目录
 
 ### 步骤 3：研究选题
 
-使用 `rednote-research` skill：
+使用 `seednote-research` skill：
 - 采集热门笔记数据
 - 自动选 Top 1 选题
 - 评分结果写入 `$DIR/topic-analysis.md`
 
 ### 步骤 4：创作内容
 
-使用 `rednote-writing` skill：
+使用 `seednote-writing` skill：
 - 生成标题（≤20 字）、正文、话题标签
 - 内容保存到 `$DIR/content.md`
 
 ### 步骤 5：生成图片
 
-使用 `rednote-visual-design` skill：
+使用 `seednote-visual-design` skill：
 - 传入 `$DIR/content.md`
 - 生成封面 `$DIR/cover.png`、内容图 `$DIR/image_01.png` ... `$DIR/image_0{N-2}.png`、尾图 `$DIR/tail.png`
 - 图片规划写入 `$DIR/image-plan.md`
@@ -55,13 +55,13 @@ description: 小红书图文全自动创作。用户提到"小红书"、"红书"
 ### 步骤 6：合规检查（复刻模式）
 
 如果是复刻模式（用户提供了笔记 ID 或链接）：
-- 使用 `rednote-writing` skill 扫描标题与正文
+- 使用 `seednote-writing` skill 扫描标题与正文
 - 生成 `$DIR/compliance-report.md`
 
 ### 步骤 7：归档
 
 - 从 `$DIR/content.md` 提取最终标题
-- 调用 `archive_workspace(content_type="rednote", name="{标题}")` 获取归档路径 `$ARCHIVE_DIR`
+- 调用 `archive_workspace(content_type="seednote", name="{标题}")` 获取归档路径 `$ARCHIVE_DIR`
 - 通过 Bash 执行 `mkdir -p "$ARCHIVE_DIR" && mv "$DIR"/* "$ARCHIVE_DIR/" 2>/dev/null` 移动文件
 - 报告成果目录路径 `$ARCHIVE_DIR`
 
@@ -95,8 +95,8 @@ description: 小红书图文全自动创作。用户提到"小红书"、"红书"
 |------|----------|------|
 | 1 | 直接 MCP 调用 | `$CHANNEL_ID` |
 | 2 | 直接 MCP 调用 | `$DIR` |
-| 3 | `rednote-research` | `topic-analysis.md`（原创）或 `source-analysis.md`（复刻） |
-| 4 | `rednote-writing` | `content.md` |
-| 5 | `rednote-visual-design` | `cover.png`, `image_0*.png`, `tail.png`, `image-plan.md` |
-| 6 | `rednote-writing` | `compliance-report.md`（仅复刻模式） |
+| 3 | `seednote-research` | `topic-analysis.md`（原创）或 `source-analysis.md`（复刻） |
+| 4 | `seednote-writing` | `content.md` |
+| 5 | `seednote-visual-design` | `cover.png`, `image_0*.png`, `tail.png`, `image-plan.md` |
+| 6 | `seednote-writing` | `compliance-report.md`（仅复刻模式） |
 | 7 | 直接 MCP 调用 | 归档到 `$ARCHIVE_DIR` |

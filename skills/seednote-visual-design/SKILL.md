@@ -1,9 +1,9 @@
 ---
-name: rednote-visual-design
-description: Generates cover (封面), content pages (内容图), and tail pages (尾图) for Xiaohongshu (小红书) posts with 3:4 ratio design norms. Use when creating rednote visual content including covers, content pages, and tail pages. Also use when user mentions '小红书图片', '红书配图', '封面生成', '内容图', '尾图', '图片规划', or when the rednote pipeline calls for image generation.
+name: seednote-visual-design
+description: Generates cover (封面), content pages (内容图), and tail pages (尾图) for Seednote (种草笔记) posts with 3:4 ratio design norms. Use when creating seednote visual content including covers, content pages, and tail pages. Also use when user mentions '种草笔记图片', '封面生成', '内容图', '尾图', '图片规划', or when the seednote pipeline calls for image generation.
 ---
 
-# 小红书图片生成
+# 种草笔记图片生成
 
 ## MCP 工具
 
@@ -16,7 +16,7 @@ description: Generates cover (封面), content pages (内容图), and tail pages
 
 ## 平台 Gotcha
 
-小红书图片是 **3:4 竖版**，强视觉驱动。封面决定点击率，内容图决定完读率，尾图决定互动率。三类图片目标不同，prompt 构建方式也不同。
+种草笔记图片是 **3:4 竖版**，强视觉驱动。封面决定点击率，内容图决定完读率，尾图决定互动率。三类图片目标不同，prompt 构建方式也不同。
 
 ---
 

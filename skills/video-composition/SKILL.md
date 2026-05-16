@@ -76,4 +76,4 @@ description: Composes images into MP4 slideshow videos (视频合成) using FFmp
 
 ## 与流水线的集成
 
-本 skill 由 rednote 和 xls 流水线在图片生成完成后调用。输入为流水线产出的图片序列（cover.png + image_01...N + tail.png），输出为 `$DIR/video.mp4`。
+本 skill 由 seednote 流水线在图片生成完成后调用。输入为流水线产出的图片序列（cover.png + image_01...N + tail.png），输出为 `$DIR/video.mp4`。

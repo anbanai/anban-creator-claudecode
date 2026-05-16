@@ -7,11 +7,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **anbanwriter-claudecode** is a Claude Code plugin for automated Chinese social media content creation. It targets three platforms:
 
 - **WeChat Official Account articles** (微信公众号图文)
-- **Xiaohongshu/RedNote posts** (小红书笔记)
-- **WeChat "Xiaolvshu" image posts** (小绿书图片帖)
-- **Flower photography** (鲜花图片)
+- **SeedNote posts** (种草笔记)
 
-The plugin follows an **Agent + Skill + MCP** architecture: Claude Code agents orchestrate end-to-end pipelines, skills encapsulate domain knowledge, and an external MCP server provides WeChat/Xiaohongshu API access.
+The plugin follows an **Agent + Skill + MCP** architecture: Claude Code agents orchestrate end-to-end pipelines, skills encapsulate domain knowledge, and an external MCP server provides WeChat/Seednote API access.
 
 ## Architecture
 
@@ -22,9 +20,7 @@ Orchestration engines that run fully autonomous, zero-interaction pipelines. Eac
 | Agent | Trigger | Pipeline |
 |-------|---------|----------|
 | `wechatarticle` | "写文章", "发文章" | Research → Write → De-AI → SEO → Cover → Illustrations → HTML → Draft |
-| `rednote` | "小红书", "种草", "复刻" | Research → Content → Image plan → Cover + Content images → Compliance → Archive |
-| `wechatxls` | "小绿书", "图片帖" | Research → Visual style → Image generation → Compliance → Upload → Draft |
-| `flower` | "鲜花", "花卉图片" | Flower research → Prompt generation → Batch image generation → Summary |
+| `seednote` | "种草笔记", "种草", "复刻" | Research → Content → Image plan → Cover + Content images → Compliance → Archive |
 
 Agents use TaskCreate/TaskUpdate for progress tracking and report progress as `[N/M] step complete → path (detail)`.
 
@@ -35,9 +31,7 @@ Reusable knowledge modules referenced by agents. Each skill has a `SKILL.md` fro
 Key skill groups:
 - **Content**: `content-writing`, `topic-research`, `seo-optimization`
 - **WeChat article**: `article`, `article-visual-design`, `article-publishing`
-- **RedNote**: `rednote`, `rednote-research`, `rednote-writing`, `rednote-visual-design`
-- **XLS**: `xls`, `xls-visual-design`, `xls-publishing`
-- **Flower**: `flower-content-design`, `flower-visual-design`
+- **SeedNote**: `seednote`, `seednote-research`, `seednote-writing`, `seednote-visual-design`
 - **Init**: `init` (first-time setup, key configuration, and connectivity verification)
 
 ### MCP Server (`.mcp.json`)
@@ -47,8 +41,8 @@ Connects to the `anbanwriter` MCP server at `$ANBANWRITER_API_URL` (default `htt
 - `list_channels`, `get_channel_profile`, `list_drafts`, `list_published_articles`, `list_channel_topics`
 - `prepare_workspace`, `archive_workspace`
 - `write_article`, `convert_markdown`, `humanize_article`
-- `image upload`, `draft article`, `draft xls`
-- `get_feed_detail` (RedNote source note fetching)
+- `image upload`, `draft article`
+- `get_feed_detail` (SeedNote source note fetching)
 
 ### Themes (Server-managed)
 

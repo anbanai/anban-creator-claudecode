@@ -1,6 +1,6 @@
 {
   "name": "anbanwriter",
-  "description": "Professional WeChat and Xiaohongshu (小红书) content creation toolkit — MCP server with AI-powered writing, visual design, and multi-platform publishing",
+  "description": "Professional WeChat and Seednote (种草笔记) content creation toolkit — MCP server with AI-powered writing, visual design, and multi-platform publishing",
   "version": "2.8.1",
   "author": {
     "name": "Rick",
@@ -23,11 +23,8 @@
     "chinese-content",
     "social-media",
     "official-account",
-    "rednote",
-    "xiaohongshu",
-    "小红书",
-    "cover-image",
-    "xiaolvshu",
-    "小绿书"
+    "seednote",
+    "种草笔记",
+    "cover-image"
   ]
 }

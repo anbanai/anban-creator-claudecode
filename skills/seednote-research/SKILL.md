@@ -1,9 +1,9 @@
 ---
-name: rednote-research
-description: Analyzes Xiaohongshu (小红书) topics, trending notes (热门笔记), and scores engagement potential (互动率评分). Use when analyzing Xiaohongshu topics, scoring engagement, or researching trending rednote content. Also use when user mentions '小红书选题', '红书调研', '热门笔记', '竞品分析', '笔记分析', or when the rednote pipeline calls for topic discovery or source note analysis.
+name: seednote-research
+description: Analyzes Seednote (种草笔记) topics, trending notes (热门笔记), and scores engagement potential (互动率评分). Use when analyzing Seednote topics, scoring engagement, or researching trending seednote content. Also use when user mentions '种草笔记选题', '热门笔记', '竞品分析', '笔记分析', or when the seednote pipeline calls for topic discovery or source note analysis.
 ---
 
-# 小红书选题研究
+# 种草笔记选题研究
 
 ## MCP 工具
 

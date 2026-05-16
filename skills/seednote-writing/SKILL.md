@@ -1,9 +1,9 @@
 ---
-name: rednote-writing
-description: Writes and optimizes Xiaohongshu (小红书) content including titles, body text, hashtags, and viral note rewrites. Use when writing Xiaohongshu content, optimizing rednote titles, or rewriting viral notes. Also use when user mentions '写小红书', '笔记文案', '种草文案', '标题优化', '改写笔记', '爆款改写', '复刻文案', '合规检查', or when the rednote pipeline calls for content creation or text optimization.
+name: seednote-writing
+description: Writes and optimizes Seednote (种草笔记) content including titles, body text, hashtags, and viral note rewrites. Use when writing Seednote content, optimizing seednote titles, or rewriting viral notes. Also use when user mentions '写种草笔记', '笔记文案', '种草文案', '标题优化', '改写笔记', '爆款改写', '复刻文案', '合规检查', or when the seednote pipeline calls for content creation or text optimization.
 ---
 
-# 小红书内容写作知识库
+# 种草笔记内容写作知识库
 
 ## 1. 标题规范
 
@@ -45,7 +45,7 @@ title_score = 情绪强度(0-3) + 关键词密度(0-1) + 字数优化(0-1) + 句
 
 ## 2.5 正文格式（关键 Gotcha）
 
-**平台陷阱**：小红书不渲染 Markdown。`**粗体**` 在用户手机屏幕上就是 `**粗体**` 四个字符，`---` 就是三个横杠。这是平台硬限制，不是风格偏好。
+**平台陷阱**：种草笔记不渲染 Markdown。`**粗体**` 在用户手机屏幕上就是 `**粗体**` 四个字符，`---` 就是三个横杠。这是平台硬限制，不是风格偏好。
 
 发布到平台的正文必须是**纯文本 + emoji + 符号**。内部文档（topic-analysis.md、source-analysis.md、image-plan.md）不发布，可用 Markdown。
 
@@ -112,7 +112,7 @@ Lightroom ✅ 专业全面 / 适合 raw 格式 / 稍重
 
 ## 2.6 字数压缩（强制步骤）
 
-**平台限制**：小红书正文限制 ≤1000 字（含 emoji 和空格）。超过无法发布。
+**平台限制**：种草笔记正文限制 ≤1000 字（含 emoji 和空格）。超过无法发布。
 
 完整压缩流程（三级压缩：保留层→精简层→裁剪层）见 [word-compression.md](references/word-compression.md)。
 
@@ -124,7 +124,7 @@ Lightroom ✅ 专业全面 / 适合 raw 格式 / 稍重
 
 - **对话式第一人称**：像跟朋友聊天，用"我"和"你/集美/姐妹"，拉近距离
 - **沉浸式场景开头**：感官细节或微故事开场（"上周去咖啡馆，无意间发现..."），不要抽象陈述（禁止"本文将介绍..."）
-- **平台原生表达**：自然使用小红书惯用语（"针不戳"、"绝了"、"已上车"），不堆砌，不刻意
+- **平台原生表达**：自然使用种草笔记惯用语（"针不戳"、"绝了"、"已上车"），不堆砌，不刻意
 
 **反面模式（禁止）**：
 - 论文腔："本文旨在探讨..."、"综上所述..."
@@ -271,7 +271,7 @@ Lightroom ✅ 专业全面 / 适合 raw 格式 / 稍重
 复刻完成后，将提取的 5 维模板保存到系统模板库：
 
 调用 MCP 工具 `save_template`（如果可用），参数：
-- `type`: "rednote"
+- `type`: "seednote"
 - `name`: 基于源笔记主题生成简短模板名（如"美妆种草测评模板"）
 - `category`: 从源笔记所属行业推断
 - `structure`: JSON 对象，包含提取的 5 维模板信息：
