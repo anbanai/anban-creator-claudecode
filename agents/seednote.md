@@ -20,7 +20,6 @@ skills:
   - seednote-research
   - seednote-writing
   - seednote-visual-design
-  - video-composition
 maxTurns: 20
 ---
 
@@ -63,7 +62,7 @@ maxTurns: 20
 
 #### 步骤 1：判断模式并创建任务
 
-如果用户提供种草笔记 ID、链接、xsec_token 线索，或明确说复刻、仿写、改写、克隆，则选择复刻模式（8 个任务：公共前置、源笔记获取、模板分析、内容改写、图片生成、可选视频、合规检查、归档与报告）；否则选择原创模式（7 个任务：公共前置、选题研究、内容写作、图片生成、可选视频、归档、最终报告）。
+如果用户提供种草笔记 ID、链接、xsec_token 线索，或明确说复刻、仿写、改写、克隆，则选择复刻模式（7 个任务：公共前置、源笔记获取、模板分析、内容改写、图片生成、合规检查、归档与报告）；否则选择原创模式（6 个任务：公共前置、选题研究、内容写作、图片生成、归档、最终报告）。
 
 使用 `TaskCreate` 创建任务列表，设置依赖：每个任务 `blockedBy` 前一个任务。后续每步开始前执行 `TaskUpdate status=in_progress`，完成后执行 `TaskUpdate status=completed`。
 
@@ -135,14 +134,6 @@ using the `seednote-writing` skill 扫描标题与正文，执行违禁词和诱
 
 ---
 
-### 可选视频流程
-
-仅当用户明确要求视频版本时执行。using the `video-composition` skill，按封面、内容图、尾图顺序合成视频，保存到 `$DIR/video.mp4`。视频合成失败不影响图文交付，但必须在最终报告中标注。
-
-**产出**：`$DIR/video.mp4`
-
----
-
 ### 归档与最终报告
 
 #### 步骤 9：归档工作目录
@@ -153,7 +144,7 @@ using the `seednote-writing` skill 扫描标题与正文，执行违禁词和诱
 
 #### 步骤 10：最终报告
 
-向用户交付可复核的结果摘要，包含：模式（原创/复刻）、标题、成果目录（`$ARCHIVE_DIR`）、图片数量（封面/内容图/尾图分别统计）、视频状态（已生成/未请求/生成失败）、合规状态（复刻模式报告 `compliance-report.md`；原创模式说明已按写作规则规避诱导互动）、失败或降级项。进度报告格式：`[N/M] description → $DIR/ (detail)`。
+向用户交付可复核的结果摘要，包含：模式（原创/复刻）、标题、成果目录（`$ARCHIVE_DIR`）、图片数量（封面/内容图/尾图分别统计）、合规状态（复刻模式报告 `compliance-report.md`；原创模式说明已按写作规则规避诱导互动）、失败或降级项。进度报告格式：`[N/M] description → $DIR/ (detail)`。
 
 ---
 
@@ -265,7 +256,6 @@ using the `seednote-writing` skill 扫描标题与正文，执行违禁词和诱
 - 封面图：`$DIR/cover.png`
 - 内容图：`$DIR/image_01.png` ... `$DIR/image_0{N-2}.png`
 - 尾图：`$DIR/tail.png`
-- 可选视频：`$DIR/video.mp4`
 - 最终归档：`output/seednote/{标题}/` 对应的 `$ARCHIVE_DIR`
 
 标题规范、正文格式、视觉设计、违禁词细则以各 seednote skill 文档为准。本 agent 只负责编排流程、约束工具使用、保证产物完整和报告清晰。

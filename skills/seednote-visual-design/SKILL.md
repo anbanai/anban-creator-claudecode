@@ -182,7 +182,3 @@ description: Generates cover (封面), content pages (内容图), and tail pages
 5. **带风格描述**：在 prompt 中加入风格描述（如"手绘感，暖色调，小清新"）
 
 **关键规则**：内容图逐张调用 `generate_image` 生成，每张使用 image-plan.md 中对应的信息点构造独立 prompt（output_path 设为 `image_01.png`、`image_02.png` ...），以封面作为参考图保持视觉一致性。尾图单独生成（`tail.png`），封面单独生成（`cover.png`）。
-
----
-
-> 视频合成功能已移至独立 skill：[video-composition](../video-composition/SKILL.md)
