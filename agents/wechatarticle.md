@@ -62,11 +62,17 @@ maxTurns: 50
 
 #### 步骤 1：获取频道信息与工作目录
 
-通过 Bash 执行 `echo $ANBANWRITER_DEFAULT_CHANNEL` 检查环境变量，若非空则直接使用其值作为 `$CHANNEL_ID`。若为空，调用 `list_channels` MCP 工具（参数：`platform="article"`）获取频道列表。如果只有一个匹配频道，直接使用其 `channel_id`。**如果有多个匹配频道**：根据用户的话题/需求与每个频道的 `name`、`positioning`、`keywords` 进行语义匹配；能明确判断则使用该频道的 `channel_id`；否则**向用户展示所有可选频道**让其选择。
+**频道选择（必须先完成，再调用频道 API）：**
 
-然后依次调用：
+1. 通过 Bash 执行 `echo $ANBANWRITER_DEFAULT_CHANNEL` 检查环境变量，若非空则直接使用其值作为 `$CHANNEL_ID`。
+2. 若为空，调用 `list_channels` MCP 工具（参数：`platform="article"`）获取频道列表。
+3. 如果只有一个匹配频道，直接使用其 `channel_id`。
+4. **如果有多个匹配频道**：仅根据每个频道的 `name`、`positioning`、`keywords` 与用户的话题/需求进行语义匹配。能明确判断则使用该频道的 `channel_id`；否则**向用户展示所有可选频道**让其选择。（这是"零用户交互"原则的唯一例外。）
+5. **⚠️ 禁止基于 API 可用性选择频道。** 不要对多个频道调用 `get_channel_profile`/`list_published_articles` 来评估哪个"可用"。频道选择仅依据 `list_channels` 返回的 `name`、`positioning`、`keywords`。选定频道后，即使后续 API 调用返回错误也不得切换到其他频道。
+
+**频道选定后，仅对 `$CHANNEL_ID` 调用以下 API：**
 - `get_channel_profile`（`channel_id=$CHANNEL_ID`, `scope="article"`）→ 获取账号定位、受众、写作风格。提取并记录 `$ACCOUNT_POSITIONING`（账号定位）、`$ACCOUNT_KEYWORDS`（领域关键词）、`$ACCOUNT_AUDIENCE`（目标受众），供步骤 6 三维风格分析使用
-- `list_drafts` 和 `list_published_articles`（`channel_id=$CHANNEL_ID`）→ 获取已有文章标题，后续选题避开
+- `list_drafts` 和 `list_published_articles`（`channel_id=$CHANNEL_ID`）→ 获取已有文章标题，后续选题避开（如返回错误可忽略，用空列表继续）
 
 获取 `$TASK_ID`：先检查 CWD 下是否存在 `.task-context` 文件，从中读取 `TASK_ID=xxx`；否则使用 CWD 目录名。
 

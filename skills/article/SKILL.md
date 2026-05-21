@@ -23,12 +23,16 @@ description: 微信公众号图文文章全自动创作。用户提到"写文章
 
 ### 步骤 1：获取频道信息与工作目录
 
-合并执行以下操作：
+**频道选择（必须先完成，再调用频道 API）：**
 
 - 检查 `$ANBANWRITER_DEFAULT_CHANNEL` 环境变量，非空则直接使用
-- 否则调用 `list_channels(platform="article")`，匹配或让用户选择 → `$CHANNEL_ID`
+- 否则调用 `list_channels(platform="article")`，**仅根据** `name`、`positioning`、`keywords` 语义匹配或让用户选择 → `$CHANNEL_ID`
+- **⚠️ 禁止基于 API 可用性选择频道**：不要对多个频道调用 `get_channel_profile`/`list_published_articles` 来评估哪个"可用"。频道选择仅依据 `list_channels` 返回的 `name`、`positioning`、`keywords`。选定频道后，即使后续 API 调用返回错误也不得切换到其他频道
+
+**频道选定后，仅对 `$CHANNEL_ID` 调用：**
+
 - `get_channel_profile(channel_id="$CHANNEL_ID", scope="article")` → 获取账号定位、受众、写作风格
-- `list_drafts(channel_id="$CHANNEL_ID")` 和 `list_published_articles(channel_id="$CHANNEL_ID")` → 已有文章标题
+- `list_drafts(channel_id="$CHANNEL_ID")` 和 `list_published_articles(channel_id="$CHANNEL_ID")` → 已有文章标题（如返回错误可忽略，用空列表继续）
 - `prepare_workspace(content_type="articles", task_id=TASK_ID)` → 工作目录路径 `$DIR`
 - Bash 执行 `mkdir -p "$DIR"` 创建目录
 
