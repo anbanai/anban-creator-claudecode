@@ -34,15 +34,24 @@ description: 种草笔记图文全自动创作。用户提到"种草笔记"、"s
 
 ### 步骤 3：研究选题
 
-使用 `seednote-research` skill：
+原创模式使用 `seednote-research` skill：
 - 采集热门笔记数据
 - 自动选 Top 1 选题
 - 评分结果写入 `$DIR/topic-analysis.md`
+
+复刻模式使用 `seednote-research` skill：
+- 获取源笔记详情、互动数据和评论数据
+- 原始详情写入 `$DIR/source-note.md`
+
+然后使用 `seednote-viral-analysis` skill：
+- 证据驱动拆解源笔记
+- 生成 `$DIR/source-analysis.md`、`$DIR/viral-template.json`、`$DIR/template-meta.json`
 
 ### 步骤 4：创作内容
 
 使用 `seednote-writing` skill：
 - 生成标题（≤20 字）、正文、话题标签
+- 复刻模式读取 `$DIR/viral-template.json`，不得重新拆解源笔记
 - 内容保存到 `$DIR/content.md`
 
 ### 步骤 5：生成图片
@@ -96,7 +105,8 @@ description: 种草笔记图文全自动创作。用户提到"种草笔记"、"s
 |------|----------|------|
 | 1 | 直接 MCP 调用 | `$CHANNEL_ID` |
 | 2 | 直接 MCP 调用 | `$DIR` |
-| 3 | `seednote-research` | `topic-analysis.md`（原创）或 `source-analysis.md`（复刻） |
+| 3 | `seednote-research` | `topic-analysis.md`（原创）或 `source-note.md`（复刻） |
+| 3b | `seednote-viral-analysis` | `source-analysis.md`, `viral-template.json`, `template-meta.json`（仅复刻模式） |
 | 4 | `seednote-writing` | `content.md` |
 | 5 | `seednote-visual-design` | `cover.png`, `image_0*.png`, `tail.png`, `image-plan.md` |
 | 6 | `seednote-writing` | `compliance-report.md`（仅复刻模式） |

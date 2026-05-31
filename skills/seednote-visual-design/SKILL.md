@@ -62,7 +62,7 @@ description: Generates cover (封面), content pages (内容图), and tail pages
 - `$DIR/content.md`：包含标题、正文、话题标签的完整内容文件
 - 账号定位信息（如已知）
 - 改写模式信息（如适用：`style-only` / `medium` / `tight`）
-- 源笔记视觉结构（仅复刻模式，如适用）
+- `$DIR/viral-template.json`（仅复刻模式，如适用）：读取 `cover_template`、`do_not_copy`、`recommended_clone_depth`
 
 ### 步骤 1：内容分析
 
@@ -164,10 +164,12 @@ description: Generates cover (封面), content pages (内容图), and tail pages
 
 ### 复刻模式适配
 
-当提供改写模式和源笔记视觉结构时：
-- `style-only`：完全独立规划，不参考源笔记图片结构
-- `medium`：参考源笔记信息结构重新设计内容图主题
-- `tight`：参照源笔记视觉结构模板（图片张数、各页主题关键词），若标记"无法提取"则按 `medium` 处理
+当提供改写模式和 `$DIR/viral-template.json` 时：
+- `style-only`：只参考 `cover_template` 的风格方向、信息层级和色彩倾向，完全重做具体构图
+- `medium`：参考源笔记的信息结构重新设计内容图主题，但替换视觉主体、场景和版式
+- `tight`：仅在 `recommended_clone_depth=tight` 且 `do_not_copy` 风险低时参考图片张数和各页主题关键词；不得复用源图人物姿势、图标组合、文字框位置或可识别构图
+
+无论哪种模式，`do_not_copy` 中列出的元素都必须写入 `image-plan.md` 的风险提示，并在生成 prompt 时显式避开。若模板 `confidence=low` 或视觉证据不足，按 `style-only` 处理。
 
 ---
 

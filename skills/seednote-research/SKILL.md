@@ -1,6 +1,6 @@
 ---
 name: seednote-research
-description: Analyzes Seednote (种草笔记) topics, trending notes (热门笔记), and scores engagement potential (互动率评分). Use when analyzing Seednote topics, scoring engagement, or researching trending seednote content. Also use when user mentions '种草笔记选题', '热门笔记', '竞品分析', '笔记分析', or when the seednote pipeline calls for topic discovery or source note analysis.
+description: Analyzes Seednote (种草笔记) topics, trending notes (热门笔记), and scores engagement potential (互动率评分). Use when analyzing Seednote topics, scoring engagement, researching trending seednote content, or fetching source note details for replicate mode. Also use when user mentions '种草笔记选题', '热门笔记', '竞品分析', '笔记分析', or when the seednote pipeline calls for topic discovery or source note fetching.
 ---
 
 # 种草笔记选题研究
@@ -60,14 +60,16 @@ novelty_bonus: 同角度笔记<3 → 1.2, 否则 → 1.0
 
 ---
 
-## 复刻模式研究
+## 复刻模式源笔记获取
 
-当用户提供笔记 ID 或链接时，使用 `get_feed_detail` 分析源笔记：
+当用户提供笔记 ID 或链接时，本 skill 只负责获取源笔记详情，不做爆款模板分析：
 
-1. 提取 5 维模板信息（标题、封面、正文、互动、标签）
-2. 记录互动数据（点赞、收藏、评论数）作为对标基准
-3. 分析评论区高频关键词和用户痛点
-4. 将分析结果写入 `$DIR/source-analysis.md`
+1. 通过 `search_feeds` 或 `list_feeds` 获取真实返回的 `feed_id` 与 `xsec_token`
+2. 调用 `get_feed_detail(feed_id, xsec_token)` 获取源笔记详情、互动数据和评论数据
+3. 将原始详情、token 来源、互动数据、评论摘要和数据缺失项写入 `$DIR/source-note.md`
+4. 后续由 `seednote-viral-analysis` skill 读取 `$DIR/source-note.md`，生成 `$DIR/source-analysis.md`、`$DIR/viral-template.json`、`$DIR/template-meta.json`
+
+**边界**：不要在本 skill 中提取爆款模板，不要调用 `save_template`，不要生成改写正文。
 
 ---
 
@@ -76,4 +78,4 @@ novelty_bonus: 同角度笔记<3 → 1.2, 否则 → 1.0
 | 模式 | 产出文件 |
 |------|----------|
 | 原创模式 | `$DIR/topic-analysis.md`（候选话题列表、评分明细、最终选题理由） |
-| 复刻模式 | `$DIR/source-analysis.md`（源笔记 5 维模板提取、互动数据分析） |
+| 复刻模式 | `$DIR/source-note.md`（源笔记原始详情、互动数据、评论摘要、数据缺失项） |

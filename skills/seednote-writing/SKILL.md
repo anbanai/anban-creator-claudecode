@@ -201,7 +201,9 @@ Lightroom ✅ 专业全面 / 适合 raw 格式 / 稍重
 
 ## 9. 爆款改写
 
-输入一条爆款笔记 ID，输出高贴合主题的可发布新笔记。支持 3 种改写模式：
+复刻模式下，先由 `seednote-viral-analysis` skill 生成 `$DIR/viral-template.json`，本 skill 只读取该模板并输出高贴合主题的可发布新笔记。不要重新拆解源笔记，不要调用 `save_template`。
+
+支持 3 种改写模式：
 
 | 模式 | 说明 | 适用场景 |
 |------|------|---------|
@@ -209,30 +211,45 @@ Lightroom ✅ 专业全面 / 适合 raw 格式 / 稍重
 | `medium` | 保留主题方向，适度借鉴结构，内容重新设计 | 需要兼顾原帖热度和原创度 |
 | `tight` | 保留同主题、同互动机制、同内容结构，仅替换具体措辞和案例 | 测款阶段快速复制爆款结构 |
 
-### 9.1 模板提取维度（5 维）
+### 9.1 模板输入
 
-分析源笔记时提取以下 5 维信息：
-- **标题模板**：年份/动作词/情绪词/句式
-- **封面模板**：主文案、信息层级、配色、字体大小
-- **正文模板**：开场金句、段落数量、结尾 CTA
-- **互动模板**：评论区高频动作词、参与门槛
-- **标签模板**：核心话题 + 长尾话题
+读取 `$DIR/viral-template.json`，至少包含：
+
+- `title_template`
+- `cover_template`
+- `body_template`
+- `interaction_template`
+- `tag_template`
+- `audience_insight`
+- `viral_mechanism`
+- `rewrite_constraints`
+- `do_not_copy`
+- `recommended_clone_depth`
+- `confidence`
+
+若模板文件缺失或 JSON 无效，停止复刻写作并要求先执行 `seednote-viral-analysis`。不要凭空重建模板。
 
 ### 9.2 改写规则
 
 **tight 模式**（高一致性）：
 - 保留：同主题、同互动机制（如"评论区打确认"）、同内容结构
 - 替换：具体措辞、案例细节、账号人设口吻
-- 禁止：逐句照抄、原图二次使用、原作者专属信息
+- 禁止：逐句照抄、原图二次使用、原作者专属信息、`do_not_copy` 列出的元素
 
 **style-only 模式**（默认）：
 - 封面：仅参考风格、色调、信息分层与竖版构图
 - 明确禁止复用：人物姿势、图标组合、文本框形状与位置
 - 使用"保留主题 + 重设计元素"策略
 
+模式选择规则：
+
+- 默认使用 `viral-template.json.recommended_clone_depth`
+- 若用户指定更高强度，但模板 `confidence=low` 或 `do_not_copy` 风险多，自动降级并记录原因
+- `style-only` 只迁移机制和风格方向；`medium` 可迁移结构但重写案例；`tight` 仅在低风险、强通用结构下使用
+
 ### 9.3 标题生成
 
-内部生成 3 个候选，使用本 SKILL 第 1 节标题评分公式自动选 Top 1（≤20 字）。
+基于 `title_template` 和当前账号画像生成 3 个候选，使用本 SKILL 第 1 节标题评分公式自动选 Top 1（≤20 字）。标题不得复制源笔记标题，不得只替换一两个词。
 
 ### 9.4 内容输出格式
 
@@ -266,25 +283,6 @@ Lightroom ✅ 专业全面 / 适合 raw 格式 / 稍重
 
 生成 `$DIR/compliance-report.md` 记录所有修改。
 
-### 9.6 模板持久化
+### 9.6 模板边界
 
-复刻完成后，将提取的 5 维模板保存到系统模板库：
-
-调用 MCP 工具 `save_template`（如果可用），参数：
-- `type`: "seednote"
-- `name`: 基于源笔记主题生成简短模板名（如"美妆种草测评模板"）
-- `category`: 从源笔记所属行业推断
-- `structure`: JSON 对象，包含提取的 5 维模板信息：
-  ```json
-  {
-    "title_template": "...",
-    "cover_template": "...",
-    "body_template": "...",
-    "interaction_template": "...",
-    "tag_template": "..."
-  }
-  ```
-- `style_prompt`: 从源笔记的视觉风格中提炼的提示词
-- `tags`: 基于行业和内容类型的标签数组
-
-注意：如果 `save_template` 调用失败，记录到 `$DIR/compliance-report.md` 但不阻塞流程。
+模板持久化由 seednote 完成 hook 处理。写作过程中只消费 `$DIR/viral-template.json`，不得调用 `save_template`，不得修改 `$DIR/template-meta.json`，除非发现模板明显无效并在 `compliance-report.md` 中记录问题。
