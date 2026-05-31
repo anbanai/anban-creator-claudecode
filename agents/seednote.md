@@ -49,7 +49,7 @@ maxTurns: 20
 
 ## MCP 工具规则
 
-- **必须使用 Claude Code 内置 MCP 工具**调用服务端接口（如 `list_channels`、`get_channel_profile`、`list_channel_topics`、`search_feeds`、`get_feed_detail`、`prepare_workspace`、`archive_workspace`、`generate_image` 等）
+- **必须使用 Claude Code 内置 MCP 工具**调用服务端接口（如 `list_channels`、`get_channel_profile`、`list_channel_titles`、`search_feeds`、`get_feed_detail`、`prepare_workspace`、`archive_workspace`、`generate_image` 等）
 - **禁止编写 JavaScript/Node.js/Python 脚本或自定义 HTTP 客户端**调用 MCP 接口
 - **MCP 工具不可用或关键 MCP 调用失败时立即停止并报告错误**，不要自行探测、绕过或创建替代连接方式
 - **`prepare_workspace` / `archive_workspace` 仅返回路径**，目录创建和文件移动由 agent 通过本地 Bash 执行
@@ -70,11 +70,11 @@ maxTurns: 20
 
 通过 Bash 执行 `echo $ANBANWRITER_DEFAULT_CHANNEL` 检查环境变量，若非空则直接使用其值作为 `$CHANNEL_ID`。若为空，调用 `list_channels` MCP 工具（参数：`platform="seednote"`）获取频道列表。如果只有一个匹配频道，直接使用其 `channel_id`。**如果有多个匹配频道**：根据用户的话题/需求与每个频道的 `name`、`positioning`、`keywords` 进行语义匹配；能明确判断则使用该频道的 `channel_id`；否则**向用户展示所有可选频道**让其选择。
 
-#### 步骤 3：获取账号画像与已有选题
+#### 步骤 3：获取账号画像与已有标题
 
-调用 `get_channel_profile`（`channel_id=$CHANNEL_ID`, `scope="seednote"`）获取账号定位、关键词、受众、参考图或风格配置。调用 `list_channel_topics`（`channel_id=$CHANNEL_ID`）获取已有选题列表，原创模式后续必须避开重复主题；复刻模式用于判断改写角度是否过近。已有选题为空时也要记录为空列表。
+调用 `get_channel_profile`（`channel_id=$CHANNEL_ID`, `scope="seednote"`）获取账号定位、关键词、受众、参考图或风格配置。调用 `list_channel_titles`（`channel_id=$CHANNEL_ID`）获取已有标题列表，原创模式后续必须避开重复或近似标题；复刻模式用于判断改写角度是否过近。已有标题为空时也要记录为空列表。
 
-**产出**：账号画像、已有选题列表
+**产出**：账号画像、已有标题列表
 
 #### 步骤 4：创建工作目录
 
@@ -138,7 +138,7 @@ using the `seednote-writing` skill 扫描标题与正文，执行违禁词和诱
 
 #### 步骤 9：归档工作目录
 
-从 `$DIR/content.md` 提取最终标题（第一行去掉 `# ` 前缀），调用 `archive_workspace`（`content_type="seednote"`, `name="{标题}"`）获取归档路径 `$ARCHIVE_DIR`。通过 Bash 执行 `mkdir -p "$ARCHIVE_DIR" && mv "$DIR"/* "$ARCHIVE_DIR/" 2>/dev/null`。若归档目录已存在，追加序号（如 `标题-2/`），确保不覆盖已有成果。归档失败时保留 `$DIR` 原始成果并报告两个路径。
+确认 AI 最终选定标题 `$FINAL_TITLE`（必须是面向用户发布的笔记标题，不得使用 `图片内容规划`、`标题候选与评分`、`选题研究报告`、`违禁词合规检查报告` 等内部产物标题）。调用 `archive_workspace`（`content_type="seednote"`, `name="$FINAL_TITLE"`）获取归档路径 `$ARCHIVE_DIR`。通过 Bash 执行 `mkdir -p "$ARCHIVE_DIR" && mv "$DIR"/* "$ARCHIVE_DIR/" 2>/dev/null`。若归档目录已存在，追加序号（如 `标题-2/`），确保不覆盖已有成果。归档失败时保留 `$DIR` 原始成果并报告两个路径。最终标题写入系统排重库由 seednote 完成 hook 统一负责，agent 不要自行调用标题上报工具。
 
 **产出**：`$ARCHIVE_DIR`
 

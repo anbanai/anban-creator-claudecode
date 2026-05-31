@@ -9,7 +9,7 @@ description: Researches WeChat topics (选题研究), scores engagement potentia
 
 | MCP 工具 | 说明 |
 |----------|------|
-| `list_channel_topics` (channel_id) | 查看系统内已有选题（选题前必调） |
+| `list_channel_titles` (channel_id) | 查看系统内已有标题（定标题前必调） |
 | `list_drafts` (channel_id) | 查看已有草稿 |
 | `list_published_articles` (channel_id) | 查看已发布文章 |
 | `research_topics` (channel_id, keywords?, domain?, count?) | 选题研究 |
@@ -24,16 +24,16 @@ description: Researches WeChat topics (选题研究), scores engagement potentia
 
 ### 步骤 1：查重——收集已有内容
 
-选题前必须先检查已有内容，避免重复。
+定标题前必须先检查已有标题，避免重复。
 
 调用以下三个工具：
 ```
-list_channel_topics(channel_id="$CHANNEL_ID")
+list_channel_titles(channel_id="$CHANNEL_ID")
 list_drafts(channel_id="$CHANNEL_ID")
 list_published_articles(channel_id="$CHANNEL_ID")
 ```
 
-从结果中提取所有已有标题和选题关键词，构建**排除列表**。后续选题必须避开这些已有主题。
+从结果中提取所有已有标题和选题关键词，构建**排除列表**。后续标题必须避开这些已有标题和近似表达。
 
 **产出**：在 `$DIR/01-research.md` 中记录已有内容摘要和排除列表。
 

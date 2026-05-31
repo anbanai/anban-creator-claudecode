@@ -38,7 +38,7 @@ Key skill groups:
 
 Connects to the `anbanwriter` MCP server at `$ANBANWRITER_API_URL` (default `https://api.creator.anbanai.com`). Key MCP tools:
 - `$ANBANWRITER_DEFAULT_CHANNEL`: Optional default channel ID. When set, agents skip `list_channels` and use this directly.
-- `list_channels`, `get_channel_profile`, `list_drafts`, `list_published_articles`, `list_channel_topics`
+- `list_channels`, `get_channel_profile`, `list_drafts`, `list_published_articles`, `list_channel_titles`
 - `prepare_workspace`, `archive_workspace`
 - `write_article`, `convert_markdown`, `humanize_article`
 - `image upload`, `draft article`

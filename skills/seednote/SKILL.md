@@ -24,7 +24,7 @@ description: 种草笔记图文全自动创作。用户提到"种草笔记"、"s
 调用 MCP 工具：
 - `list_channels()` → 找到 `platform` 为 `seednote` 的 channel，记为 `$CHANNEL_ID`
 - `get_channel_profile(channel_id="$CHANNEL_ID", scope="seednote")` → 获取账号定位、关键词等信息
-- `list_channel_topics(channel_id="$CHANNEL_ID")` → 查看系统内已有选题，后续选题避开
+- `list_channel_titles(channel_id="$CHANNEL_ID")` → 查看系统内已有标题，后续标题避开
 
 ### 步骤 2：创建工作目录
 
@@ -60,10 +60,11 @@ description: 种草笔记图文全自动创作。用户提到"种草笔记"、"s
 
 ### 步骤 7：归档
 
-- 从 `$DIR/content.md` 提取最终标题
-- 调用 `archive_workspace(content_type="seednote", name="{标题}")` 获取归档路径 `$ARCHIVE_DIR`
+- 确认 AI 最终选定标题 `$FINAL_TITLE`，必须是真实发布标题，不得是 `图片内容规划`、`标题候选与评分`、`选题研究报告`、`违禁词合规检查报告` 等内部产物标题
+- 调用 `archive_workspace(content_type="seednote", name="$FINAL_TITLE")` 获取归档路径 `$ARCHIVE_DIR`
 - 通过 Bash 执行 `mkdir -p "$ARCHIVE_DIR" && mv "$DIR"/* "$ARCHIVE_DIR/" 2>/dev/null` 移动文件
 - 报告成果目录路径 `$ARCHIVE_DIR`
+- 最终标题写入系统排重库由 seednote 完成 hook 统一负责，本 skill 不直接上报标题
 
 ---
 
