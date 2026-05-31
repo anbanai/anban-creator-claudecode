@@ -21,7 +21,7 @@ Orchestration engines that run fully autonomous, zero-interaction pipelines. Eac
 | Agent | Trigger | Pipeline |
 |-------|---------|----------|
 | `wechatarticle` | "写文章", "发文章" | Research → Write → De-AI → SEO → Cover → Illustrations → HTML → Draft |
-| `seednote` | "种草笔记", "种草", "复刻" | Research → Content → Image plan → Cover + Content images → Compliance → Archive |
+| `seednote` | "种草笔记", "种草", "复刻" | Research → Viral analysis (replicate) → Content → Image plan → Cover + Content images → Compliance → Archive |
 | `live-slicer` | "直播切片", "剪直播", "听悟" | ffmpeg prep → TingWu transcription → Invalid sentence filter → Segment/subject planning → Batch cuts/concat → Report |
 
 Agents use TaskCreate/TaskUpdate for progress tracking and report progress as `[N/M] step complete → path (detail)`.
@@ -33,7 +33,7 @@ Reusable knowledge modules referenced by agents. Each skill has a `SKILL.md` fro
 Key skill groups:
 - **Content**: `content-writing`, `topic-research`, `seo-optimization`
 - **WeChat article**: `article`, `article-visual-design`, `article-publishing`
-- **SeedNote**: `seednote`, `seednote-research`, `seednote-writing`, `seednote-visual-design`
+- **SeedNote**: `seednote`, `seednote-research`, `seednote-viral-analysis`, `seednote-writing`, `seednote-visual-design`
 - **Live slicing**: `live-slice`
 - **Init**: `init` (first-time setup, key configuration, and connectivity verification)
 
