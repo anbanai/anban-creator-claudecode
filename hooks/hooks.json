@@ -19,6 +19,15 @@
             "prompt": "seednote agent 已完成执行。hook 负责最终标题入库：请检查 output/seednote/ 目录下的产出文件，确定真实发布标题，并通过 MCP 工具 finalize_task_title 上报到服务端。\n\n1. **确定笔记标题**：优先使用 content.md 的正式标题或归档目录名中的真实发布标题；不得使用 图片内容规划 / 标题候选与评分 / 选题研究报告 / 违禁词合规检查报告 等内部产物标题。\n2. **标题上报**：立即调用 finalize_task_title(task_id=$TASK_ID, title=最终标题)。如果返回重复标题错误，重新拟定非重复标题、更新 content.md 首行后再次调用。\n3. **内容文件**：检查 content.md 路径及正文字数。\n4. **图片列表**：列出所有生成的图片文件（封面 + 内容图），共 N 张。\n5. **决策记录**：topic-analysis.md 或 source-analysis.md 是否已生成。\n6. **问题检查**：图片数量是否 ≥3、content.md 是否包含话题标签。\n\n如 finalize_task_title 调用失败，请停止并明确报告错误，不要声称任务已完成。"
           }
         ]
+      },
+      {
+        "matcher": "live-slicer",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "live-slicer agent 已完成执行。请检查 output/live-slice/ 目录下的产出文件，生成结构化交付摘要：\n\n1. **成果目录**：本次任务对应的 output/live-slice/<task>/ 路径\n2. **核心文件**：metadata.json、audio.mp3、cover.jpg、analysis.json、invalid-sentences.json、segments.json、clip-plan.json 或 subject-clip-plan.json、clip_results.json、clip-manifest.json、transcript.md、summary.md 是否存在\n3. **切片结果**：读取 clip-manifest.json，统计成功/失败切片数量，确认每条成功结果包含 actual_duration_seconds，并列出 exports/ 下的视频文件和 exports/*.md\n4. **方案检查**：segments.json 或 subject-clip-plan.json 的句子范围是否能对应 analysis.json 的 sentences；检查 warnings、rejected，并确认 summary.md 是否列出“需人工复核片段”\n5. **问题检查**：是否存在空视频、失败命令、duration mismatch、part_results 缺失、听悟未完成、无效句过滤后素材不足等问题\n\n如发现问题请明确指出并建议从哪个步骤继续修复。"
+          }
+        ]
       }
     ],
     "TaskCompleted": [

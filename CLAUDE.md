@@ -4,10 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**anbanwriter-claudecode** is a Claude Code plugin for automated Chinese social media content creation. It targets three platforms:
+**anbanwriter-claudecode** is a Claude Code plugin for automated Chinese social media content creation. It targets these workflows:
 
 - **WeChat Official Account articles** (微信公众号图文)
 - **SeedNote posts** (种草笔记)
+- **Live video slicing** (直播切片)
 
 The plugin follows an **Agent + Skill + MCP** architecture: Claude Code agents orchestrate end-to-end pipelines, skills encapsulate domain knowledge, and an external MCP server provides WeChat/Seednote API access.
 
@@ -21,6 +22,7 @@ Orchestration engines that run fully autonomous, zero-interaction pipelines. Eac
 |-------|---------|----------|
 | `wechatarticle` | "写文章", "发文章" | Research → Write → De-AI → SEO → Cover → Illustrations → HTML → Draft |
 | `seednote` | "种草笔记", "种草", "复刻" | Research → Content → Image plan → Cover + Content images → Compliance → Archive |
+| `live-slicer` | "直播切片", "剪直播", "听悟" | ffmpeg prep → TingWu transcription → Invalid sentence filter → Segment/subject planning → Batch cuts/concat → Report |
 
 Agents use TaskCreate/TaskUpdate for progress tracking and report progress as `[N/M] step complete → path (detail)`.
 
@@ -32,17 +34,19 @@ Key skill groups:
 - **Content**: `content-writing`, `topic-research`, `seo-optimization`
 - **WeChat article**: `article`, `article-visual-design`, `article-publishing`
 - **SeedNote**: `seednote`, `seednote-research`, `seednote-writing`, `seednote-visual-design`
+- **Live slicing**: `live-slice`
 - **Init**: `init` (first-time setup, key configuration, and connectivity verification)
 
 ### MCP Server (`.mcp.json`)
 
 Connects to the `anbanwriter` MCP server at `$ANBANWRITER_API_URL` (default `https://api.creator.anbanai.com`). Key MCP tools:
 - `$ANBANWRITER_DEFAULT_CHANNEL`: Optional default channel ID. When set, agents skip `list_channels` and use this directly.
-- `list_channels`, `get_channel_profile`, `list_drafts`, `list_published_articles`, `list_channel_topics`
+- `list_channels`, `get_channel_profile`, `list_drafts`, `list_published_articles`, `list_channel_titles`
 - `prepare_workspace`, `archive_workspace`
 - `write_article`, `convert_markdown`, `humanize_article`
 - `image upload`, `draft article`
 - `get_feed_detail` (SeedNote source note fetching)
+- `upload_live_audio`, `create_live_analysis_task`, `query_live_analysis_task`, `recognize_live_invalid_sentences`, `recognize_live_segments`, `build_live_clip_plan`, `build_live_subject_clip_plan`, `build_live_clip_manifest`, `recognize_live_subjects`, `complete_live_subject`
 
 ### Themes (Server-managed)
 
@@ -74,6 +78,7 @@ Lifecycle hooks for quality verification:
 - **Image reference chain**: First image establishes visual style; subsequent images use the first as `--ref` to maintain consistency.
 - **Skill references**: Agents invoke skills via `using the <skill-name> skill` phrasing, not the Skill tool.
 - **Content is Chinese**: All generated content targets Chinese social media platforms. Prohibited words lists (违禁词) are in `references/prohibited-words.md`.
+- **Live slicing media dependency**: `live-slicer` and `live-slice` require local `ffmpeg` and `ffprobe`; they support continuous clips and subject-script multi-part concat clips without a local helper runtime.
 
 ## Modifying This Plugin
 
