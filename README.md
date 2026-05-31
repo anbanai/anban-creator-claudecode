@@ -1,6 +1,6 @@
 # Anban 智能创作助手 Claude Code 插件
 
-> 微信公众号 & 种草笔记 AI 内容创作插件，基于 Claude Code Agent + Skill + MCP 架构。
+> 微信公众号、种草笔记与直播切片 AI 创作插件，基于 Claude Code Agent + Skill + MCP 架构。
 
 ## 接入流程
 
@@ -107,6 +107,7 @@
 ```text
 帮我写一篇关于 AI Agent 的公众号文章
 种草笔记，主题是降噪耳机
+把 ./live.mp4 做成直播切片
 ```
 
 ### 方式二：指定 Agent
@@ -116,6 +117,7 @@
 ```bash
 claude --dangerously-skip-permissions --verbose --agent anbanwriter:article AI Agent 入门指南
 claude --dangerously-skip-permissions --verbose --agent anbanwriter:seednote 降噪耳机种草笔记
+claude --dangerously-skip-permissions --verbose --agent anbanwriter:live-slicer ./live.mp4
 ```
 
 ## 常用命令
@@ -128,6 +130,8 @@ claude --dangerously-skip-permissions --verbose --agent anbanwriter:seednote 降
   公众号图文创作
 - `anbanwriter:seednote`
   种草笔记创作
+- `anbanwriter:live-slicer`
+  直播视频切片，需要本机可用 `ffmpeg` 和 `ffprobe`
 
 ## 遇到问题时先检查
 
@@ -142,6 +146,7 @@ claude --dangerously-skip-permissions --verbose --agent anbanwriter:seednote 降
 |------|---------|---------|
 | 微信公众号图文 | "帮我写一篇关于 AI Agent 的文章" | 选题研究 → AI 写作 → 去痕优化 → SEO 优化 → 封面配图 → HTML 转换 → 草稿发布 |
 | 种草笔记 | "种草笔记，主题是降噪耳机" | 选题研究 → 内容创作 → 图片规划 → 封面 + 内容配图 → 合规检查 → 归档 |
+| 直播切片 | "把 live.mp4 剪成短视频切片" | ffmpeg 准备音频/封面 → 听悟转写 → 无效句过滤 → 智能切片规划 → 批量裁剪 → 报告 |
 
 ## 项目结构
 

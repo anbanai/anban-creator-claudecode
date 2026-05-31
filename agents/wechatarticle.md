@@ -8,8 +8,6 @@ tools:
   - TaskGet
   - Read
   - Write
-  - Glob
-  - Grep
   - Bash
 model: inherit
 mcpServers:
