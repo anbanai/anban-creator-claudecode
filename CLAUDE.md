@@ -22,7 +22,7 @@ Orchestration engines that run fully autonomous, zero-interaction pipelines. Eac
 |-------|---------|----------|
 | `wechatarticle` | "写文章", "发文章" | Research → Write → De-AI → SEO → Cover → Illustrations → HTML → Draft |
 | `seednote` | "种草笔记", "种草", "复刻" | Research → Viral analysis (replicate) → Content → Image plan → Cover + Content images → Compliance → Archive |
-| `live-slicer` | "直播切片", "剪直播", "听悟" | ffmpeg prep → TingWu transcription → Invalid sentence filter → Segment/subject planning → Batch cuts/concat → Report |
+| `live-slicer` | "直播切片", "剪直播", "听悟" | ffmpeg prep → TingWu transcription → Invalid sentence filter → Segment/subject planning → Batch cuts/concat → CapCut export → Report |
 
 Agents use TaskCreate/TaskUpdate for progress tracking and report progress as `[N/M] step complete → path (detail)`.
 
@@ -34,7 +34,7 @@ Key skill groups:
 - **Content**: `content-writing`, `topic-research`, `seo-optimization`
 - **WeChat article**: `article`, `article-visual-design`, `article-publishing`
 - **SeedNote**: `seednote`, `seednote-research`, `seednote-viral-analysis`, `seednote-writing`, `seednote-visual-design`
-- **Live slicing**: `live-slice`
+- **Live slicing**: `live-slice`, `capcut-draft`
 - **Init**: `init` (first-time setup, key configuration, and connectivity verification)
 
 ### MCP Server (`.mcp.json`)

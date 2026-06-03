@@ -23,6 +23,7 @@ Use one output directory per source video:
 | `subject-clip-plan.json` | deterministic topic-script clip parts and concat commands |
 | `clip_results.json` | local ffmpeg execution results |
 | `clip-manifest.json` | JSON array of delivered clips |
+| `clip-draft-results.json` | CapCut draft creation results (optional) |
 | `exports/` | cut videos and text exports |
 
 ## Workflow
@@ -68,6 +69,15 @@ Use one output directory per source video:
    - `transcript_markdown` to `transcript.md`.
    - `summary_markdown` to `summary.md`.
    - `clip_notes_markdown[].markdown` to `clip_notes_markdown[].markdown_path`.
+
+9. Export to CapCut (optional):
+   For each successful clip in `clip_results.json`, create a CapCut/JianYing draft using the `capcut-draft` skill. Each clip becomes its own draft with:
+   - Video segment: the clip's MP4 file (`type: "video"`)
+   - Subtitles: from the clip's `transcript` array, with time offsets relative to the clip's start (`subtitle_start = (sentence.start - clip.start) × 1,000,000` microseconds)
+   - Cover: `$DIR/cover.jpg`
+   - Canvas: vertical 9:16 (1080×1920) for short videos
+   - No effects, transitions, or background music added automatically
+   Save results to `clip-draft-results.json`. Skip this step entirely if CapCut draft root directory is not found.
 
 ## Cutting Commands
 
