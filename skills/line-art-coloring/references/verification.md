@@ -4,6 +4,13 @@
 
 验证的目的是确保跨图颜色一致性。不是模糊的「看起来差不多」，而是逐实体逐部位的精确比对。
 
+## 图像分析方法
+
+**所有图像视觉分析通过 `analyze_image` MCP 工具执行，不依赖 Read 的视觉能力。**
+
+- 对 generate_image 生成的图：使用返回的 `file_path`（服务器端路径）传 `file_path` 参数
+- 对已有 CDN URL 的图：传 `image_url` 参数
+
 ## 三级验证
 
 ### Level 1 — 单图验证（每张上色图完成后）
@@ -12,10 +19,9 @@
 
 **步骤**：
 
-1. Read 上色图
+1. 调用 `analyze_image(channel_id="$CHANNEL_ID", file_path=上色图服务器端路径, prompt="逐实体逐部位描述颜色。对图中每个角色/物体，列出所有可见部位并描述每个部位的颜色。")` → 获取颜色描述
 2. 对 Color Bible 中出现在此图的每个实体：
-   - 逐部位描述观察到的颜色
-   - 与 Color Bible 定义比对
+   - 逐部位比对返回的颜色描述与 Color Bible 定义
 3. 对每个部位评级
 
 **评级标准**：
@@ -26,15 +32,18 @@
 | MINOR | 色调正确但饱和度/明度有轻微偏差 | Color Bible: "bright cherry red" → 观察: "slightly darker red, still clearly red" |
 | FAIL | 色调错误 | Color Bible: "deep navy blue" → 观察: "appears black" 或 "appears royal blue" |
 
+4. 线稿完整性验证：调用 `analyze_image(channel_id="$CHANNEL_ID", file_path=上色图服务器端路径, image_url=原始线稿CDN_URL, prompt="比对这张上色图与原始线稿的线条是否完全一致。检查：线条粗细是否改变、线条是否模糊或被重绘、构图比例是否偏移、是否有新增或丢失的线条元素。只报告线稿保持状态，不评论颜色。")` → 确认线稿未被修改
+
 **产出**：更新 `$DIR/best-refs.md` 中的质量评估。
 
 ### Level 2 — 跨图一致性审计（全部上完后）
 
-读取所有已上色图，对 Color Bible 中每个跨图实体进行跨图比对。
+对每张已上色图调用 `analyze_image`，对 Color Bible 中每个跨图实体进行跨图比对。
 
 **步骤**：
 
-1. 读取所有 `$DIR/colored_NN.png`
+1. 对每个 `$DIR/colored_NN.png`：
+   - 调用 `analyze_image(channel_id="$CHANNEL_ID", file_path=服务器端路径, prompt="逐实体逐部位描述颜色，与以下 Color Bible 规格比对并标注 PASS/MINOR/FAIL：[Color Bible 内容]")`
 2. 对 Color Bible 中每个实体：
    - 列出该实体出现的所有图
    - 逐图逐部位比对
@@ -80,6 +89,7 @@ Details:
 - 本轮修正的实体是否改善了
 - 是否引入了新的不一致
 - best-ref 是否需要更新
+- **线稿是否在修正过程中被修改**（模型有时修正颜色会连带改线）
 
 ---
 
@@ -170,13 +180,14 @@ Details:
 | 次要部位 MINOR + 仅 1 张图 | 建议修正 |
 | 次要部位 MINOR + 多张图类似 | 可接受 |
 | 背景元素 MINOR | 可接受 |
+| 线稿被修改 | 必须重新生成 |
 
 ## 修正策略
 
 ### FAIL 修正
 
 1. 确定该实体的当前 best_ref
-2. 用 best_ref 作 `ref_image_path`
+2. 用 best_ref 的服务器端 `file_path` 作 `ref_image_path`
 3. 构建 correction prompt（明确指出偏差 + 正确值）
 4. 生成 2 个候选选最优
 5. 验证修正结果
@@ -206,13 +217,14 @@ Use the reference image's colors EXACTLY for [Entity].
 The result must be visually indistinguishable from the reference
 in terms of [Entity]'s colors.
 
-PRESERVE the exact line art composition — only fix the colors.
-Do not modify any other entity's colors.
+CRITICAL LINE PRESERVATION: Every line, stroke, and proportion must remain
+100% identical to the original line art. Do NOT modify, blur, redraw, add,
+or remove any lines. Only change the COLOR of [Entity], nothing else.
 ```
 
 ### 修正后验证
 
-修正后必须重新 Read 验证：
+修正后必须通过 `analyze_image` 重新验证：
 1. 修正的实体是否颜色正确了
 2. 其他实体是否被影响（模型有时改一个会影响其他）
 3. 线稿构图是否保持完整（未被修改）

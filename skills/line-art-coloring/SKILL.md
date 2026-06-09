@@ -9,6 +9,7 @@ description: Line art coloring skill with cross-image color consistency guarante
 
 | MCP 工具 | 说明 |
 |----------|------|
+| `analyze_image` (channel_id, image_url, file_path, prompt) | 图像视觉分析——传入图像 URL 或服务器文件路径，返回 AI 视觉分析结果。用于实体识别、候选评估、一致性审计、线稿验证 |
 | `generate_image` (channel_id, prompt, image_type, output_path, ref_image_path, size, task_id) | 生成单张图片，返回 download_url 和 file_path |
 | `upload_image` (channel_id, file_path) | 上传图片 |
 | `compress_image` (file_path) | 压缩图片 |
@@ -16,9 +17,75 @@ description: Line art coloring skill with cross-image color consistency guarante
 
 ---
 
-## 核心原则：一致性 > 效率
+## 核心原则
+
+### 原则 0：线稿神圣不可侵犯（最高优先级）
+
+**上色只添加颜色，绝不修改线稿。** 每根线条、每个笔触、每处构图必须与原图 100% 一致。
+
+- 不可修改线条粗细、曲率、位置
+- 不可模糊、锐化或重绘线条
+- 不可增加或删除线条元素
+- 不可改变构图、比例或布局
+
+所有 prompt 必须包含固定语：
+```
+CRITICAL: PRESERVE the exact line art composition. Every line, stroke, and proportion must remain 100% identical to the original. Do NOT modify, blur, redraw, add, or remove any lines. Only add color.
+```
+
+### 原则 1：一致性 > 效率
 
 宁可多花 3 倍算力，也要保证同一实体在所有图中颜色完全一致。
+
+### 原则 2：使用 `analyze_image` 分析图像
+
+**Read 工具不用于图像视觉分析。** 在本环境中 Read 上传图像到 CDN 并返回 URL，不提供视觉内容。所有需要"看"图像的场景必须使用 `analyze_image`。
+
+---
+
+## 图像视觉分析方法
+
+### 分析流程
+
+1. **获取图像可访问路径**：
+   - 本地文件路径：直接传 `file_path` 参数
+   - 已有 CDN URL：传 `image_url` 参数
+   - Read 返回 CDN URL 的场景：先 Read 获取 URL，再用 `image_url` 参数传入
+2. **调用 analyze_image**：`analyze_image(channel_id="$CHANNEL_ID", image_url=URL或file_path=路径, prompt=分析提示)`
+3. **处理结果**：根据返回的文本描述进行实体匹配、颜色评估等
+
+> **注意**：Read 返回的 CDN URL 约 30 分钟过期。获取后立即使用；需要重新分析时重新 Read 获取新 URL。
+
+### 各场景的 analyze_image prompt 模板
+
+**实体识别**（步骤 3）：
+```
+描述图中所有实体：角色（位置、姿态、朝向、体型比例、发型轮廓、服装类型、配饰、与其他角色空间关系）、物体（位置、大小、材质）、环境元素（整体色调方向）。对每个实体提供足够外观描述用于跨图匹配。
+```
+
+**候选颜色评估**（步骤 7）：
+```
+逐实体逐部位描述颜色。对图中每个角色/物体，列出所有可见部位并描述每个部位的颜色。格式：
+- [实体名]: [部位1]=[颜色描述], [部位2]=[颜色描述], ...
+```
+
+**一致性审计**（步骤 8）：
+```
+逐实体逐部位描述颜色，与以下 Color Bible 规格比对并标注 PASS/MINOR/FAIL：
+[Color Bible 内容]
+
+对每个实体的每个部位：
+- PASS: 颜色与定义一致
+- MINOR: 色调正确但有轻微饱和度/明度偏差
+- FAIL: 色调错误
+```
+
+**线稿验证**（每张上色图生成后）：
+```
+比对这张上色图与原始线稿的线条是否完全一致。检查：线条粗细是否改变、线条是否模糊或被重绘、构图比例是否偏移、是否有新增或丢失的线条元素。只报告线稿保持状态，不评论颜色。
+```
+
+---
 
 ## 核心机制
 
@@ -44,7 +111,7 @@ Color Bible 不在开始时一次性建完，而是逐图渐进构建：
 
 每张线稿生成 **2 个候选**上色图：
 - 候选 A 和 B 使用不同的 prompt 措辞（描述同一颜色但换说法）
-- Read 两个候选 → 逐实体逐部位比对 Color Bible
+- 用 `analyze_image` 逐实体逐部位比对 Color Bible
 - 选匹配度最高的作为正式结果
 - 如果两个都 < 70% → 生成候选 C
 
@@ -86,7 +153,8 @@ Color Bible 不在开始时一次性建完，而是逐图渐进构建：
 - `echo $ANBANWRITER_DEFAULT_CHANNEL` → `$CHANNEL_ID`
 - 如果为空，调用 `list_channels` 获取频道列表并选择
 - 从 `.task-context` 获取 `$TASK_ID`，或使用 CWD 目录名
-- 调用 `prepare_workspace(content_type="design", task_id=$TASK_ID)` → `$DIR`
+- 尝试调用 `prepare_workspace(content_type="design", task_id=$TASK_ID)` → `$DIR`
+  - 如果 `prepare_workspace` 调用失败，使用 `$CWD/workspace/` 作为 `$DIR`
 - `mkdir -p "$DIR"`
 
 #### 步骤 2：确认输入线稿
@@ -94,8 +162,8 @@ Color Bible 不在开始时一次性建完，而是逐图渐进构建：
 - 收集用户提供的线稿图路径列表
 - Read 每张图验证存在且可读取
 - 如果用户未指定顺序：
-  - Read 每张线稿，快速评估角色密度（实体数量、构图复杂度）
-  - 按角色数量降序排列（角色多、构图简单的先处理）
+  - 对每张线稿调用 `analyze_image`，参数 `prompt="识别图中所有角色/实体的数量、类型（人物/动物/物体）、位置、构图复杂度。列出每个实体的简要描述。"`
+  - 按角色数量 × 构图简洁度降序排列
 - 写入 `$DIR/input-manifest.md`：
 
 ```markdown
@@ -118,7 +186,7 @@ Color Bible 不在开始时一次性建完，而是逐图渐进构建：
 
 #### 步骤 3：读取线稿，识别实体
 
-Read 当前线稿图，识别所有实体：
+Read 当前线稿图获取 CDN URL → 调用 `analyze_image(channel_id="$CHANNEL_ID", image_url=CDN_URL, prompt=实体识别prompt)` → 识别所有实体：
 
 - **角色类**：人物、动物、拟人角色
   - 描述：位置、姿态、朝向、大小、服装特征、配饰、与其他角色的空间关系
@@ -158,8 +226,14 @@ Read 当前线稿图，识别所有实体：
 
 构建包含以下要素的 prompt（颜色描述使用英文，因为 image generation 模型对英文颜色术语响应更精确；其余指令可用中文）：
 
+> **提醒**：颜色描述使用语义色名 + 实物类比 + 反面约束，**绝对不用 hex 色值**。详见下方"语义色名参考"表。
+
 ```
 Color this line art illustration.
+
+CRITICAL: PRESERVE the exact line art composition. Every line, stroke, and
+proportion must remain 100% identical to the original. Do NOT modify, blur,
+redraw, add, or remove any lines. Only add color.
 
 COLOR SPECIFICATIONS (must match exactly):
 
@@ -174,33 +248,47 @@ COLOR SPECIFICATIONS (must match exactly):
 
 COLOR RELATIONSHIPS:
 - [Entity A]'s [element] is the same color as [Entity B]'s [element]
-
-PRESERVE the exact line art composition and poses. Only add color.
-Do not modify lines, proportions, or layout.
 ```
 
 **Prompt 要点**：
 - 已知实体：强调与参考图一致 + 反面约束
 - 新实体：完整定义颜色 + 实物类比
 - 跨实体颜色关系明确写出
-- 最后固定语：保持线稿构图不变
+- **线稿保持固定语**必须包含
+- 不使用 hex 色值
 
 #### 步骤 6：多候选生成
 
+**参考图像路径解析**：
+
+`generate_image` 的 `ref_image_path` 参数需要服务器可访问的路径。路径解析规则：
+
+1. **之前由 generate_image 生成的图像**：使用返回的 `file_path`（服务器端路径）作 ref_image_path
+   ```
+   # 第一次生成
+   result_a = generate_image(..., output_path="$DIR/colored_00_a.png")
+   server_path_a = result_a.file_path  # 服务器端路径
+
+   # 后续使用该图作参考时
+   generate_image(..., ref_image_path=server_path_a)
+   ```
+2. **用户提供的本地线稿图**（仅用于需要以线稿本身作为参考图的场景）：先 Read 获取 CDN URL，再调用 `download_image(channel_id, CDN_URL)` 让服务器下载注册，返回的路径作为 ref_image_path
+3. **无参考图**（纯 prompt 驱动）：不传 ref_image_path 参数
+
 确定参考图：
-- 有已知实体 → `ref_image_path = 包含当前图实体最多且 best_ref 最好的那张`
+- 有已知实体 → `ref_image_path = 包含当前图实体最多且 best_ref 最好的那张`（使用其服务器端 file_path）
 - 全部新实体 → 无参考图（纯 prompt）
 - 多个已知实体但各自 best_ref 不同 → 选包含实体最多的那张
 
 生成候选 A：
 ```
-generate_image(
+result_a = generate_image(
   channel_id="$CHANNEL_ID",
   prompt="[主 prompt]",
   image_type="content",
-  output_path="$DIR/colored_NN_a.png",
-  ref_image_path="[参考图路径]"
+  output_path="$DIR/colored_NN_a.png"
 )
+SERVER_PATH_A = result_a.file_path
 ```
 
 生成候选 B（微调 prompt 措辞）：
@@ -209,29 +297,29 @@ generate_image(
 - 或在 prompt 开头增加更强的一致性声明
 
 ```
-generate_image(
+result_b = generate_image(
   channel_id="$CHANNEL_ID",
   prompt="[微调后 prompt]",
   image_type="content",
   output_path="$DIR/colored_NN_b.png",
-  ref_image_path="[参考图路径]"
+  ref_image_path=SERVER_PATH_A  # 或其他合适的参考
 )
+SERVER_PATH_B = result_b.file_path
 ```
 
 #### 步骤 7：候选评估 + 最优选
 
-1. Read 候选 A 和候选 B
-2. 对每个候选，逐实体逐部位比对 Color Bible：
-   - 对每个实体：列出所有部位（hair, skin, outfit-primary, outfit-secondary, accessories 等）
-   - 对每个部位：描述观察到的颜色，与 Color Bible 定义比对
-   - 打分：匹配部位数 / 总部位数
-3. 选择得分最高的候选
-4. `cp [选中候选] $DIR/colored_NN.png`
-5. 如果两个候选都 < 70% 匹配：
+1. 调用 `analyze_image(channel_id="$CHANNEL_ID", file_path=SERVER_PATH_A, prompt=候选颜色评估prompt)` → 获取候选 A 的颜色描述
+2. 调用 `analyze_image(channel_id="$CHANNEL_ID", file_path=SERVER_PATH_B, prompt=候选颜色评估prompt)` → 获取候选 B 的颜色描述
+3. 对每个候选，逐实体逐部位比对 Color Bible → 计算匹配分
+4. 选择得分最高的候选
+5. `cp [选中候选] $DIR/colored_NN.png`
+6. 如果两个候选都 < 70% 匹配：
    - 生成候选 C（换参考图或加强 prompt 约束）
    - 选三者中最好的
-6. 更新 `$DIR/best-refs.md`：如果新图中某实体颜色比当前 best_ref 更好，更新
-7. 删除未选中的候选文件
+7. 调用 `analyze_image` 验证线稿完整性：`prompt=线稿验证prompt`
+8. 更新 `$DIR/best-refs.md`：如果新图中某实体颜色比当前 best_ref 更好，更新
+9. 删除未选中的候选文件
 
 **产出**：`$DIR/colored_NN.png`
 
@@ -243,7 +331,7 @@ generate_image(
 
 #### 步骤 8：全面审计
 
-读取所有 `$DIR/colored_NN.png`，对 Color Bible 中每个跨图实体进行逐部位比对。
+对每张 `$DIR/colored_NN.png`：调用 `analyze_image(channel_id="$CHANNEL_ID", file_path=服务器端路径, prompt=一致性审计prompt)` → 对 Color Bible 中每个跨图实体逐部位比对。
 
 生成 `$DIR/consistency-report.md`：
 
@@ -279,17 +367,20 @@ generate_image(
 CORRECTION PASS for color inconsistency.
 The reference image shows the CORRECT color scheme for [Entity].
 
+CRITICAL LINE PRESERVATION: Every line, stroke, and proportion must remain
+100% identical to the original line art. Do NOT modify, blur, redraw, add,
+or remove any lines. Only change the COLOR of [Entity], nothing else.
+
 SPECIFIC ISSUES TO FIX:
 - [Entity]'s [element] should be [语义色名] (currently appears [错误色描述])
 - [Entity]'s [element] should be [语义色名] (currently appears [错误色描述])
 
 Use the reference image's colors EXACTLY. The result must be visually
 indistinguishable from the reference in terms of [Entity]'s colors.
-PRESERVE the exact line art composition — only fix the colors.
 ```
 
 - 同样生成 2 个候选选最优
-- `ref_image_path = 该实体当前 best_ref 路径`
+- `ref_image_path = 该实体当前 best_ref 的服务器端路径`
 - 更新 best-refs.md
 
 **9b. MINOR 级修正**（增加反面约束）：
@@ -299,6 +390,9 @@ PRESERVE the exact line art composition — only fix the colors.
 IMPORTANT COLOR CORRECTION:
 - [Entity]'s [element] must be [语义色名], NOT [当前错误方向]
 - The reference shows the correct shade — match it exactly
+
+CRITICAL: PRESERVE the exact line art composition. Every line must remain
+100% identical. Only change the color.
 ```
 
 生成 1 个候选即可。
@@ -414,6 +508,9 @@ COLOR RELATIONSHIPS:
 | 多角色图中某角色颜色错误 | 多实体增加复杂度 | 单独指定每个实体的反面约束 |
 | 实体匹配错误 | 不同角色外观相似 | 增加 more specific 描述（位置、配饰、体型差异） |
 | 新实体颜色与已有实体冲突 | 颜色区分度不够 | 选色时确保跨实体区分度 |
+| 线条被修改或重绘 | 模型在添加颜色时破坏线条 | 强化 prompt 中 CRITICAL LINE PRESERVATION 固定语；在 analyze_image 验证时检查线稿完整性 |
+| CDN URL 过期 | Read 返回的 CDN URL 约 30 分钟后过期 | 获取后立即使用；需要重新分析时重新 Read 获取新 URL |
+| ref_image_path 无法访问 | 远程 MCP Server 无法访问本地文件路径 | 使用 generate_image 返回的 file_path（服务器端路径），或通过 download_image 中转 |
 
 ---
 
@@ -424,6 +521,7 @@ COLOR RELATIONSHIPS:
 - [ ] 候选评估完成，选中匹配度最高的
 - [ ] best-refs.md 已更新
 - [ ] 正式上色图 `$DIR/colored_NN.png` 存在
+- [ ] 线稿完整性已通过 analyze_image 验证
 
 ## 验证清单（全部完成后）
 
@@ -432,4 +530,5 @@ COLOR RELATIONSHIPS:
 - [ ] 收敛修正完成（全部 PASS 或达最大轮次）
 - [ ] 回溯统一完成（如需要）
 - [ ] 无 FAIL 项或已标记人工复核
+- [ ] 线稿完整性在所有图中已确认
 - [ ] 最终报告已交付
