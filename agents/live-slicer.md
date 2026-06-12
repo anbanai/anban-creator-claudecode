@@ -230,7 +230,7 @@ ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:no
 
    c. 验证写入的 JSON 文件有效性：
    ```bash
-   python3 -c "import json; json.load(open('<draft_info_path>'))"
+   jq empty "<draft_info_path>"
    ```
 
    d. 记录结果到 `$DIR/clip-draft-results.json`：

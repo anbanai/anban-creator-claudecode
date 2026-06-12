@@ -303,7 +303,7 @@ Apply after any write operation:
 
 ### 1. Valid JSON
 ```bash
-python3 -c "import json; json.load(open('<filePath>'))" && echo "Valid JSON"
+jq empty "<filePath>" && echo "Valid JSON"
 ```
 
 ### 2. Material References Exist
