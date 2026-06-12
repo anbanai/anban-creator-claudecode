@@ -17,14 +17,14 @@ The plugin follows an **Agent + Skill + MCP** architecture: Claude Code agents o
 
 ### Agents (`agents/`)
 
-Orchestration engines that run fully autonomous, zero-interaction pipelines. Each agent has a frontmatter block with `name`, `tools`, `skills`, `mcpServers`, `maxTurns`, and `memory` config. The agent definition is the single source of truth for its pipeline's flow, quality standards, risk mitigation, and success criteria.
+Orchestration engines that run fully autonomous, zero-interaction pipelines. Each agent has a frontmatter block with `name`, `skills`, `mcpServers`, `maxTurns`, and `memory` config. The agent definition is the single source of truth for its pipeline's flow, quality standards, risk mitigation, and success criteria. Do not add a `tools` allowlist to agents that need MCP tools; Claude Code treats `tools` as an allowlist and can hide `mcp__anbanwriter__...` tools from subagents.
 
 | Agent | Trigger | Pipeline |
 |-------|---------|----------|
 | `wechatarticle` | "写文章", "发文章" | Research → Write → De-AI → SEO → Cover → Illustrations → HTML → Draft |
 | `seednote` | "种草笔记", "种草", "复刻" | Research → Viral analysis (replicate) → Content → Image plan → Cover + Content images → Compliance → Archive |
 | `live-slicer` | "直播切片", "剪直播", "听悟" | ffmpeg prep → TingWu transcription → Invalid sentence filter → Segment/subject planning → Batch cuts/concat → CapCut export → Report |
-| `designer` | "上色", "填色", "线稿", "color consistency", "designer" | Init → Progressive coloring (2-candidate) → Full audit → Convergence correction (max 3 rounds) → Backtrack unification → Report |
+| `designer` | "上色", "填色", "线稿", "color consistency", "designer" | Init → Progressive coloring (single-candidate by default, optional 2-candidate) → Full audit → Best-effort correction/backtracking → Report with `needs_img2img` where strict line preservation is impossible |
 
 Agents use TaskCreate/TaskUpdate for progress tracking and report progress as `[N/M] step complete → path (detail)`.
 
@@ -78,14 +78,14 @@ Lifecycle hooks for quality verification:
 - **Zero user interaction**: All agents run autonomously. Decisions are recorded in `$DIR/*.md` files, never by asking the user.
 - **Workspace isolation**: Each creation task calls `prepare_workspace` MCP tool to obtain the canonical workspace path, then creates the directory locally with `mkdir -p`. The MCP tool only computes and returns the path — it does not create directories or move files.
 - **File naming**: Agents use numbered prefixes (`01-research.md`, `02-outline.md`...) or semantic names (`cover.png`, `content.md`, `image-plan.md`).
-- **Image reference chain**: First image establishes visual style; subsequent images use the first as `--ref` to maintain consistency.
+- **Image reference chain**: First image establishes visual style; subsequent images use the first as reference to maintain consistency. For line-art coloring, current `generate_image` is best-effort reference-image generation, not a guaranteed line-preserving colorize tool.
 - **Skill references**: Agents invoke skills via `using the <skill-name> skill` phrasing, not the Skill tool.
 - **Content is Chinese**: All generated content targets Chinese social media platforms. Prohibited words lists (违禁词) are in `references/prohibited-words.md`.
 - **Live slicing media dependency**: `live-slicer` and `live-slice` require local `ffmpeg` and `ffprobe`; they support continuous clips and subject-script multi-part concat clips without a local helper runtime.
 
 ## Modifying This Plugin
 
-- **Adding a new agent**: Create `agents/<name>.md` with frontmatter (name, tools, skills, mcpServers, maxTurns) and pipeline definition following existing agent structure.
+- **Adding a new agent**: Create `agents/<name>.md` with frontmatter (name, skills, mcpServers, maxTurns) and pipeline definition following existing agent structure. Omit `tools` unless you intentionally want to restrict the agent to a small allowlist that includes every required MCP tool.
 - **Adding a new skill**: Create `skills/<name>/SKILL.md` with frontmatter name/description. Add `references/` for detailed guides.
 - **Adding a new theme**: Themes are managed server-side. Contact the server admin to add new themes.
 - **Adding a new writer style**: Add `writers/<name>.yaml` with required `name`, `english_name`, `writing_prompt`.

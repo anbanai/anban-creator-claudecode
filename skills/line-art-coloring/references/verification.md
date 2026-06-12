@@ -4,12 +4,19 @@
 
 验证的目的是确保跨图颜色一致性。不是模糊的「看起来差不多」，而是逐实体逐部位的精确比对。
 
+当前 `generate_image` 不是专用 img2img/colorize_lineart 工具。验证结论必须区分：
+- **颜色一致性**：是否符合 Color Bible。
+- **线稿保持风险**：是否出现线条重绘、构图偏移、比例变化或元素增删。
+
+如果颜色问题需要“只改颜色不动线稿”才能修复，标记 `needs_img2img`，不要把重新生成说成严格修正。
+
 ## 图像分析方法
 
 **所有图像视觉分析通过 `analyze_image` MCP 工具执行，不依赖 Read 的视觉能力。**
 
 - 对 generate_image 生成的图：使用返回的 `file_path`（服务器端路径）传 `file_path` 参数
 - 对已有 CDN URL 的图：传 `image_url` 参数
+- 若 `file_path` 分析因 10MB 限制失败，先 `compress_image`，仍失败则 `upload_image` 后用 `image_url` 重试。
 
 ## 三级验证
 
@@ -32,7 +39,7 @@
 | MINOR | 色调正确但饱和度/明度有轻微偏差 | Color Bible: "bright cherry red" → 观察: "slightly darker red, still clearly red" |
 | FAIL | 色调错误 | Color Bible: "deep navy blue" → 观察: "appears black" 或 "appears royal blue" |
 
-4. 线稿完整性验证：调用 `analyze_image(channel_id="$CHANNEL_ID", file_path=上色图服务器端路径, image_url=原始线稿CDN_URL, prompt="比对这张上色图与原始线稿的线条是否完全一致。检查：线条粗细是否改变、线条是否模糊或被重绘、构图比例是否偏移、是否有新增或丢失的线条元素。只报告线稿保持状态，不评论颜色。")` → 确认线稿未被修改
+4. 线稿完整性验证：调用 `analyze_image(channel_id="$CHANNEL_ID", file_path=上色图服务器端路径, image_url=原始线稿CDN_URL, prompt="比对这张上色图与原始线稿的线条保持情况。检查：线条粗细是否改变、线条是否模糊或被重绘、构图比例是否偏移、是否有新增或丢失的线条元素。只报告线稿保持风险，不评论颜色。")` → 审计线稿风险；不能确认时标记 `needs_img2img`
 
 **产出**：更新 `$DIR/best-refs.md` 中的质量评估。
 
@@ -180,7 +187,7 @@ Details:
 | 次要部位 MINOR + 仅 1 张图 | 建议修正 |
 | 次要部位 MINOR + 多张图类似 | 可接受 |
 | 背景元素 MINOR | 可接受 |
-| 线稿被修改 | 必须重新生成 |
+| 线稿被修改 | 标记 `needs_img2img`；只有用户接受 best-effort 时才重新生成 |
 
 ## 修正策略
 
@@ -189,7 +196,7 @@ Details:
 1. 确定该实体的当前 best_ref
 2. 用 best_ref 的服务器端 `file_path` 作 `ref_image_path`
 3. 构建 correction prompt（明确指出偏差 + 正确值）
-4. 生成 2 个候选选最优
+4. 默认生成 1 个候选；质量优先模式生成 2 个候选选最优
 5. 验证修正结果
 
 ### MINOR 修正
@@ -222,12 +229,14 @@ CRITICAL LINE PRESERVATION: Every line, stroke, and proportion must remain
 or remove any lines. Only change the COLOR of [Entity], nothing else.
 ```
 
+上面的 line preservation 文案是 prompt 约束，不是能力承诺。若输出仍改变线稿，记录 `needs_img2img`。
+
 ### 修正后验证
 
 修正后必须通过 `analyze_image` 重新验证：
 1. 修正的实体是否颜色正确了
 2. 其他实体是否被影响（模型有时改一个会影响其他）
-3. 线稿构图是否保持完整（未被修改）
+3. 线稿构图是否保持完整；若被修改，标记 `needs_img2img`
 
 如果修正引入了新问题（其他实体被影响），需要在新一轮修正中一并处理。
 
@@ -242,8 +251,9 @@ or remove any lines. Only change the COLOR of [Entity], nothing else.
 | FAIL 数不变但位置变化 | 继续下一轮（换修正策略） |
 | FAIL 数不变且位置不变 | 停止循环，标记人工复核 |
 | FAIL 数增加 | 回退本轮修正，停止循环 |
+| 线稿风险升高 | 停止循环，标记 `needs_img2img` |
 
-最大轮次：3 轮。超过后未解决项标记 `needs_manual_review`。
+最大轮次：3 轮。超过后未解决项标记 `needs_manual_review`；需要局部保线稿换色的项标记 `needs_img2img`。
 
 ## 回溯触发
 
@@ -255,4 +265,4 @@ or remove any lines. Only change the COLOR of [Entity], nothing else.
 
 回溯范围：只回溯包含该实体、且非 best_ref 的图。
 
-回溯后重新审计确认。
+回溯后重新审计确认。若回溯会明显改变线稿，停止并标记 `needs_img2img`。
