@@ -61,7 +61,7 @@ maxTurns: 20
 
 #### 步骤 1：判断模式并创建任务
 
-如果用户提供种草笔记 ID、链接、xsec_token 线索，或明确说复刻、仿写、改写、克隆，则选择复刻模式（9 个任务：公共前置、源笔记获取、爆款拆解、内容改写、图片生成、合规检查、归档、标题入库与模板保存、最终报告）；否则选择原创模式（7 个任务：公共前置、选题研究、内容写作、图片生成、归档、标题入库、最终报告）。
+如果用户提供种草笔记 ID、链接、xsec_token 线索，或明确说复刻、仿写、改写、克隆，则选择复刻模式（8 个任务：公共前置、源笔记获取、爆款拆解、内容改写、图片生成、合规检查、归档与模板保存、最终报告）；否则选择原创模式（6 个任务：公共前置、选题研究、内容写作、图片生成、归档、最终报告）。
 
 使用 `TaskCreate` 创建任务列表，设置依赖：每个任务 `blockedBy` 前一个任务。后续每步开始前执行 `TaskUpdate status=in_progress`，完成后执行 `TaskUpdate status=completed`。
 
@@ -143,16 +143,13 @@ maxTurns: 20
 
 #### 步骤 10：归档工作目录
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="archive", title="归档", description="归档工作目录到最终路径")`。确认 AI 最终选定标题 `$FINAL_TITLE`（必须是面向用户发布的笔记标题，不得使用 `图片内容规划`、`标题候选与评分`、`选题研究报告`、`违禁词合规检查报告` 等内部产物标题）。调用 `archive_workspace`（`content_type="seednote"`, `name="$FINAL_TITLE"`）获取归档路径 `$ARCHIVE_DIR`。通过 Bash 执行 `mkdir -p "$ARCHIVE_DIR" && mv "$DIR"/* "$ARCHIVE_DIR/" 2>/dev/null`。若归档目录已存在，追加序号（如 `标题-2/`），确保不覆盖已有成果。归档失败时保留 `$DIR` 原始成果并报告两个路径。
+调用 `update_task_progress(task_id=$TASK_ID, stage="archive", title="归档", description="归档工作目录到最终路径")`。确认 AI 最终选定标题 `$FINAL_TITLE`（必须是面向用户发布的笔记标题，不得使用 `图片内容规划`、`标题候选与评分`、`选题研究报告`、`违禁词合规检查报告` 等内部产物标题）。最终标题写入系统排重库由 seednote SubagentStop hook 统一负责，agent 不要自行调用标题上报工具。调用 `archive_workspace`（`content_type="seednote"`, `name="$FINAL_TITLE"`）获取归档路径 `$ARCHIVE_DIR`。通过 Bash 执行 `mkdir -p "$ARCHIVE_DIR" && mv "$DIR"/* "$ARCHIVE_DIR/" 2>/dev/null`。若归档目录已存在，追加序号（如 `标题-2/`），确保不覆盖已有成果。归档失败时保留 `$DIR` 原始成果并报告两个路径。
 
 **产出**：`$ARCHIVE_DIR`
 
-#### 步骤 11：标题入库与模板保存
+#### 步骤 11：模板保存（仅复刻模式）
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="finalize", title="标题入库", description="将最终标题写入排重库并保存模板")`。
-
-1. **标题入库**：调用 `finalize_task_title(task_id=$TASK_ID, title=$FINAL_TITLE)`。若返回重复标题错误，修改标题后更新 `$DIR/content.md`（或 `$ARCHIVE_DIR/content.md`）首行标题，然后重试 `finalize_task_title`。重复标题修改不超过 3 次。
-2. **模板保存**（仅复刻模式）：检查 `$DIR/viral-template.json` 和 `$DIR/template-meta.json`（归档后检查 `$ARCHIVE_DIR/` 下对应文件）是否均存在，且 `template-meta.json` 中 `save_eligible=true`。条件满足时调用 `save_template` MCP 工具，参数为：`type="seednote"`、`name=template-meta.name`、`category=template-meta.category`、`structure=viral-template.json`（文件内容）、`style_prompt=viral-template.cover_template`、`tags=template-meta.tags`。若 `save_template` 失败，记录日志但不阻塞流程。
+调用 `update_task_progress(task_id=$TASK_ID, stage="finalize", title="模板保存", description="保存复刻模板到模板库")`。检查 `$DIR/viral-template.json` 和 `$DIR/template-meta.json`（归档后检查 `$ARCHIVE_DIR/` 下对应文件）是否均存在，且 `template-meta.json` 中 `save_eligible=true`。条件满足时调用 `save_template` MCP 工具，参数为：`type="seednote"`、`name=template-meta.name`、`category=template-meta.category`、`structure=viral-template.json`（文件内容）、`style_prompt=viral-template.cover_template`、`tags=template-meta.tags`。若 `save_template` 失败，记录日志但不阻塞流程。
 
 #### 步骤 12：最终报告
 

@@ -9,7 +9,7 @@ description: Use when analyzing or decomposing a Seednote (种草笔记) viral n
 
 爆款拆解必须是 **证据驱动**，不是主观点评。每个重要结论都要从源笔记内容、封面、互动数据、评论信号或账号定位中找到依据，并转化为可复用模板和下一步动作。
 
-本 skill 只负责分析与模板产物，不写新笔记，不调用 `save_template`。模板持久化由 seednote 完成 hook 统一处理。
+本 skill 只负责分析与模板产物，不写新笔记，不调用 `save_template`。模板持久化由 seednote agent 步骤 11 统一处理。
 
 ## 输入
 
