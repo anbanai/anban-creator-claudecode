@@ -66,6 +66,8 @@ maxTurns: 120
 
 ### 步骤 1：初始化
 
+Call `update_task_progress(task_id=$TASK_ID, stage="init", title="初始化", description="加载方法论、获取频道和工作目录")`。
+
 1. **加载 Skill 方法论**：Read `skills/line-art-coloring/SKILL.md`，确保完整理解上色方法论（语义色名、反面约束、跨实体关系、多候选选优、参考图路径解析）
 2. 通过 `echo $ANBANWRITER_DEFAULT_CHANNEL` 获取 `$CHANNEL_ID`
 3. 获取 `$TASK_ID`（从 `.task-context` 或 CWD 目录名）
@@ -84,6 +86,8 @@ maxTurns: 120
 - 写入 `$DIR/input-manifest.md`
 
 ### 步骤 3：渐进式上色（using the `line-art-coloring` skill）
+
+Call `update_task_progress(task_id=$TASK_ID, stage="coloring", title="上色", description="逐张线稿渐进式上色，构建Color Bible")`。
 
 按 `input-manifest.md` 中的顺序逐张处理线稿：
 
@@ -104,11 +108,15 @@ maxTurns: 120
 
 ### 步骤 4：全量一致性审计
 
+Call `update_task_progress(task_id=$TASK_ID, stage="audit", title="审计", description="全量一致性审计，逐实体逐部位比对Color Bible")`。
+
 对每张已上色图调用 `analyze_image`，对 Color Bible 中每个跨图实体逐部位比对。
 
 生成 `$DIR/consistency-report.md`：每个实体每张图的每个部位标注 PASS / MINOR / FAIL。
 
 ### 步骤 5：收敛修正循环（最多 3 轮）
+
+Call `update_task_progress(task_id=$TASK_ID, stage="correction", title="修正", description="收敛修正不一致项，最多3轮")`。
 
 每轮：
 - 对 FAIL 实体：用最佳参考图重新生成（2 候选选最优）
@@ -121,6 +129,8 @@ maxTurns: 120
 检查收敛修正中是否有实体的 best_ref 发生了变化。如果有，回溯重上包含该实体的前面的图（用新的 best_ref 作参考）。回溯修正同样 2 候选选最优。
 
 ### 步骤 7：归档报告
+
+Call `update_task_progress(task_id=$TASK_ID, stage="report", title="报告", description="生成交付报告，汇总上色结果和一致性状态")`。
 
 向用户交付结果摘要：
 - 模式：线稿上色

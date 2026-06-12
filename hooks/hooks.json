@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "wechatarticle agent 已完成执行。请检查 output/ 目录下的产出文件，生成结构化交付摘要：\n\n1. **产出文件**：列出所有生成的文件（HTML、draft.json、图片）及其路径\n2. **文章概要**：标题、字数、章节数\n3. **草稿状态**：是否成功创建草稿，draft_url 是什么\n4. **问题检查**：文件是否完整、HTML 是否符合微信规范\n\n如发现问题请明确指出并建议修复方案。"
+            "prompt": "wechatarticle agent 已完成执行。请检查 output/ 目录下的产出文件，生成结构化交付摘要：\n\n1. **产出文件**：列出所有生成的文件（HTML、draft.json、图片）及其路径\n2. **文章概要**：标题、字数、章节数\n3. **草稿状态**：是否成功创建草稿，draft_url 是什么\n4. **问题检查**：文件是否完整、HTML 是否符合微信规范\n\n如发现问题请明确指出并建议修复方案。\n\n最后，调用 submit_agent_feedback(task_id=$TASK_ID, agent_name=\"wechatarticle\", scores={quality:N, completeness:N, efficiency:N}, errors=\"<errors>\", optimizations=\"<optimizations>\", summary=\"<brief summary>\") 提交本次 agent 执行反馈。scores 按 1-10 评分，errors 填写遇到的问题（无则填空字符串），optimizations 填写可改进之处，summary 填写简要执行摘要。"
           }
         ]
       },
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "seednote agent 已完成执行。hook 负责最终标题入库，并在复刻模式下负责爆款模板持久化。请检查 output/seednote/ 目录下的产出文件。\n\n1. **确定笔记标题**：优先使用 content.md 的正式标题或归档目录名中的真实发布标题；不得使用 图片内容规划 / 标题候选与评分 / 选题研究报告 / 爆款拆解报告 / 违禁词合规检查报告 等内部产物标题。\n2. **标题上报**：立即调用 finalize_task_title(task_id=$TASK_ID, title=最终标题)。如果返回重复标题错误，重新拟定非重复标题、更新 content.md 首行后再次调用。如 finalize_task_title 调用失败，请停止并明确报告错误，不要声称任务已完成。\n3. **复刻模板保存（如存在）**：检查成果目录是否有 viral-template.json 和 template-meta.json。若两者存在且 template-meta.json 中 save_eligible=true，则读取两个 JSON，并通过 MCP 工具 save_template 保存模板。保存参数来自 template-meta.json 与 viral-template.json：type=\"seednote\"，name=template-meta.name，category=template-meta.category，structure=viral-template.json，style_prompt=viral-template.cover_template，tags=template-meta.tags（若工具支持 metadata/idempotency，则附带 source_feed_id、source_url、template_hash）。保存前若 list_templates/get_template 可用，先用 source_feed_id + template_hash 做幂等检查；已存在则记录为“已存在，跳过保存”。save_template 失败只写入交付摘要，不回滚内容产物，不阻塞最终交付。\n4. **内容文件**：检查 content.md 路径及正文字数。\n5. **图片列表**：列出所有生成的图片文件（封面 + 内容图），共 N 张。\n6. **决策记录**：topic-analysis.md 或 source-analysis.md 是否已生成；复刻模式还要检查 source-note.md、viral-template.json、template-meta.json。\n7. **问题检查**：图片数量是否 ≥3、content.md 是否包含话题标签；复刻模式下 source-analysis.md 是否包含证据驱动拆解。"
+            "prompt": "seednote agent 已完成执行。请检查 output/seednote/ 目录下的产出文件，生成结构化交付摘要：\n\n1. **标题验证**：确认 finalize_task_title 已被调用，检查任务标题是否已设置。如未设置，标记为问题。\n2. **内容文件**：检查 content.md 路径及正文字数。\n3. **图片列表**：列出所有生成的图片文件（封面 + 内容图），共 N 张。\n4. **决策记录**：topic-analysis.md 或 source-analysis.md 是否已生成；复刻模式还要检查 source-note.md、viral-template.json、template-meta.json。\n5. **问题检查**：图片数量是否 ≥3、content.md 是否包含话题标签；复刻模式下 source-analysis.md 是否包含证据驱动拆解。\n\n如发现问题请明确指出并建议修复方案。\n\n最后，调用 submit_agent_feedback(task_id=$TASK_ID, agent_name=\"seednote\", scores={quality:N, completeness:N, efficiency:N}, errors=\"<errors>\", optimizations=\"<optimizations>\", summary=\"<brief summary>\") 提交本次 agent 执行反馈。scores 按 1-10 评分，errors 填写遇到的问题（无则填空字符串），optimizations 填写可改进之处，summary 填写简要执行摘要。"
           }
         ]
       },
@@ -25,7 +25,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "designer agent 已完成执行。请检查工作目录下的产出文件，生成结构化交付摘要：\n\n1. **上色图列表**：列出所有 colored_NN.png 文件，确认总数与输入线稿数一致\n2. **Color Bible**：检查 color-bible.md 是否包含所有识别到的实体及颜色规格\n3. **一致性报告**：检查 consistency-report.md 是否已生成，逐实体确认状态（PASS/MINOR/FAIL）\n4. **修正记录**：如果进行了收敛修正，报告修正轮次和结果\n5. **人工复核项**：列出所有标记为 needs_manual_review 的项（如有）\n6. **线稿完整性**：抽查 2-3 张上色图，确认线条与原始线稿一致（无修改、模糊、重绘）\n7. **问题检查**：是否存在缺失图片、空文件、颜色明显偏差、线稿被修改等问题\n\n如发现问题请明确指出并建议修复方案。"
+            "prompt": "designer agent 已完成执行。请检查工作目录下的产出文件，生成结构化交付摘要：\n\n1. **上色图列表**：列出所有 colored_NN.png 文件，确认总数与输入线稿数一致\n2. **Color Bible**：检查 color-bible.md 是否包含所有识别到的实体及颜色规格\n3. **一致性报告**：检查 consistency-report.md 是否已生成，逐实体确认状态（PASS/MINOR/FAIL）\n4. **修正记录**：如果进行了收敛修正，报告修正轮次和结果\n5. **人工复核项**：列出所有标记为 needs_manual_review 的项（如有）\n6. **线稿完整性**：抽查 2-3 张上色图，确认线条与原始线稿一致（无修改、模糊、重绘）\n7. **问题检查**：是否存在缺失图片、空文件、颜色明显偏差、线稿被修改等问题\n\n如发现问题请明确指出并建议修复方案。\n\n最后，调用 submit_agent_feedback(task_id=$TASK_ID, agent_name=\"designer\", scores={quality:N, completeness:N, efficiency:N}, errors=\"<errors>\", optimizations=\"<optimizations>\", summary=\"<brief summary>\") 提交本次 agent 执行反馈。scores 按 1-10 评分，errors 填写遇到的问题（无则填空字符串），optimizations 填写可改进之处，summary 填写简要执行摘要。"
           }
         ]
       },
@@ -34,7 +34,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "live-slicer agent 已完成执行。请检查 output/live-slice/ 目录下的产出文件，生成结构化交付摘要：\n\n1. **成果目录**：本次任务对应的 output/live-slice/<task>/ 路径\n2. **核心文件**：metadata.json、audio.mp3、cover.jpg、analysis.json、invalid-sentences.json、segments.json、clip-plan.json 或 subject-clip-plan.json、clip_results.json、clip-manifest.json、transcript.md、summary.md 是否存在\n3. **切片结果**：读取 clip-manifest.json，统计成功/失败切片数量，确认每条成功结果包含 actual_duration_seconds，并列出 exports/ 下的视频文件和 exports/*.md\n4. **方案检查**：segments.json 或 subject-clip-plan.json 的句子范围是否能对应 analysis.json 的 sentences；检查 warnings、rejected，并确认 summary.md 是否列出“需人工复核片段”\n5. **问题检查**：是否存在空视频、失败命令、duration mismatch、part_results 缺失、听悟未完成、无效句过滤后素材不足等问题\n\n如发现问题请明确指出并建议从哪个步骤继续修复。"
+            "prompt": "live-slicer agent 已完成执行。请检查 output/live-slice/ 目录下的产出文件，生成结构化交付摘要：\n\n1. **成果目录**：本次任务对应的 output/live-slice/<task>/ 路径\n2. **核心文件**：metadata.json、audio.mp3、cover.jpg、analysis.json、invalid-sentences.json、segments.json、clip-plan.json 或 subject-clip-plan.json、clip_results.json、clip-manifest.json、transcript.md、summary.md 是否存在\n3. **切片结果**：读取 clip-manifest.json，统计成功/失败切片数量，确认每条成功结果包含 actual_duration_seconds，并列出 exports/ 下的视频文件和 exports/*.md\n4. **方案检查**：segments.json 或 subject-clip-plan.json 的句子范围是否能对应 analysis.json 的 sentences；检查 warnings、rejected，并确认 summary.md 是否列出"需人工复核片段"\n5. **问题检查**：是否存在空视频、失败命令、duration mismatch、part_results 缺失、听悟未完成、无效句过滤后素材不足等问题\n\n如发现问题请明确指出并建议从哪个步骤继续修复。\n\n最后，调用 submit_agent_feedback(task_id=$TASK_ID, agent_name=\"live-slicer\", scores={quality:N, completeness:N, efficiency:N}, errors=\"<errors>\", optimizations=\"<optimizations>\", summary=\"<brief summary>\") 提交本次 agent 执行反馈。scores 按 1-10 评分，errors 填写遇到的问题（无则填空字符串），optimizations 填写可改进之处，summary 填写简要执行摘要。"
           }
         ]
       }
@@ -45,7 +45,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "任务已完成。请验证以下质量维度：\n1. 产出文件是否存在且内容完整\n2. 命令执行是否有报错\n3. 格式是否符合目标平台规范（微信 HTML / 种草笔记文案）\n如发现问题请提醒用户并建议修复方案。"
+            "prompt": "任务已完成。请执行以下验证步骤：\n\n**步骤 1：产出文件收集**\n调用 list_task_files(task_id=$TASK_ID) 获取文件清单。报告文件总数、各角色分类（cover/html/markdown/image）及各文件大小。如未找到任何文件，标记为质量问题并提醒用户。\n\n**步骤 2：质量验证**\n1. 产出文件是否存在且内容完整\n2. 命令执行是否有报错\n3. 格式是否符合目标平台规范（微信 HTML / 种草笔记文案）\n如发现问题请提醒用户并建议修复方案。\n\n**步骤 3：反馈提交**\n调用 submit_agent_feedback(task_id=$TASK_ID, agent_name=\"general\", scores={quality:N, completeness:N, efficiency:N}, errors=\"<errors>\", optimizations=\"<optimizations>\", summary=\"<brief summary>\") 提交任务反馈。scores 按 1-10 评分，errors 填写遇到的问题（无则填空字符串），optimizations 填写可改进之处，summary 填写简要执行摘要。"
           }
         ]
       }
