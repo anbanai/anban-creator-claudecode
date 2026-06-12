@@ -17,6 +17,8 @@
 - 对 generate_image 生成的图：使用返回的 `file_path`（服务器端路径）传 `file_path` 参数
 - 对已有 CDN URL 的图：传 `image_url` 参数
 - 若 `file_path` 分析因 10MB 限制失败，先 `compress_image`，仍失败则 `upload_image` 后用 `image_url` 重试。
+- analyze_image 一次只分析一张图片；同时传 `file_path` 和 `image_url` 时服务端只会使用 `file_path`，不会做双图比较。
+- 线稿保持验证必须先为原始线稿生成线稿指纹，再分析上色图，将上色图审计结果与线稿指纹逐项比对。
 
 ## 三级验证
 
@@ -39,7 +41,10 @@
 | MINOR | 色调正确但饱和度/明度有轻微偏差 | Color Bible: "bright cherry red" → 观察: "slightly darker red, still clearly red" |
 | FAIL | 色调错误 | Color Bible: "deep navy blue" → 观察: "appears black" 或 "appears royal blue" |
 
-4. 线稿完整性验证：调用 `analyze_image(channel_id="$CHANNEL_ID", file_path=上色图服务器端路径, image_url=原始线稿CDN_URL, prompt="比对这张上色图与原始线稿的线条保持情况。检查：线条粗细是否改变、线条是否模糊或被重绘、构图比例是否偏移、是否有新增或丢失的线条元素。只报告线稿保持风险，不评论颜色。")` → 审计线稿风险；不能确认时标记 `needs_img2img`
+4. 线稿完整性验证分两次单图分析：
+   - 原始线稿：调用 `analyze_image(channel_id="$CHANNEL_ID", image_url=原始线稿CDN_URL, prompt="只描述这张原始线稿的可验证线稿指纹，不评论颜色。包括：画面宽高方向、主体数量、主体位置、姿态、轮廓关键线、服装/道具/背景线条、构图边界、容易被重绘或丢失的小线条。")` → 写入 `$DIR/lineart-fingerprints.md`
+   - 上色图：调用 `analyze_image(channel_id="$CHANNEL_ID", file_path=上色图服务器端路径, prompt="只描述这张上色图的线条和构图状态，不评论颜色。按原始线稿指纹逐项检查：画面宽高方向、主体数量、主体位置、姿态、轮廓关键线、服装/道具/背景线条、构图边界、小线条是否存在。输出 PASS/MINOR/FAIL，并列出任何线条重绘、模糊、构图偏移、比例变化或元素增删。")`
+   - 将上色图审计结果与线稿指纹逐项比对；不能确认时标记 `needs_img2img`
 
 **产出**：更新 `$DIR/best-refs.md` 中的质量评估。
 

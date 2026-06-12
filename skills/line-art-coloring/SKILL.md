@@ -1,6 +1,6 @@
 ---
 name: line-art-coloring
-description: Best-effort line art coloring workflow with cross-image color consistency tracking. Uses incremental Color Bible building, optional candidate selection, visual audit, and explicit img2img-needed flags. Use when coloring line art images or when user mentions "线稿上色", "上色", "填色", "coloring", "color consistency", "批量上色", "角色上色", "给线稿上色".
+description: Use when coloring line art images, batch coloring multiple images, preserving visual consistency across characters, or when user mentions "线稿上色", "上色", "填色", "coloring", "color consistency", "批量上色", "角色上色", "给线稿上色".
 ---
 
 # 线稿上色——跨图颜色一致性保障
@@ -9,11 +9,11 @@ description: Best-effort line art coloring workflow with cross-image color consi
 
 | MCP 工具 | 说明 |
 |----------|------|
-| `analyze_image` (channel_id, image_url, file_path, prompt) | 图像视觉分析——传入图像 URL 或服务器文件路径，返回 AI 视觉分析结果。用于实体识别、候选评估、一致性审计、线稿验证 |
+| `analyze_image` (channel_id, image_url, file_path, prompt) | 图像视觉分析——传入图像 URL 或服务器文件路径，返回 AI 视觉分析结果。analyze_image 一次只分析一张图片；同时传 `file_path` 和 `image_url` 时服务端只会使用 `file_path`。用于实体识别、候选评估、一致性审计、线稿验证 |
 | `generate_image` (channel_id, prompt, image_type, output_path, ref_image_path, size, task_id) | 生成单张图片，返回 download_url 和 file_path。当前不是专用的 `colorize_lineart`，也不是严格的 img2img/ControlNet 上色 |
 | `upload_image` (channel_id, file_path) | 上传图片 |
 | `compress_image` (file_path) | 压缩图片 |
-| `download_image` (channel_id, url) | 下载在线图片 |
+| `download_image` (channel_id, url) | 下载在线图片到 MCP 服务器临时路径或上传到存储，不写入 agent 本地 `$DIR` |
 
 ---
 
@@ -54,6 +54,8 @@ CRITICAL: PRESERVE the exact line art composition. Every line, stroke, and propo
 ### 原则 2：使用 `analyze_image` 分析图像
 
 **Read 工具不用于图像视觉分析。** 在本环境中 Read 上传图像到 CDN 并返回 URL，不提供视觉内容。所有需要"看"图像的场景必须使用 `analyze_image`。
+
+**analyze_image 一次只分析一张图片。** 调用时二选一传 `image_url` 或 `file_path`；同时传 `file_path` 和 `image_url` 时服务端只会使用 `file_path`，不会做双图对比。线稿保持审计必须先为原始线稿生成线稿指纹，再分析上色图，将上色图审计结果与线稿指纹逐项比对。
 
 ---
 
@@ -97,9 +99,18 @@ CRITICAL: PRESERVE the exact line art composition. Every line, stroke, and propo
 ```
 
 **线稿验证**（每张上色图生成后）：
+
+先为原始线稿生成线稿指纹：
 ```
-比对这张上色图与原始线稿的线条是否完全一致。检查：线条粗细是否改变、线条是否模糊或被重绘、构图比例是否偏移、是否有新增或丢失的线条元素。只报告线稿保持状态，不评论颜色。
+只描述这张原始线稿的可验证线稿指纹，不评论颜色。包括：画面宽高方向、主体数量、主体位置、姿态、轮廓关键线、服装/道具/背景线条、构图边界、容易被重绘或丢失的小线条。
 ```
+
+再审计上色图：
+```
+只描述这张上色图的线条和构图状态，不评论颜色。按原始线稿指纹逐项检查：画面宽高方向、主体数量、主体位置、姿态、轮廓关键线、服装/道具/背景线条、构图边界、小线条是否存在。输出 PASS/MINOR/FAIL，并列出任何线条重绘、模糊、构图偏移、比例变化或元素增删。
+```
+
+将上色图审计结果与线稿指纹逐项比对；不能确认时标记 `needs_img2img`。
 
 ---
 
@@ -301,7 +312,7 @@ COLOR RELATIONSHIPS:
    # 后续使用该图作参考时
    generate_image(..., ref_image_path=server_path_a)
    ```
-2. **用户提供的本地线稿图**（仅用于需要以线稿本身作为参考图的场景）：先 Read 获取 CDN URL，再调用 `download_image(channel_id, CDN_URL)` 让服务器下载注册，返回的路径作为 ref_image_path
+2. **用户提供的本地线稿图**（仅用于需要以线稿本身作为参考图的场景）：先 Read 获取 CDN URL，再调用 `download_image(channel_id, CDN_URL)` 让服务器下载注册，返回的 `file_path` 作为 `ref_image_path`
 3. **无参考图**（纯 prompt 驱动）：不传 ref_image_path 参数
 
 确定参考图：
@@ -329,6 +340,7 @@ SERVER_PATH_A = result_a.file_path
 - 换一种方式描述同一颜色（如 "crimson red" → "deep blood red"）
 - 或换一种实体描述顺序
 - 或在 prompt 开头增加更强的一致性声明
+- 使用与候选 A 相同的参考来源独立生成，不把候选 A 当作候选 B 的参考，避免放大 A 的错误
 
 ```
 result_b = generate_image(
@@ -337,7 +349,7 @@ result_b = generate_image(
   image_type="content",
   output_path="/tmp/anbanwriter-line-art/$TASK_ID/colored_NN_b.png",
   size="[同候选 A]",
-  ref_image_path=SERVER_PATH_A  # 或其他合适的参考
+  ref_image_path=BEST_REF_SERVER_PATH  # 可为空；与候选 A 使用同一参考来源
 )
 SERVER_PATH_B = result_b.file_path
 ```
@@ -348,11 +360,11 @@ SERVER_PATH_B = result_b.file_path
 2. 高质量模式下，同样分析 SERVER_PATH_B。
 3. 对每个候选，逐实体逐部位比对 Color Bible → 计算匹配分，同时记录线稿/构图差异。
 4. 选择颜色得分最高且线稿风险最低的候选。
-5. 将选中候选的服务器端 `file_path` 写入 `$DIR/server-paths.md`；如需要本地归档，再用 `download_image` 或返回的 `download_url` 下载到 `$DIR/colored_NN.png`。
+5. 将选中候选的服务器端 `file_path` 写入 `$DIR/server-paths.md`。不能把 `download_image` 当作写入 `$DIR/colored_NN.png` 的本地归档步骤；`download_image` 只返回服务器端临时 `file_path` 或上传 URL。如需要本地归档，用 shell 下载 `download_url` 到 `$DIR/colored_NN.png`（或在 `download_url` 是 data URL 时解码写入该文件）。
 6. 如果两个候选都 < 70% 匹配：
    - 生成候选 C（换参考图或加强 prompt 约束）
    - 选三者中最好的
-7. 调用 `analyze_image` 验证线稿完整性：`prompt=线稿验证prompt`
+7. 调用 `analyze_image` 验证线稿完整性：先为原始线稿生成线稿指纹，再审计上色图，并将上色图审计结果与线稿指纹逐项比对。
 8. 更新 `$DIR/best-refs.md`：如果新图中某实体颜色比当前 best_ref 更好，更新
 9. 删除未选中的候选文件
 
@@ -550,6 +562,7 @@ COLOR RELATIONSHIPS:
 | CDN URL 过期 | Read 返回的 CDN URL 约 30 分钟后过期 | 获取后立即使用；需要重新分析时重新 Read 获取新 URL |
 | analyze_image 文件过大 | `file_path` 方式分析有 10MB 限制 | 先 `compress_image`，再失败则 `upload_image` 后用 `image_url` |
 | output_path 权限错误 | `output_path` 是 MCP 服务器端路径 | 使用 `/tmp/anbanwriter-line-art/$TASK_ID/...` |
+| 本地归档缺失 | 把 `download_image` 误当成本地保存工具 | 下载 `download_url` 到 `$DIR/colored_NN.png`，`download_image` 仅用于服务器端注册/中转 |
 | 长 prompt 504 Gateway Timeout | prompt 过长或约束过多 | Prompt 控制在 500 词以内，优先关键实体和关键颜色 |
 | ref_image_path 无法访问 | 远程 MCP Server 无法访问本地文件路径 | 使用 generate_image 返回的 file_path（服务器端路径），或通过 download_image 中转 |
 

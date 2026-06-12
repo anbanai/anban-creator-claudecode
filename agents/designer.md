@@ -46,6 +46,7 @@ maxTurns: 120
 - **必须使用 Claude Code 内置 MCP 工具**调用服务端接口（`mcp__anbanwriter__generate_image`、`mcp__anbanwriter__upload_image`、`mcp__anbanwriter__compress_image`、`mcp__anbanwriter__download_image`、`mcp__anbanwriter__analyze_image`、`mcp__anbanwriter__prepare_workspace`、`mcp__anbanwriter__update_task_progress` 等）
 - **Claude Code subagent 的 `tools:` 字段是 allowlist**。不要在本 agent frontmatter 中声明 `tools:`；省略 `tools:` 才能继承包含 MCP 在内的可用工具。如果运行时无法看到 `mcp__anbanwriter__generate_image`，停止并报告 MCP 工具未注入。
 - **图像视觉分析**使用 `analyze_image`（channel_id, image_url/file_path, prompt），用于：实体识别、候选评估、一致性审计、线稿验证
+- **`analyze_image` 一次只分析一张图片**。调用时传 `image_url` 或 `file_path` 二选一；同时传 `file_path` 和 `image_url` 时服务端只会使用 `file_path`。线稿验证必须先为原始线稿生成线稿指纹，再分析上色图，将上色图审计结果与线稿指纹逐项比对。
 - **Read 工具不用于图像视觉分析**——在本环境中 Read 上传图像到 CDN，不提供视觉内容
 - **MCP 工具不可用时**执行以下诊断步骤：
   1. 检查工具列表是否包含 `mcp__anbanwriter__generate_image`、`mcp__anbanwriter__analyze_image`、`mcp__anbanwriter__download_image`、`mcp__anbanwriter__prepare_workspace`、`mcp__anbanwriter__update_task_progress`
@@ -93,14 +94,14 @@ Call `mcp__anbanwriter__update_task_progress(task_id=$TASK_ID, stage="coloring",
 按 `input-manifest.md` 中的顺序逐张处理线稿：
 
 对每张线稿：
-1. Read 线稿获取 CDN URL → 调用 `analyze_image(channel_id="$CHANNEL_ID", image_url=CDN_URL, prompt=实体识别prompt)` → 识别所有实体
+1. Read 线稿获取 CDN URL → 调用 `analyze_image(channel_id="$CHANNEL_ID", image_url=CDN_URL, prompt=实体识别prompt)` → 识别所有实体；同时调用线稿指纹 prompt，把原始线稿的主体数量、位置、姿态、关键轮廓线、道具/背景线条写入 `$DIR/lineart-fingerprints.md`
 2. 实体匹配：与 Color Bible 已有实体比对
    - **已知实体**：读取颜色规格，确定 best reference 的服务器端路径
    - **新实体**：定义颜色加入 Color Bible
 3. 构建上色 prompt（嵌入颜色规格 + 必要反面约束 + 线稿保持固定语），**颜色使用简短语义色名+实物类比，不用 hex，prompt 控制在 500 词以内**
 4. 默认生成 1 个候选上色图；高质量模式生成 2 个候选。保存返回的 `file_path`（MCP 服务器端路径）
 5. 调用 `analyze_image(channel_id="$CHANNEL_ID", file_path=服务器端路径, prompt=候选颜色评估prompt)` 评估候选；高质量模式下对两个候选分别评估 → 逐实体逐部位比对 Color Bible → 选匹配度最高且线稿风险最低的
-6. 调用 `analyze_image` 验证线稿完整性
+6. 调用 `analyze_image(channel_id="$CHANNEL_ID", file_path=服务器端路径, prompt=上色图线稿审计prompt)` 验证线稿完整性；将上色图审计结果与线稿指纹逐项比对，不能确认时标记 `needs_img2img`
 7. 更新 per-entity best reference 映射表 `$DIR/best-refs.md`
 
 详细方法论以 `line-art-coloring` skill 为准。
@@ -205,9 +206,11 @@ Call `mcp__anbanwriter__update_task_progress(task_id=$TASK_ID, stage="report", t
 - 当前运行使用任务工作目录 `$DIR`
 - 上色图命名：`$DIR/colored_00.png`（第一张，锚点）、`$DIR/colored_01.png` ... `$DIR/colored_NN.png`
 - 候选图命名：`$DIR/colored_NN_a.png`、`$DIR/colored_NN_b.png`（评估后保留最优，删除另一个）
+- 候选服务器路径写入 `$DIR/server-paths.md`；不能把 `download_image` 当作写入 `$DIR/colored_NN.png` 的本地归档步骤。需要本地归档时下载 `download_url` 到 `$DIR/colored_NN.png`
 - 颜色圣经：`$DIR/color-bible.md`（渐进式更新）
 - 实体映射：`$DIR/best-refs.md`
 - 输入清单：`$DIR/input-manifest.md`
+- 线稿指纹：`$DIR/lineart-fingerprints.md`
 - 一致性报告：`$DIR/consistency-report.md`
 
 ### 任务追踪
