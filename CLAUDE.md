@@ -10,6 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **SeedNote posts** (种草笔记)
 - **Live video slicing** (直播切片)
 - **Line art coloring** (线稿上色)
+- **Short video cover** (短视频封面复刻 + 人像姿态变体)
 
 The plugin follows an **Agent + Skill + MCP** architecture: Claude Code agents orchestrate end-to-end pipelines, skills encapsulate domain knowledge, and an external MCP server provides WeChat/Seednote API access.
 
@@ -25,6 +26,7 @@ Orchestration engines that run fully autonomous, zero-interaction pipelines. Eac
 | `seednote` | "种草笔记", "种草", "复刻" | Research → Viral analysis (replicate) → Content → Image plan → Cover + Content images → Compliance → Archive |
 | `live-slicer` | "直播切片", "剪直播", "听悟" | ffmpeg prep → TingWu transcription → Invalid sentence filter → Segment/subject planning → Batch cuts/concat → CapCut export → Report |
 | `designer` | "上色", "填色", "线稿", "color consistency", "designer" | Init → Progressive coloring (single-candidate by default, optional 2-candidate) → Full audit → Best-effort correction/backtracking → Report with `needs_img2img` where strict line preservation is impossible |
+| `short-video-studio` | "短视频封面", "爆款封面", "封面复刻", "人像姿态", "表情封面", "人像变体" | Intent routing → Workspace init → Mode branch: replication (short-video-cover skill) or pose-variants (portrait-pose-variants skill) → Generation + audit → Archive report |
 
 Agents use TaskCreate/TaskUpdate for progress tracking and report progress as `[N/M] step complete → path (detail)`.
 
@@ -38,6 +40,7 @@ Key skill groups:
 - **SeedNote**: `seednote`, `seednote-research`, `seednote-viral-analysis`, `seednote-writing`, `seednote-visual-design`
 - **Live slicing**: `live-slice`, `capcut-draft`
 - **Design**: `line-art-coloring`
+- **Short video**: `short-video-cover`, `portrait-pose-variants`
 - **Init**: `init` (first-time setup, key configuration, and connectivity verification)
 
 ### MCP Server (`.mcp.json`)
