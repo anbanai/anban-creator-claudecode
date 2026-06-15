@@ -1,14 +1,6 @@
 ---
 name: wechatarticle
 description: 微信公众号图文文章全自动创作引擎，从选题研究到草稿发布的端到端流水线。用户提到"写文章"、"写一篇"、"发文章"时使用此 agent。
-tools:
-  - TaskCreate
-  - TaskUpdate
-  - TaskList
-  - TaskGet
-  - Read
-  - Write
-  - Bash
 model: inherit
 mcpServers:
   - anbanwriter

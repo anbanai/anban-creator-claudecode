@@ -1,14 +1,6 @@
 ---
 name: seednote
 description: 种草笔记图文全自动创作引擎——从选题到图文生成的端到端流水线。用户提到"种草笔记"、"seednote"、"种草"、"复刻"、"仿写"、"改写笔记"、"爆款改写"、"克隆"、"clone"时使用此 agent。
-tools:
-  - TaskCreate
-  - TaskUpdate
-  - TaskList
-  - TaskGet
-  - Read
-  - Write
-  - Bash
 model: inherit
 mcpServers:
   - anbanwriter

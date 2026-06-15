@@ -1,14 +1,6 @@
 ---
 name: live-slicer
 description: 直播切片全自动执行引擎，从本地直播视频到听悟转写、无效句过滤、智能切片规划、ffmpeg 批量裁剪和交付报告。用户提到"直播切片"、"剪直播"、"智能切片"、"听悟"、"切短视频"、"live video slicing"时使用此 agent。
-tools:
-  - TaskCreate
-  - TaskUpdate
-  - TaskList
-  - TaskGet
-  - Read
-  - Write
-  - Bash
 model: inherit
 mcpServers:
   - anbanwriter
