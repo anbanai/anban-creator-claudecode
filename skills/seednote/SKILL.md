@@ -21,8 +21,8 @@ description: 种草笔记图文全自动创作。用户提到"种草笔记"、"s
 
 ### 步骤 1：获取账号信息
 
-调用 MCP 工具：
-- `list_channels()` → 找到 `platform` 为 `seednote` 的 channel，记为 `$CHANNEL_ID`
+先通过 Bash 执行 `echo $ANBANWRITER_DEFAULT_CHANNEL` 检查环境变量。若非空，直接使用其值作为 `$CHANNEL_ID`，跳过下面的 `list_channels`。若为空（如本地无服务端上下文的纯 CLI 场景），调用 MCP 工具：
+- `list_channels(platform="seednote")` → 获取频道列表。只有一个匹配频道时记为 `$CHANNEL_ID`；多个匹配时按用户话题与频道 `name`/`positioning`/`keywords` 语义匹配，能明确判断则用之，否则向用户展示候选让其选择
 - `get_channel_profile(channel_id="$CHANNEL_ID", scope="seednote")` → 获取账号定位、关键词等信息
 - `list_channel_titles(channel_id="$CHANNEL_ID")` → 查看系统内已有标题，后续标题避开
 
@@ -103,7 +103,7 @@ description: 种草笔记图文全自动创作。用户提到"种草笔记"、"s
 
 | 步骤 | 调用技能 | 产出 |
 |------|----------|------|
-| 1 | 直接 MCP 调用 | `$CHANNEL_ID` |
+| 1 | Bash + MCP 调用 | `$CHANNEL_ID` |
 | 2 | 直接 MCP 调用 | `$DIR` |
 | 3 | `seednote-research` | `topic-analysis.md`（原创）或 `source-note.md`（复刻） |
 | 3b | `seednote-viral-analysis` | `source-analysis.md`, `viral-template.json`, `template-meta.json`（仅复刻模式） |
