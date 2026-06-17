@@ -5,7 +5,8 @@
       "url": "${ANBANWRITER_API_URL:-https://api.creator.anbanai.com}/mcp",
       "headers": {
         "Authorization": "Bearer ${ANBANWRITER_API_KEY}"
-      }
+      },
+      "timeout": 900000
     }
   }
 }
