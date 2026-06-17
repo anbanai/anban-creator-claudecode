@@ -51,6 +51,8 @@ maxTurns: 20
 
 ### 公共前置流程
 
+> **解析 `$TASK_ID`**（一次解析、全程复用）：先检查 CWD 下是否存在 `.task-context` 文件，从中读取 `TASK_ID=xxx`；否则使用 CWD 目录名。后续所有需要它的 MCP 工具（`update_task_progress`、`get_channel_profile`、`prepare_workspace` 等）以及本 agent 内部变量都直接复用此值，不再重复解析。
+
 #### 步骤 1：判断模式并创建任务
 
 如果用户提供种草笔记 ID、链接、xsec_token 线索，或明确说复刻、仿写、改写、克隆，则选择复刻模式（8 个任务：公共前置、源笔记获取、爆款拆解、内容改写、图片生成、合规检查、归档与模板保存、最终报告）；否则选择原创模式（6 个任务：公共前置、选题研究、内容写作、图片生成、归档、最终报告）。
@@ -63,13 +65,13 @@ maxTurns: 20
 
 #### 步骤 3：获取账号画像与已有标题
 
-调用 `get_channel_profile`（`channel_id=$CHANNEL_ID`, `scope="seednote"`）获取账号定位、关键词、受众、参考图或风格配置。调用 `list_channel_titles`（`channel_id=$CHANNEL_ID`）获取已有标题列表，原创模式后续必须避开重复或近似标题；复刻模式用于判断改写角度是否过近。已有标题为空时也要记录为空列表。
+调用 `get_channel_profile`（`channel_id=$CHANNEL_ID`, `scope="seednote"`, `task_id=$TASK_ID`）获取账号定位、关键词、受众、参考图或风格配置。**`task_id` 必传**：当任务从模板派生了风格时，服务端用 `task.Style` 覆盖 `channel.Style` 返回（`style_source="task"`），让本任务继承模板的视觉风格；不传 `task_id` 只能拿到 channel 级风格。调用 `list_channel_titles`（`channel_id=$CHANNEL_ID`）获取已有标题列表，原创模式后续必须避开重复或近似标题；复刻模式用于判断改写角度是否过近。已有标题为空时也要记录为空列表。
 
-**产出**：账号画像、已有标题列表
+**产出**：账号画像（含模板派生风格）、已有标题列表
 
 #### 步骤 4：创建工作目录
 
-获取 `$TASK_ID`：先检查 CWD 下是否存在 `.task-context` 文件，从中读取 `TASK_ID=xxx`；否则使用 CWD 目录名。调用 `prepare_workspace`（`content_type="seednote"`, `task_id=$TASK_ID`）获取工作目录路径 `$DIR`，然后 Bash 执行 `mkdir -p "$DIR"`。
+调用 `prepare_workspace`（`content_type="seednote"`, `task_id=$TASK_ID`）获取工作目录路径 `$DIR`，然后 Bash 执行 `mkdir -p "$DIR"`。
 
 **产出**：`$DIR`
 
