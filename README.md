@@ -2,6 +2,8 @@
 
 > 微信公众号、种草笔记与直播切片 AI 创作插件，基于 Claude Code Agent + Skill + MCP 架构。
 
+> **从旧版本升级？** `/init` 命令已改名为 `/setup`，以避免与 Claude Code 内置 `/init`（生成 CLAUDE.md）冲突。如果你之前在用 `/init` 配置 API Key，请改用 `/setup`。
+
 ## 接入流程
 
 按下面顺序操作，第一次接入最省事：
@@ -10,9 +12,9 @@
 2. 在设置页创建 API Key
 3. 在 Claude Code 里安装插件
 4. 把 API Key 写入 Claude Code 配置
-5. 运行 `/init`
+5. 运行 `/setup`
 6. 完全退出并重新启动 Claude Code
-7. 重启后再次运行 `/init` 验证连接
+7. 重启后再次运行 `/setup` 验证连接
 8. 开始用自然语言或指定 Agent 创作
 
 ---
@@ -70,15 +72,15 @@
 
 如果 `~/.claude/settings.json` 原来已经有别的配置，只需要把 `env` 里的字段合并进去，不要覆盖其他内容。
 
-## 5. 运行 `/init`
+## 5. 运行 `/setup`
 
 安装并写好 Key 后，在 Claude Code 中运行：
 
 ```bash
-/init
+/setup
 ```
 
-`/init` 会帮你检查：
+`/setup` 会帮你检查：
 
 - API Key 是否生效
 - MCP 服务是否连通
@@ -86,14 +88,14 @@
 
 ## 6. 重启 Claude Code
 
-`/init` 完成后，请**完全退出并重新启动 Claude Code**。
+`/setup` 完成后，请**完全退出并重新启动 Claude Code**。
 
 这是为了让新的环境变量和 MCP 连接真正生效。只刷新当前会话通常不够。
 
 重启以后，再运行一次：
 
 ```bash
-/init
+/setup
 ```
 
 如果能看到频道列表或连接成功提示，就说明接入已经完成。
@@ -122,7 +124,7 @@ claude --dangerously-skip-permissions --verbose --agent anbanwriter:live-slicer 
 
 ## 常用命令
 
-- `/init`
+- `/setup`
   初始化配置并验证连接
 - `/plugin`
   查看插件是否已安装成功
@@ -138,7 +140,7 @@ claude --dangerously-skip-permissions --verbose --agent anbanwriter:live-slicer 
 1. 是否已经在 [设置页](https://creator.anbanai.com/settings) 创建并复制了完整 API Key
 2. `~/.claude/settings.json` 里是否真的写入了 `ANBANWRITER_API_KEY`
 3. 是否已经完全退出并重启过 Claude Code
-4. 重启后是否重新执行过 `/init`
+4. 重启后是否重新执行过 `/setup`
 
 ## 支持的创作类型
 

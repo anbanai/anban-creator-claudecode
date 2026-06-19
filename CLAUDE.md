@@ -41,7 +41,7 @@ Key skill groups:
 - **Live slicing**: `live-slice`, `capcut-draft`
 - **Design**: `line-art-coloring`
 - **Short video**: `short-video-cover`, `portrait-pose-variants`
-- **Init**: `init` (first-time setup, key configuration, and connectivity verification)
+- **Setup**: `setup` (first-time setup, key configuration, and connectivity verification)
 
 ### MCP Server (`.mcp.json`)
 
