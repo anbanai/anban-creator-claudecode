@@ -1,5 +1,11 @@
 # 公众号封面图设计规范
 
+## 角色定位
+
+封面在 `visual-rhythm-plan.md` 中对应 `hero` slot（`image_size=full-bleed`, `2.35:1`），是全篇的视觉锚点。封面定调后，所有内容配图通过 `ref_image_path="$DIR/cover.png"` 继承风格。详见 [rhythm.md](rhythm.md)。
+
+封面也必须通过 vision 校验（`required_entities` 来自文章核心隐喻），不通过则重试一次，仍失败请求用户协助。
+
 ## 核心原则：账号驱动，非 Writer 驱动
 
 **Writer YAML 定义文字风格（语气、结构、修辞），不定义图片风格。** 封面图的视觉风格由账号定位、内容主题和目标受众三个维度独立决定。
