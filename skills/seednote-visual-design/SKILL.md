@@ -97,19 +97,20 @@ description: Generates cover (封面), content pages (内容图), and tail pages
 - 标记每组的关键词和推荐布局类型（参考 [references/content.md](references/content.md) 的 6 种布局模式）
 - 优先级排序：最重要的信息 → 首张内容图
 
-### 步骤 3：图片数量与布局选择
+### 步骤 3：图片构成与布局选择
 
-**图片数量决策**：
-1. 计算信息点组数 G
-2. N = max(G + 2, 3)（加上封面和尾图）
-3. N 取最近的奇数（3/5/7/9）
-4. N ≤ 9
+**图片构成严格按 user prompt 中的「图片构成要求」指令执行**（指令由服务端根据用户在创建任务/计划时的勾选注入）。四种组合：
 
-**内容类型 → 图片数量参考**：
-- 情感/生活：3-5 张
-- 干货/教程：5-7 张
-- 合集/测评：5-7 张
-- 旅行/探店：5-9 张
+| user prompt 指令 | 应生成文件 | 总数 |
+|---|---|---|
+| 仅封面 | cover.png | 1 |
+| 封面 + 内容图 | cover.png + image_01.png | 2 |
+| 封面 + 尾图 | cover.png + tail.png | 2 |
+| 封面 + 内容图 + 尾图 | cover.png + image_01.png + tail.png | 3 |
+
+**内容图（image_01.png）信息密度**：单张承载 2-4 个信息点；信息点超出时合并到同一张，不要扩展成多张内容图。布局模式参考 [references/content.md](references/content.md) 的 6 种布局。
+
+**image-plan.md 必须在「计划图片数量」字段写入实际数字**（1/2/3），机械闸门按此校验。
 
 ### 步骤 4：生成 image-plan.md
 
@@ -200,7 +201,7 @@ description: Generates cover (封面), content pages (内容图), and tail pages
 当提供改写模式和 `$DIR/viral-template.json` 时：
 - `style-only`：只参考 `cover_template` 的风格方向、信息层级和色彩倾向，完全重做具体构图
 - `medium`：参考源笔记的信息结构重新设计内容图主题，但替换视觉主体、场景和版式
-- `tight`：仅在 `recommended_clone_depth=tight` 且 `do_not_copy` 风险低时参考图片张数和各页主题关键词；不得复用源图人物姿势、图标组合、文字框位置或可识别构图
+- `tight`：仅在 `recommended_clone_depth=tight` 且 `do_not_copy` 风险低时参考图片张数和各页主题关键词；不得复用源图人物姿势、图标组合、文字框位置或可识别构图。**图片构成仍以 user prompt 指令为准；若源笔记超过预期张数，按信息点优先级合并到 user prompt 指令允许的范围内，并在 image-plan.md 记录合并理由**
 
 无论哪种模式，`do_not_copy` 中列出的元素都必须写入 `image-plan.md` 的风险提示，并在生成 prompt 时显式避开。若模板 `confidence=low` 或视觉证据不足，按 `style-only` 处理。
 

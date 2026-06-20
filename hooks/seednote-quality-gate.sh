@@ -6,7 +6,7 @@
 #   - $DIR/image-plan.md    证明走了 seednote-visual-design skill 的完整规划流程
 #   - $DIR/image-prompts.md 证明每次 generate_image 后都追加了 prompt 记录
 #   - $DIR/image-review.md  证明跑了 skill Step 6 质量验证
-#   - ≥3 张图（cover.png + image_*.png + tail.png）满足平台最低数量
+#   - 图片数 = image-plan.md 「计划图片数量」字段值（由 skill 步骤 3 写入，由 user prompt 指令驱动）
 #
 # 工作目录定位（关键）：
 #   prepare_workspace(task_id=X) 返回字面字符串 "output"（不是 output/seednote/X/）。
@@ -72,8 +72,18 @@ MISSING=()
 [[ ! -f "$SEEDNOTE_DIR/image-prompts.md" ]] && MISSING+=("image-prompts.md（说明 generate_image 调用后没记录 prompt）")
 [[ ! -f "$SEEDNOTE_DIR/image-review.md" ]]  && MISSING+=("image-review.md（说明没跑 skill Step 6 质量验证）")
 
-IMG_COUNT=$(find "$SEEDNOTE_DIR" -maxdepth 1 \( -name "cover.png" -o -name "image_*.png" -o -name "tail.png" \) -type f 2>/dev/null | wc -l | tr -d ' ')
-[[ "$IMG_COUNT" -lt 3 ]] && MISSING+=("图片数量（当前 $IMG_COUNT 张，应 ≥3：cover + 内容图 + tail）")
+# 图片数量：从 image-plan.md 解析「计划图片数量: N 张」字段（由 skill 步骤 3 写入）。
+# 四种合法值 1/2/3 对应封面 / 封面+内容图 / 封面+尾图 / 封面+内容图+尾图，由 user prompt 指令驱动。
+if [[ -f "$SEEDNOTE_DIR/image-plan.md" ]]; then
+  EXPECTED=$(grep -oE '计划图片数量[:：]\s*[0-9]+' "$SEEDNOTE_DIR/image-plan.md" 2>/dev/null | grep -oE '[0-9]+' | head -1)
+  if [[ -z "$EXPECTED" ]]; then
+    MISSING+=("image-plan.md 缺「计划图片数量」字段（说明 skill 步骤 3 未执行）")
+  else
+    IMG_COUNT=$(find "$SEEDNOTE_DIR" -maxdepth 1 \( -name "cover.png" -o -name "image_*.png" -o -name "tail.png" \) -type f 2>/dev/null | wc -l | tr -d ' ')
+    [[ "$IMG_COUNT" -ne "$EXPECTED" ]] && MISSING+=("图片数量（当前 $IMG_COUNT 张，应等于 image-plan.md 声明的 $EXPECTED 张）")
+    [[ ! -f "$SEEDNOTE_DIR/cover.png" ]] && MISSING+=("cover.png（封面必选）")
+  fi
+fi
 
 if [[ ${#MISSING[@]} -gt 0 ]]; then
   REASON="种子笔记机械闸门未通过（${SEEDNOTE_DIR}），缺失：
