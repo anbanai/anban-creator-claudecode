@@ -73,7 +73,7 @@ MISSING=()
 [[ ! -f "$SEEDNOTE_DIR/image-review.md" ]]  && MISSING+=("image-review.md（说明没跑 skill Step 6 质量验证）")
 
 # 图片数量：从 image-plan.md 解析「计划图片数量: N 张」字段（由 skill 步骤 3 写入）。
-# 四种合法值 1/2/3 对应封面 / 封面+内容图 / 封面+尾图 / 封面+内容图+尾图，由 user prompt 指令驱动。
+# 内容图张数按信息点自适应（0~3 张），总张数 1~5；机械闸门校验「声明数 == 实际文件数」+「内容图 ≤3」。
 if [[ -f "$SEEDNOTE_DIR/image-plan.md" ]]; then
   EXPECTED=$(grep -oE '计划图片数量[:：]\s*[0-9]+' "$SEEDNOTE_DIR/image-plan.md" 2>/dev/null | grep -oE '[0-9]+' | head -1)
   if [[ -z "$EXPECTED" ]]; then
@@ -82,6 +82,8 @@ if [[ -f "$SEEDNOTE_DIR/image-plan.md" ]]; then
     IMG_COUNT=$(find "$SEEDNOTE_DIR" -maxdepth 1 \( -name "cover.png" -o -name "image_*.png" -o -name "tail.png" \) -type f 2>/dev/null | wc -l | tr -d ' ')
     [[ "$IMG_COUNT" -ne "$EXPECTED" ]] && MISSING+=("图片数量（当前 $IMG_COUNT 张，应等于 image-plan.md 声明的 $EXPECTED 张）")
     [[ ! -f "$SEEDNOTE_DIR/cover.png" ]] && MISSING+=("cover.png（封面必选）")
+    CONTENT_COUNT=$(find "$SEEDNOTE_DIR" -maxdepth 1 -name "image_*.png" -type f 2>/dev/null | wc -l | tr -d ' ')
+    [[ "$CONTENT_COUNT" -gt 3 ]] && MISSING+=("内容图超过 3 张上限（当前 $CONTENT_COUNT 张，应 ≤3）")
   fi
 fi
 

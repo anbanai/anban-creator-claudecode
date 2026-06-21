@@ -60,7 +60,7 @@ description: 种草笔记图文全自动创作。用户提到"种草笔记"、"s
 
 使用 `seednote-visual-design` skill：
 - 传入 `$DIR/content.md`
-- 生成封面 `$DIR/cover.png`、内容图 `$DIR/image_01.png` ... `$DIR/image_0{N-2}.png`、尾图 `$DIR/tail.png`
+- 生成封面 `$DIR/cover.png`、内容图 `$DIR/image_01.png` ... `$DIR/image_03.png`、尾图 `$DIR/tail.png`
 - 图片规划写入 `$DIR/image-plan.md`
 
 ### 步骤 6：合规检查（复刻模式）
@@ -88,7 +88,7 @@ description: 种草笔记图文全自动创作。用户提到"种草笔记"、"s
 
 ## 质量标准
 
-- 图片总数 ≥ 3 张（封面 + 至少 2 张内容图 + 尾图）
+- 图片总数符合 image-plan.md「计划图片数量」声明值（封面 1 + 内容图 1~3 + 尾图 0~1）
 - 所有图片视觉风格一致
 - `content.md` 包含标题、正文、话题标签三部分
 - 标题 ≤ 20 字，关键词前置

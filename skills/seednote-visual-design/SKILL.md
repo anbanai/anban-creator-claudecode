@@ -91,9 +91,10 @@ description: Generates cover (封面), content pages (内容图), and tail pages
 
 ### 步骤 2：信息点提取与分组
 
-将提取的信息点按主题相关性分组：
-- 每组 2-3 个信息点（对应一张内容图）
+将提取的信息点按主题相关性分组，**每组对应一张内容图，组数即内容图张数（上限 3 张）**：
+- 每组 2-4 个信息点
 - 确保组间不重叠
+- 组数参考阈值：信息点 ≤4 → 1 张、5-8 → 2 张、≥9 → 3 张（以可读性为先，宁少勿挤）
 - 标记每组的关键词和推荐布局类型（参考 [references/content.md](references/content.md) 的 6 种布局模式）
 - 优先级排序：最重要的信息 → 首张内容图
 
@@ -104,13 +105,13 @@ description: Generates cover (封面), content pages (内容图), and tail pages
 | user prompt 指令 | 应生成文件 | 总数 |
 |---|---|---|
 | 仅封面 | cover.png | 1 |
-| 封面 + 内容图 | cover.png + image_01.png | 2 |
+| 封面 + 内容图 | cover.png + image_01.png … image_0N.png（1~3 张） | 2~4 |
 | 封面 + 尾图 | cover.png + tail.png | 2 |
-| 封面 + 内容图 + 尾图 | cover.png + image_01.png + tail.png | 3 |
+| 封面 + 内容图 + 尾图 | cover.png + image_01.png … image_0N.png（1~3 张）+ tail.png | 3~5 |
 
-**内容图（image_01.png）信息密度**：单张承载 2-4 个信息点；信息点超出时合并到同一张，不要扩展成多张内容图。布局模式参考 [references/content.md](references/content.md) 的 6 种布局。
+**内容图张数按信息点自适应（1~3 张）**：N 由步骤 2 的信息点分组决定，每张承载 2-4 个信息点，最多 3 张（image_01.png、image_02.png、image_03.png）。布局模式参考 [references/content.md](references/content.md) 的 6 种布局。
 
-**image-plan.md 必须在「计划图片数量」字段写入实际数字**（1/2/3），机械闸门按此校验。
+**image-plan.md 必须在「计划图片数量」字段写入实际生成的总张数**（1~5），机械闸门按此校验。
 
 ### 步骤 4：生成 image-plan.md
 
@@ -151,7 +152,7 @@ description: Generates cover (封面), content pages (内容图), and tail pages
 - 禁止元素: （英文、伪词、无关主题、误导性参数）
 - 验收标准: （文字准确 + 主体准确 + 与其他页面不重复）
 
-{重复 image_02 ... image_0{N-2}}
+（按步骤 2 分组重复 image_02、最多到 image_03；每组独立填写信息点 / 推荐布局 / 必须出现文字 / 视觉主体）
 
 ---
 
@@ -166,7 +167,7 @@ description: Generates cover (封面), content pages (内容图), and tail pages
 按 image-plan.md 逐一生成：
 
 1. **封面**：使用 [references/cover.md](references/cover.md) 的 Prompt 模板生成
-2. **内容图**：使用 [references/content.md](references/content.md) 的 Prompt 模板逐张生成，每张传入对应的信息点和布局，以封面作为参考图
+2. **内容图**：使用 [references/content.md](references/content.md) 的 Prompt 模板逐张生成（1~3 张），每张独立调用 `generate_image`，传入对应分组的信息点和布局；以封面作为参考图保持风格统一，多张内容图之间保证视觉多样性（不同实景背景 / 构图角度）
 3. **尾图**：使用 [references/tail.md](references/tail.md) 的 Prompt 模板单独生成
 4. **Prompt 备份**：每次调用 `generate_image` 后，必须把实际 prompt、`image_type`、`size`、`output_path`、`ref_image_path`、返回的 `provider`、`model`、`response_type`、`revised_prompt`、`output_mime` 追加写入 `$DIR/image-prompts.md`
 

@@ -93,7 +93,7 @@ maxTurns: 20
 
 #### 步骤 7：生成图片
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="image_generation", title="图片生成", description="规划并生成封面、内容图和尾图")`。using the `seednote-visual-design` skill，传入 `$DIR/content.md`。账号画像有可用参考图时优先使用参考图；否则动态设计 `$STYLE`，以封面确立基准风格。技能内部完成图片内容规划（`$DIR/image-plan.md`）和全部图片生成：封面 `$DIR/cover.png`、内容图 `$DIR/image_01.png` ... `$DIR/image_0{N-2}.png`、尾图 `$DIR/tail.png`。单张内容图失败时重试一次，仍失败则跳过并在最终报告标注；封面失败时重试两次，仍失败则请求用户协助。图片质量和风格一致性由 `seednote-visual-design` skill 内部验证流程保证。
+调用 `update_task_progress(task_id=$TASK_ID, stage="image_generation", title="图片生成", description="规划并生成封面、内容图和尾图")`。using the `seednote-visual-design` skill，传入 `$DIR/content.md`。账号画像有可用参考图时优先使用参考图；否则动态设计 `$STYLE`，以封面确立基准风格。技能内部完成图片内容规划（`$DIR/image-plan.md`）和全部图片生成：封面 `$DIR/cover.png`、内容图 `$DIR/image_01.png` ... `$DIR/image_03.png`、尾图 `$DIR/tail.png`。单张内容图失败时重试一次，仍失败则跳过并在最终报告标注；封面失败时重试两次，仍失败则请求用户协助。图片质量和风格一致性由 `seednote-visual-design` skill 内部验证流程保证。
 
 **产出**：`$DIR/image-plan.md`、`$DIR/cover.png`、内容图、`$DIR/tail.png`
 
@@ -155,7 +155,7 @@ maxTurns: 20
 
 - `content.md` 包含标题、正文、话题标签三部分
 - `image-plan.md` 包含封面、内容页和尾图规划
-- 图片总数不少于 3 张，且所有图片文件存在、可访问
+- 图片总数符合 image-plan.md「计划图片数量」声明值（封面 1 + 内容图 1~3 + 尾图 0~1），且所有图片文件存在、可访问
 - 图片视觉风格一致：同一色系、字体、布局语言和信息密度
 - 正文不包含诱导互动表述，格式规范以 `seednote-writing` skill 为准
 - 复刻模式下 `source-note.md` 包含源笔记详情，`source-analysis.md` 包含证据驱动拆解，`viral-template.json` 和 `template-meta.json` 存在
@@ -187,9 +187,9 @@ maxTurns: 20
 - [ ] `content.md` 包含标题、正文、话题标签三部分
 - [ ] `image-plan.md` 包含封面 + 内容页规划
 - [ ] 封面图 `$DIR/cover.png` 存在且可访问
-- [ ] 所有内容图 `$DIR/image_01.png` ... `$DIR/image_0{N-2}.png` 存在且可访问
+- [ ] 所有内容图 `$DIR/image_01.png` ... `$DIR/image_03.png` 存在且可访问
 - [ ] 尾图 `$DIR/tail.png` 存在且可访问
-- [ ] 图片总数 ≥ 3 张
+- [ ] 图片总数符合 image-plan.md「计划图片数量」声明值（封面 1 + 内容图 1~3 + 尾图 0~1）
 - [ ] 所有图片视觉风格一致
 - [ ] 复刻模式下 `source-note.md`、`source-analysis.md`、`viral-template.json`、`template-meta.json` 均存在
 - [ ] 复刻模式下 `source-analysis.md` 的核心结论均包含证据
@@ -199,7 +199,7 @@ maxTurns: 20
 
 ## 红旗检查清单
 
-- [ ] 图片数量 < 3 张 → 不符合平台推荐标准
+- [ ] 图片数量与 image-plan.md「计划图片数量」声明不符 → 需核对规划与实际产物
 - [ ] 封面与内容图风格明显不一致 → 需重新生成
 - [ ] `image-plan.md` 信息点模糊（无具体数字/场景/细节）→ 需补充具体内容
 - [ ] 同一信息点在多张图片重复 → 需重新规划
@@ -216,7 +216,7 @@ maxTurns: 20
 ### 文件组织
 
 - 当前运行使用任务工作目录（步骤 4，变量 `$DIR`），完成后按笔记标题归档为 `output/seednote/{标题}/`
-- 图片命名：`$DIR/cover.png`（封面）, `$DIR/image_01.png` ... `$DIR/image_0{N-2}.png`（内容图）, `$DIR/tail.png`（尾图）（N 由 `image-plan.md` 决定）
+- 图片命名：`$DIR/cover.png`（封面）, `$DIR/image_01.png` ... `$DIR/image_03.png`（内容图）, `$DIR/tail.png`（尾图）（N 由 `image-plan.md` 决定）
 - 内容草稿：`$DIR/content.md`（含标题/正文/话题标签）
 - 图片规划：`$DIR/image-plan.md`（`seednote-visual-design` skill 内部产物）
 - 决策记录：`$DIR/topic-analysis.md`（原创模式）或 `$DIR/source-analysis.md`（复刻模式）
@@ -262,7 +262,7 @@ maxTurns: 20
 - 合规报告：`$DIR/compliance-report.md`
 - 图片规划：`$DIR/image-plan.md`
 - 封面图：`$DIR/cover.png`
-- 内容图：`$DIR/image_01.png` ... `$DIR/image_0{N-2}.png`
+- 内容图：`$DIR/image_01.png` ... `$DIR/image_03.png`
 - 尾图：`$DIR/tail.png`
 - 最终归档：`output/seednote/{标题}/` 对应的 `$ARCHIVE_DIR`
 
