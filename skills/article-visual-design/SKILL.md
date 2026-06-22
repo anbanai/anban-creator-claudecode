@@ -9,9 +9,9 @@ description: Manages images for WeChat article (公众号图文) content includi
 
 | MCP 工具 | 说明 |
 |----------|------|
-| `generate_image` (channel_id, prompt, image_type, output_path, task_id, ref_image_path, verify_with_vision?, verification_prompt?) | 生成单张图片，可选自动视觉校验，返回 download_url、file_path、verification（可选） |
+| `generate_image` (channel_id, prompt, image_type, output_path, task_id, ref_image_path, verify_with_vision?, verification_prompt?, upload_to_cdn?) | 生成单张图片。`upload_to_cdn=true`（**生成与上传原子化**）时在同一调用内完成"生成→保存→视觉校验→压缩→上传微信 CDN"，直接返回 `wechat_url` + `media_id`；校验未通过则**不上传**；上传失败返回 `upload_error`（生成不浪费，仅重试上传）。返回 download_url、file_path、wechat_url、media_id、verification（可选） |
 | `analyze_image` (channel_id, image_url 或 file_path, prompt) | 用 vision 模型分析图片，用于人工二次校验或失败诊断 |
-| `upload_image` (channel_id, file_path) | 上传图片到微信 CDN，返回 CDN URL |
+| `upload_image` (channel_id, file_path) | 上传**外部/下载来的**图片到微信 CDN，返回 CDN URL。**已生成的图不再用此工具**——生成时直接用 `generate_image(upload_to_cdn=true)` 原子上传 |
 | `download_image` (channel_id, url) | 下载在线图片 |
 | `compress_image` (file_path) | 压缩图片 |
 
@@ -86,8 +86,8 @@ Phase 4: 配图生成（带 vision 校验）
 流程：
 1. 从 `$DIR/04-article-final.md` 提取核心论点和最强视觉隐喻
 2. 按 [references/cover.md](references/cover.md) 的模板构建 prompt
-3. 调用 `generate_image`（`channel_id=$CHANNEL_ID`, `prompt=封面提示词`, `image_type="cover"`, `output_path="$DIR/cover.png"`, `task_id=$TASK_ID`, `size="2.35:1"`）
-4. **Vision 校验**：调用 `generate_image` 时传入 `verify_with_vision=true` + `verification_prompt`，或生成后单独调用 `analyze_image`。校验 prompt 模板：
+3. 调用 `generate_image`（`channel_id=$CHANNEL_ID`, `prompt=封面提示词`, `image_type="cover"`, `output_path="$DIR/cover.png"`, `task_id=$TASK_ID`, `size="2.35:1"`, **`upload_to_cdn=true`**, `verify_with_vision=true`, `verification_prompt=<步骤 4 构建的校验 prompt>`）——**生成与上传原子化**：同一调用内完成生成→保存→校验→压缩→上传，直接返回 `media_id`（封面 thumb）+ `wechat_url`。
+4. **Vision 校验 prompt 模板**：
    ```
    这张图用于文章《$ARTICLE_TITLE》的封面。
    文章核心论点：$CORE_THESIS
@@ -97,8 +97,9 @@ Phase 4: 配图生成（带 vision 校验）
    2. 与文章主题的语义相关度（high/medium/low）
    3. 是否有不应出现的元素（文字水印、播放标记、低俗内容）？
    ```
-5. 校验失败时重试一次（更换 prompt 措辞），仍失败则请求用户协助
-6. 调用 `upload_image` 上传，获取 `media_id`
+   校验未通过时 `upload_to_cdn` **不会上传**（不浪费微信素材位）。
+5. 校验失败时重试一次（更换 prompt 措辞，**仍带 `upload_to_cdn=true`**），仍失败则请求用户协助
+6. 从 `generate_image` 返回值取 `media_id`（用于发布草稿的 thumb）+ `wechat_url`。若返回 `upload_error`（生成成功但上传失败），用 `upload_image(file_path="$DIR/cover.png")` 单独重试上传即可，**无需重新生成**
 
 **产出**：`$DIR/cover.png`, `media_id`, `$COVER_PATH`
 
@@ -155,7 +156,7 @@ Phase 4: 配图生成（带 vision 校验）
 }
 ```
 
-### 步骤 4c：生成图片（带 vision 校验）
+### 步骤 4c：生成图片（带 vision 校验 + 原子上传）
 
 ```
 generate_image(
@@ -166,13 +167,16 @@ generate_image(
   task_id=$TASK_ID,
   ref_image_path="$DIR/cover.png",
   verify_with_vision=true,
-  verification_prompt=<步骤 4b 构建的校验 prompt>
+  verification_prompt=<步骤 4b 构建的校验 prompt>,
+  upload_to_cdn=true
 )
 ```
 
-**关键**：`ref_image_path` 始终用 `$DIR/cover.png`（风格锚点）。
+**关键**：
+- `ref_image_path` 始终用 `$DIR/cover.png`（风格锚点）。
+- `upload_to_cdn=true` 让**生成与上传原子化**：同一调用内完成生成→保存→校验→压缩→上传微信 CDN。校验通过才上传（不浪费素材位），返回值直接带 `wechat_url` + `media_id`；校验失败则不上传，结果无 `wechat_url`。**不再有独立的 `upload_image` 阶段**——每张图生成的瞬间即持久化到 CDN。
 
-**旧版 server 兼容**：若 server 不支持 `verify_with_vision` 参数，去掉该参数生成图后，单独调用 `analyze_image` 做校验，并按 `references/content.md` 的容错解析规则处理返回文本：
+**旧版 server 兼容**：若 server 不支持 `verify_with_vision` / `upload_to_cdn` 参数，去掉这两个参数生成图后，单独调用 `analyze_image` 做校验 + `upload_image` 上传，并按 `references/content.md` 的容错解析规则处理返回文本：
 
 ```
 analyze_image(
@@ -195,10 +199,13 @@ analyze_image(
 - 把 visual_brief 改写得更具体（加入材质、颜色、方位）
 - 移除任何抽象风格词，只保留具体场景描述
 
-### 步骤 4e：上传并记录
+### 步骤 4e：记录并立即原子落盘（生成即持久化）
 
-- 调用 `upload_image` 获取 CDN URL
-- 写入 `$DIR/images.json`，每条记录必须包含：
+`generate_image(upload_to_cdn=true)` 返回时，**`wechat_url` + `media_id` 已就绪**（或返回 `upload_error`）。**无需调用 `upload_image`**。立即把这张图记录写回 `$DIR/images.json`——**每张图返回即落盘**，使中断最多丢失"正在生成的那一张"。
+
+- 从 `generate_image` 返回值取 `wechat_url` → 写入记录的 `url` 字段；`upload_error` 时记到 `upload_error` 字段并用 `upload_image(file_path=...)` 单独重试上传（**不重新生成**）。
+- **原子写** `$DIR/images.json`：先写临时文件 `$DIR/.images.json.tmp` → `fsync` → `rename` 覆盖 `$DIR/images.json`。绝不要"攒齐所有图再一次性写"——那是丢失窗口。
+- 每条记录必须包含：
   ```json
   {
     "index": 1,
@@ -225,6 +232,8 @@ analyze_image(
     "ref_image_path": "$DIR/cover.png",
     "file_path": "$DIR/img_01.png",
     "url": "https://cdn.../img_01.png",
+    "wechat_url": "https://cdn.../img_01.png",
+    "media_id": "媒体素材ID（来自 generate_image upload_to_cdn=true）",
     "quality_status": "passed"
   }
   ```
@@ -249,7 +258,8 @@ analyze_image(
 - [ ] **风格一致性**：`images.json` 中所有内容图 `ref_image_path="$DIR/cover.png"`
 - [ ] **视觉多样性**：3 张以上配图使用 3 种以上不同 `composition_type`（清单模板可豁免，因要求统一构图）
 - [ ] **Vision 校验通过率**：至少 80% 的内容图 `verification.passed=true`
-- [ ] **审计完整性**：`images.json` 每条含 `visual_brief` / `required_entities` / `must_match_excerpts` / `verification` / `slot_id` / `section_index`
+- [ ] **审计完整性**：`images.json` 每条含 `visual_brief` / `required_entities` / `must_match_excerpts` / `verification` / `slot_id` / `section_index` / `wechat_url` / `media_id`
+- [ ] **CDN 持久化**：`images.json` 每条都有非空 `wechat_url`（每张图生成即上 CDN）；缺 URL 的 slot 用 `generate_image(upload_to_cdn=true)` 补或 `upload_image` 重传
 
 未通过检查时：
 - 单图失败 → 重试或降级标记

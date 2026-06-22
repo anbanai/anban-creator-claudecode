@@ -185,14 +185,14 @@ using the article-visual-design skill 完成以下五个子步骤。详细规范
 
 记录分析结果：`$VISUAL_STYLE`（视觉风格描述）、`$COLOR_PALETTE`（色彩基调）、`$MOOD`（情绪氛围）。映射关系见 `skills/article-visual-design/references/cover.md`。
 
-##### 6d：生成封面（带 vision 校验）
+##### 6d：生成封面（带 vision 校验，生成与上传原子化）
 
 基于 6c 的风格分析与文章核心隐喻构建封面 prompt：
 
 1. 从 `$DIR/04-article-final.md` 提取核心论点和最强视觉隐喻
 2. 按 cover.md 模板构建 prompt
 3. 构建封面 required_entities（必须出现的具体物体）和 vision 校验 prompt
-4. 调用 `generate_image`：
+4. 调用 `generate_image`（**`upload_to_cdn=true` 让生成与上传原子化**：同一调用内完成生成→保存→校验→压缩→上传微信 CDN，直接返回 `media_id` + `wechat_url`）：
    ```
    generate_image(
      channel_id=$CHANNEL_ID,
@@ -202,12 +202,13 @@ using the article-visual-design skill 完成以下五个子步骤。详细规范
      task_id=$TASK_ID,
      size="2.35:1",
      verify_with_vision=true,
-     verification_prompt=<vision 校验 prompt>
+     verification_prompt=<vision 校验 prompt>,
+     upload_to_cdn=true
    )
    ```
-5. 校验失败时重试一次（更换 prompt 措辞），仍失败则请求用户协助
-6. 调用 `upload_image` 上传，获取 `media_id`
-7. 记录 `$COVER_PATH="$DIR/cover.png"`、`$COVER_CDN_URL`（供步骤 7/8 使用）
+5. 校验失败时重试一次（更换 prompt 措辞，**仍带 `upload_to_cdn=true`**），仍失败则请求用户协助
+6. 从返回值取 `media_id`（发布草稿的 thumb）+ `wechat_url`。**不再单独调用 `upload_image`**。若返回 `upload_error`（生成成功但上传失败），用 `upload_image(file_path="$DIR/cover.png")` 单独重传即可，**无需重新生成**
+7. 记录 `$COVER_PATH="$DIR/cover.png"`、`$COVER_MEDIA_ID`、`$COVER_CDN_URL`（供步骤 7/8/10 使用）
 
 ##### 6e：创建配图内容规划（升级 schema）
 
@@ -228,9 +229,9 @@ Call `update_task_progress(task_id=$TASK_ID, stage="illustration", title="插图
 
 using the article-visual-design skill 按 `$DIR/visual-rhythm-plan.md` 中 slot 顺序生成。每个需要图的 slot 执行：
 
-##### 7a：构建 prompt 并生成
+##### 7a：构建 prompt 并生成（生成与上传原子化）
 
-基于 image-plan.md 中对应 slot 的 `visual_brief` + `required_entities` + `composition_type` 叠加 `$VISUAL_STYLE` / `$COLOR_PALETTE` 构建 prompt。调用：
+基于 image-plan.md 中对应 slot 的 `visual_brief` + `required_entities` + `composition_type` 叠加 `$VISUAL_STYLE` / `$COLOR_PALETTE` 构建 prompt。调用（**`upload_to_cdn=true` 让生成与上传原子化**：校验通过才上传，返回值直接带 `wechat_url`/`media_id`）：
 
 ```
 generate_image(
@@ -241,11 +242,12 @@ generate_image(
   task_id=$TASK_ID,
   ref_image_path="$DIR/cover.png",
   verify_with_vision=true,
-  verification_prompt=<vision 校验 prompt，含 visual_brief + required_entities>
+  verification_prompt=<vision 校验 prompt，含 visual_brief + required_entities>,
+  upload_to_cdn=true
 )
 ```
 
-**关键**：`ref_image_path` 始终用 `$DIR/cover.png`（风格锚点）。
+**关键**：`ref_image_path` 始终用 `$DIR/cover.png`（风格锚点）。**不再有独立的批量 `upload_image` 阶段**——每张图生成的瞬间即上 CDN。
 
 ##### 7b：vision 校验与失败重试
 
@@ -260,10 +262,13 @@ generate_image(
 - 把 `visual_brief` 改写得更具体（加入材质、颜色、方位、数量）
 - 加强主体权重："MAIN SUBJECT: <具体物体>"
 
-##### 7c：上传并记录
+##### 7c：记录并立即原子落盘（生成即持久化）
 
-- 调用 `upload_image`（`channel_id=$CHANNEL_ID`, `file_path="$DIR/img_N.png"`）→ 获取 CDN URL
-- 写入 `$DIR/images.json`，每条记录必须含：`index`、`slot_id`、`section_index`、`image_type`、`chapter_title`、`composition_type`、`visual_brief`、`required_entities`、`must_match_excerpts`、`prompt`、`verification`（passed/score/missing_entities/notes/raw，**直接来自服务端返回值**）、`verification_audit`（attempt_count/sharper_prompt_history，**agent 维护**）、`ref_image_path`、`file_path`、`url`、`quality_status`
+`generate_image(upload_to_cdn=true)` 返回时，`wechat_url`/`media_id` 已就绪（或返回 `upload_error`）。**无需调用 `upload_image`**——立即把这张图写回 `$DIR/images.json`，使中断最多丢失"正在生成的那一张"，已上 CDN 的全部安全。
+
+- 从 `generate_image` 返回值取 `wechat_url` → 写入 `url` 字段；若返回 `upload_error`（生成成功但上传失败），记到 `upload_error` 字段并用 `upload_image(file_path="$DIR/img_N.png")` 单独重传（**不重新生成**），重传成功后再落盘
+- **原子写** `$DIR/images.json`：先写 `$DIR/.images.json.tmp` → `fsync` → `rename` 覆盖。**绝不要"攒齐所有图再一次性写"**——那是丢失窗口。每张图返回即落盘
+- 每条记录必须含：`index`、`slot_id`、`section_index`、`image_type`、`chapter_title`、`composition_type`、`visual_brief`、`required_entities`、`must_match_excerpts`、`prompt`、`verification`（passed/score/missing_entities/notes/raw，**直接来自服务端返回值**）、`verification_audit`（attempt_count/sharper_prompt_history，**agent 维护**）、`ref_image_path`、`file_path`、`url`、`wechat_url`、`media_id`、`quality_status`
 
 ##### 7d：插入到文章并回填 rhythm-plan
 
@@ -283,7 +288,8 @@ generate_image(
 - [ ] **风格一致性**：`images.json` 中所有内容图 `ref_image_path="$DIR/cover.png"`
 - [ ] **视觉多样性**：3+ 配图使用 3+ 种不同 `composition_type`（`listicle` 模板豁免）
 - [ ] **Vision 校验通过率**：至少 80% 的内容图 `verification.passed=true`
-- [ ] **审计完整性**：`images.json` 每条含 `visual_brief` / `required_entities` / `must_match_excerpts` / `verification` / `slot_id` / `section_index`
+- [ ] **审计完整性**：`images.json` 每条含 `visual_brief` / `required_entities` / `must_match_excerpts` / `verification` / `slot_id` / `section_index` / `wechat_url` / `media_id`
+- [ ] **CDN 持久化**：`images.json` 每条都有非空 `wechat_url`（即每张图已上微信 CDN）；缺 `wechat_url` 的 slot 必须补 `generate_image(upload_to_cdn=true)` 或 `upload_image` 重传
 
 未通过检查时按问题类型处理：单图失败降级、节奏/模板违规回 Phase 0、Vision 通过率 <80% 回 Phase 3。超过一半章节配图失败则暂停流程请求用户协助。
 

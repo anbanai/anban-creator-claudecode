@@ -59,8 +59,8 @@ description: Creates and manages WeChat news article drafts (图文草稿) with 
 ## 完整发布工作流
 
 1. 调用 `render_template`（带 `layout_plan`）将 Markdown + 节奏计划确定性渲染为 WeChat HTML（替代旧的 `convert_markdown`）
-2. 调用 `generate_image`（带 `verify_with_vision=true`）生成封面图到本地并通过 vision 校验
-3. 调用 `upload_image` 上传封面图到微信素材库，记录返回的 media_id
+2. 调用 `generate_image`（带 `verify_with_vision=true, upload_to_cdn=true`）生成封面图——**生成与上传原子化**，同一调用内完成生成→校验→压缩→上传微信 CDN，直接返回 `media_id` + `wechat_url`（无需单独 `upload_image`）。**流水线场景**：步骤 6d 已取得封面 `media_id`，直接复用即可，跳过本步
+3. （仅当上一步返回 `upload_error` 时）调用 `upload_image(file_path="$DIR/cover.png")` 单独重传获取 `media_id`，不重新生成
 4. 调用 `publish_draft` 创建草稿
 
 ## 流水线集成
