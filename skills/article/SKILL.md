@@ -31,7 +31,7 @@ description: 微信公众号图文文章全自动创作。用户提到"写文章
 
 **频道选定后，仅对 `$CHANNEL_ID` 调用：**
 
-- `get_channel_profile(channel_id="$CHANNEL_ID", scope="article")` → 获取账号定位、受众、写作风格
+- `get_channel_profile(channel_id="$CHANNEL_ID", scope="article", task_id="$TASK_ID")` → 获取账号定位、受众、写作风格。`task_id` 让服务端额外返回任务关联模板的内容脚手架（`template_writing_style` 写作风格 / `template_structure` 内容结构 / `template_example` 示例），若返回了这些字段，创作正文与配图时必须严格遵守；不传则只拿到 channel 级信息。
 - `list_drafts(channel_id="$CHANNEL_ID")` 和 `list_published_articles(channel_id="$CHANNEL_ID")` → 已有文章标题（如返回错误可忽略，用空列表继续）
 - `prepare_workspace(content_type="articles", task_id=TASK_ID)` → 工作目录路径 `$DIR`
 - Bash 执行 `mkdir -p "$DIR"` 创建目录
