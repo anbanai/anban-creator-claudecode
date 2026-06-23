@@ -60,7 +60,7 @@ Themes define visual styling for article排版. Themes are managed server-side v
 
 ### Writers (`writers/`)
 
-YAML files defining writing styles. Each has `name`, `english_name`, `writing_prompt` (required), plus optional `cover_prompt`, `core_beliefs`, `title_formulas`, `quote_templates`. Built-in styles: `dan-koe`, `cultural-depth`, `casual-science`.
+YAML files defining **writing** styles (the writer dimension only). Each has `name`, `english_name`, `writing_prompt` (required), plus optional `core_beliefs`, `title_formulas`, `quote_templates`. Writers **do not** carry visual identity — image visual style is an orthogonal dimension configured per channel/template/plan/task (see `article-visual-design` skill). Built-in styles: `dan-koe`, `cultural-depth`, `casual-science`.
 
 ### Layout Modules (`layouts/`)
 

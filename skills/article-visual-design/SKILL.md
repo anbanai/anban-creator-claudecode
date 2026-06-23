@@ -69,19 +69,34 @@ Phase 4: 配图生成（带 vision 校验）
 
 ---
 
-## Phase 1：三维风格分析
+## Phase 1：视觉风格确定（配置优先，分析兜底）
 
-基于 `get_channel_profile` 返回的 `$ACCOUNT_POSITIONING` / `$ACCOUNT_KEYWORDS` / `$ACCOUNT_AUDIENCE` 和 `$DIR/04-article-final.md` 内容，执行三维分析。
+### 步骤 1a：读取任务已解析的视觉风格（权威来源）
+
+公众号"模板"由三个**正交**维度组成：图片视觉（`style`）、写作风格（`writing_style`）、排版样式（`theme`）。三者各自独立解析，互不推导——**写作风格绝不决定图片视觉**。
+
+`get_channel_profile` 已按 `task > template > plan > channel` 解析并返回视觉维度的最终值：
+- `$VISUAL_STYLE_CONFIGURED` = profile 的 `style` 字段（解析后的视觉风格描述/关键词）
+- `$TEMPLATE_VISUAL_STYLE` = profile 的 `template_style` 字段（任务带模板时）
+- `$VISUAL_STYLE_SOURCE` = profile 的 `style_source`（task / template / plan / channel）
+
+**关键规则**：
+- 若 `$VISUAL_STYLE_CONFIGURED` 非空 → 它是**权威视觉锚点**。以它为 `$VISUAL_STYLE` 的核心，三维分析只做**补充细化**（配色、情绪、构图），**绝不可覆盖或偏离**配置的视觉方向。例如配置了"温暖自然的生活摄影"，分析就只能往暖色调、自然光、真实场景细化，**不得**生成维多利亚木刻/黑白版画等冲突风格。
+- 若 `$VISUAL_STYLE_CONFIGURED` 为空（所有层级都未配置视觉）→ 执行完整三维分析兜底。
+
+### 步骤 1b：三维风格分析（细化 / 兜底）
+
+基于 `get_channel_profile` 返回的 `$ACCOUNT_POSITIONING` / `$ACCOUNT_KEYWORDS` / `$ACCOUNT_AUDIENCE` 和 `$DIR/04-article-final.md` 内容，执行三维分析。当步骤 1a 有配置锚点时，分析必须向该锚点收敛（即用账号/内容主题来**充实**已指定的视觉方向），而非另起炉灶。
 
 详细规范见 [references/cover.md](references/cover.md)。
 
-**产出**：`$VISUAL_STYLE` / `$COLOR_PALETTE` / `$MOOD`
+**产出**：`$VISUAL_STYLE`（含配置锚点 + 细化方向）/ `$COLOR_PALETTE` / `$MOOD` / `$VISUAL_STYLE_SOURCE`
 
 ---
 
 ## Phase 2：封面生成
 
-基于 Phase 1 的风格分析和文章核心隐喻，从零构建封面 prompt（**不使用 writer YAML 的 cover_prompt**）。
+基于 Phase 1 的风格分析（配置锚点优先）和文章核心隐喻，从零构建封面 prompt。视觉方向取自任务解析的 `style` 字段——**不从 writer YAML 推视觉**（writer 仅决定文字风格，已不再携带任何视觉/封面字段）。
 
 流程：
 1. 从 `$DIR/04-article-final.md` 提取核心论点和最强视觉隐喻

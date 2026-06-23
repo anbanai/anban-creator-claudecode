@@ -110,17 +110,11 @@ writing_prompt: |
   你是一位简洁有力的写作者。
   用最少的字表达最清晰的观点。
   避免废话，直击要点。
-
-cover_prompt: |
-  为文章生成一个简洁有力的封面提示词。
-  使用极简主义风格。
-
-cover_style: "minimalist"
-cover_mood: "professional"
-cover_color_scheme: ["#000000", "#FFFFFF", "#FF0000"]
 ```
 
 详细格式参考 `writers/dan-koe.yaml`。
+
+> **注意**：writer YAML 只定义**写作风格**，不再包含 `cover_prompt`/`cover_style`/`cover_mood` 等封面字段。图片视觉是与写作风格正交的独立维度，由频道/模板/任务各自配置，详见 `article-visual-design` skill。
 
 ---
 

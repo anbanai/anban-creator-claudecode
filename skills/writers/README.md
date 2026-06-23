@@ -34,11 +34,6 @@ core_beliefs:
 writing_prompt: |
   你是[角色描述]...
   请将用户的内容，用[风格名]的风格重新演绎。
-
-# 封面相关（可选）
-cover_prompt: "[风格]风格的封面描述..."
-cover_style: "封面风格"
-cover_mood: "封面情绪"
 ```
 
 ### 3. 使用新风格
@@ -71,9 +66,8 @@ cover_mood: "封面情绪"
 | `writing_style` | 写作风格定义 |
 | `title_formulas` | 标题公式库 |
 | `quote_templates` | 金句模板 |
-| `cover_prompt` | 封面生成提示词 |
-| `cover_style` | 封面风格 |
-| `cover_mood` | 封面情绪 |
+
+> **关于封面/视觉**：writer **不再携带任何视觉身份**（曾经的 `cover_prompt`/`cover_style`/`cover_mood` 字段已移除）。图片视觉是与写作风格**正交**的独立维度，由频道/模板/计划/任务各自的 `style`（视觉）字段承载，在任务创建时按 `task > template > plan > channel` 解析。这样切断了"writer key 泄漏为图片风格"的 bug（如 dan-koe → 维多利亚木刻）。
 
 ---
 
@@ -124,46 +118,6 @@ writing_prompt: |
   - 直接陈述
 
   请将用户的内容，用海明威的冰山理论风格重新演绎。
-```
-
----
-
-## cover_prompt 编写指南
-
-封面提示词用于生成匹配文章风格的封面图。
-
-### 基本结构
-
-```yaml
-cover_prompt: |
-  # 角色
-  你是[封面设计师描述]。
-
-  # 任务
-  根据文章内容生成封面提示词。
-
-  ## 要求
-  - 风格：[风格描述]
-  - 比例：16:9 横向
-  - 颜色：[配色方案]
-  - 禁止：[不要做的]
-
-  # 文章内容
-  {article_content}
-```
-
-### 示例
-
-```yaml
-cover_prompt: |
-  生成一个简约风格的封面：
-  - 极简主义，黑白配色
-  - 几何线条，现代感
-  - 大量留白用于文字
-  - 16:9 横向
-
-  文章内容：
-  {article_content}
 ```
 
 ---
