@@ -10,7 +10,7 @@ description: Use when generating multiple pose/expression variants from a single
 | MCP 工具 | 说明 |
 |----------|------|
 | `analyze_image` (channel_id, image_url, file_path, prompt) | 图像视觉分析——传入图像 URL 或服务器文件路径，返回 AI 视觉分析结果。**Read 工具不用于图像视觉分析**，只用来获取 CDN URL。一次只分析一张图；同时传 `file_path` 和 `image_url` 时服务端只用 `file_path` |
-| `generate_image` (channel_id, prompt, image_type, output_path, ref_image_path, size, task_id) | 生成单张图片，返回 `download_url` 和 `file_path`。当前是参考图生成，**不是专用 ID-lock 工具** |
+| `generate_image` (channel_id, prompt, image_type, output_path, ref_image_path, size, task_id) | 生成单张图片，返回 `download_url`（始终为可 HTTP fetch 的存储 URL，不再返回 base64 data URL）和 `file_path`。当前是参考图生成，**不是专用 ID-lock 工具** |
 | `download_image` (channel_id, url) | 下载在线图片到 MCP 服务器临时路径，返回 `file_path`。用于把 Read 得到的 CDN URL 注册成 `ref_image_path` 可用的服务器端路径 |
 | `compress_image` (file_path) | 压缩图片——`analyze_image` 的 `file_path` 方式有 10MB 限制，超出时先压缩 |
 | `upload_image` (channel_id, file_path) | 上传图片，用于 `compress_image` 仍超 10MB 的兜底场景 |

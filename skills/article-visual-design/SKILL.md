@@ -9,7 +9,7 @@ description: Manages images for WeChat article (公众号图文) content includi
 
 | MCP 工具 | 说明 |
 |----------|------|
-| `generate_image` (channel_id, prompt, image_type, output_path, task_id, ref_image_path, verify_with_vision?, verification_prompt?, upload_to_cdn?) | 生成单张图片。`upload_to_cdn=true`（**生成与上传原子化**）时在同一调用内完成"生成→保存→视觉校验→压缩→上传微信 CDN"，直接返回 `wechat_url` + `media_id`；校验未通过则**不上传**；上传失败返回 `upload_error`（生成不浪费，仅重试上传）。返回 download_url、file_path、wechat_url、media_id、verification（可选） |
+| `generate_image` (channel_id, prompt, image_type, output_path, task_id, ref_image_path, verify_with_vision?, verification_prompt?, upload_to_cdn?) | 生成单张图片。`upload_to_cdn=true`（**生成与上传原子化**）时在同一调用内完成"生成→保存→视觉校验→压缩→上传微信 CDN"，直接返回 `wechat_url` + `media_id`；校验未通过则**不上传**；上传失败返回 `upload_error`（生成不浪费，仅重试上传）。返回 download_url（始终为可 HTTP fetch 的存储 URL，不再返回 base64 data URL）、file_path、wechat_url、media_id、verification（可选） |
 | `analyze_image` (channel_id, image_url 或 file_path, prompt) | 用 vision 模型分析图片，用于人工二次校验或失败诊断 |
 | `upload_image` (channel_id, file_path) | 上传**外部/下载来的**图片到微信 CDN，返回 CDN URL。**已生成的图不再用此工具**——生成时直接用 `generate_image(upload_to_cdn=true)` 原子上传 |
 | `download_image` (channel_id, url) | 下载在线图片 |

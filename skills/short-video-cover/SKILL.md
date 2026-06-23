@@ -10,7 +10,7 @@ description: Use when replicating viral short-video covers, generating a short-v
 | MCP 工具 | 说明 |
 |----------|------|
 | `analyze_image` (channel_id, image_url, file_path, prompt) | 图像视觉分析——传入图像 URL 或服务器文件路径，返回 AI 视觉分析结果。**Read 工具不用于图像视觉分析**，只用来获取 CDN URL。一次只分析一张图；同时传 `file_path` 和 `image_url` 时服务端只用 `file_path` |
-| `generate_image` (channel_id, prompt, image_type, output_path, ref_image_path, size, task_id) | 生成单张图片，返回 `download_url` 和 `file_path`。当前是参考图生成，不是 ControlNet/img2img |
+| `generate_image` (channel_id, prompt, image_type, output_path, ref_image_path, size, task_id) | 生成单张图片，返回 `download_url`（始终为可 HTTP fetch 的存储 URL，不再返回 base64 data URL）和 `file_path`。当前是参考图生成，不是 ControlNet/img2img |
 | `download_image` (channel_id, url) | 下载在线图片到 MCP 服务器临时路径或上传到存储，返回 `file_path`。用于把 Read 得到的 CDN URL 注册成 `ref_image_path` 可用的服务器端路径 |
 | `compress_image` (file_path) | 压缩图片——`analyze_image` 的 `file_path` 方式有 10MB 限制，超出时先压缩 |
 | `upload_image` (channel_id, file_path) | 上传图片，用于 `compress_image` 仍超 10MB 的兜底场景 |
@@ -215,7 +215,7 @@ COVER_SERVER_PATH = result.file_path
 
 **5c. 本地归档 + prompt 备份**：
 
-- 下载 `DOWNLOAD_URL` 到 `$DIR/cover.png`（若 `DOWNLOAD_URL` 是 data URL，base64 解码后写入；否则用 curl/wget 下载）
+- 下载 `DOWNLOAD_URL` 到 `$DIR/cover.png`（始终为可 HTTP fetch 的存储 URL，直接用 curl/wget 下载）
 - 把实际 prompt、image_type、size、output_path、ref_image_path、provider、model、response_type、revised_prompt、output_mime 全部追加到 `$DIR/cover-prompts.md`，便于复盘 504、构图偏移和颜色问题
 - 把 `COVER_SERVER_PATH` 记录到 `$DIR/server-paths.md`
 

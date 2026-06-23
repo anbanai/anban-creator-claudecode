@@ -10,7 +10,7 @@ description: Use when coloring line art images, batch coloring multiple images, 
 | MCP 工具 | 说明 |
 |----------|------|
 | `analyze_image` (channel_id, image_url, file_path, prompt) | 图像视觉分析——传入图像 URL 或服务器文件路径，返回 AI 视觉分析结果。analyze_image 一次只分析一张图片；同时传 `file_path` 和 `image_url` 时服务端只会使用 `file_path`。用于实体识别、候选评估、一致性审计、线稿验证 |
-| `generate_image` (channel_id, prompt, image_type, output_path, ref_image_path, size, task_id) | 生成单张图片，返回 download_url 和 file_path。当前不是专用的 `colorize_lineart`，也不是严格的 img2img/ControlNet 上色 |
+| `generate_image` (channel_id, prompt, image_type, output_path, ref_image_path, size, task_id) | 生成单张图片，返回 download_url（始终为可 HTTP fetch 的存储 URL，不再返回 base64 data URL）和 file_path。当前不是专用的 `colorize_lineart`，也不是严格的 img2img/ControlNet 上色 |
 | `upload_image` (channel_id, file_path) | 上传图片 |
 | `compress_image` (file_path) | 压缩图片 |
 | `download_image` (channel_id, url) | 下载在线图片到 MCP 服务器临时路径或上传到存储，不写入 agent 本地 `$DIR` |
@@ -360,7 +360,7 @@ SERVER_PATH_B = result_b.file_path
 2. 高质量模式下，同样分析 SERVER_PATH_B。
 3. 对每个候选，逐实体逐部位比对 Color Bible → 计算匹配分，同时记录线稿/构图差异。
 4. 选择颜色得分最高且线稿风险最低的候选。
-5. 将选中候选的服务器端 `file_path` 写入 `$DIR/server-paths.md`。不能把 `download_image` 当作写入 `$DIR/colored_NN.png` 的本地归档步骤；`download_image` 只返回服务器端临时 `file_path` 或上传 URL。如需要本地归档，用 shell 下载 `download_url` 到 `$DIR/colored_NN.png`（或在 `download_url` 是 data URL 时解码写入该文件）。
+5. 将选中候选的服务器端 `file_path` 写入 `$DIR/server-paths.md`。不能把 `download_image` 当作写入 `$DIR/colored_NN.png` 的本地归档步骤；`download_image` 只返回服务器端临时 `file_path` 或上传 URL。如需要本地归档，用 shell 下载 `download_url`（始终为可 HTTP fetch 的存储 URL）到 `$DIR/colored_NN.png`。
 6. 如果两个候选都 < 70% 匹配：
    - 生成候选 C（换参考图或加强 prompt 约束）
    - 选三者中最好的
