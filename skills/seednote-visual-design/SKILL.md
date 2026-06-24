@@ -41,8 +41,8 @@ description: Generates cover (封面), content pages (内容图), and tail pages
 3. **目标受众** — 年龄层、消费力影响配色（年轻用户偏饱和鲜艳；成熟用户偏质感低饱和）
 
 **封面与内容图的一致性**：
-- 无配置参考图时：先生成封面确立基准风格 → 以封面作为参考图批量生成内容图
-- 有配置参考图时：所有图片统一使用配置参考图
+- 无配置参考图时：封面单独文生图确立基准风格；内容图/尾图各自独立文生图（不传 ref_image_path），通过共享文本风格块（配色/字体/批注/色调）保持调性统一，每张使用 image-plan.md 中独立的视觉主体/场景
+- 有配置参考图时：仅当用户明确要求强一致才使用配置参考图；否则仍按文生图 + 独立场景生成，避免参考图把场景钉死导致雷同
 
 **中文内容硬约束**：
 - 用户使用中文时，图片内所有可见文字必须使用简体中文；禁止英文翻译、拼音、乱码、伪词和中英混排
@@ -109,6 +109,8 @@ description: Generates cover (封面), content pages (内容图), and tail pages
 | 封面 + 尾图 | cover.png + tail.png | 2 |
 | 封面 + 内容图 + 尾图 | cover.png + image_01.png … image_0N.png（1~3 张）+ tail.png | 3~5 |
 
+> **禁止规则（与上表同等优先级）**：若「图片构成要求」指令不含尾图、或写明「禁止生成尾图」，则**禁止生成 `tail.png`**——`image-plan.md` 不得包含 `## tail` 节，步骤 5 不得执行尾图生成，步骤 6 质量验证跳过尾图项，最终产物不含尾图。同理，指令不含内容图则不生成 `image_0N.png`。
+
 **内容图张数按信息点自适应（1~3 张）**：N 由步骤 2 的信息点分组决定，每张承载 2-4 个信息点，最多 3 张（image_01.png、image_02.png、image_03.png）。布局模式参考 [references/content.md](references/content.md) 的 6 种布局。
 
 **image-plan.md 必须在「计划图片数量」字段写入实际生成的总张数**（1~5），机械闸门按此校验。
@@ -156,7 +158,7 @@ description: Generates cover (封面), content pages (内容图), and tail pages
 
 ---
 
-## tail [尾部] 类型：{follow|comment|traffic}
+## tail [尾部] 类型：{follow|comment|traffic}（**仅当「图片构成要求」指令含尾图时添加本节；指令不含尾图则整节省略**）
 
 匹配依据：{根据内容类型自动判断——知识干货→follow, 测评对比→comment, 种草推荐→traffic}
 - 内容点: （见 tail.md 规范，根据类型填充）
@@ -167,8 +169,8 @@ description: Generates cover (封面), content pages (内容图), and tail pages
 按 image-plan.md 逐一生成：
 
 1. **封面**：使用 [references/cover.md](references/cover.md) 的 Prompt 模板生成
-2. **内容图**：使用 [references/content.md](references/content.md) 的 Prompt 模板逐张生成（1~3 张），每张独立调用 `generate_image`，传入对应分组的信息点和布局；以封面作为参考图保持风格统一，多张内容图之间保证视觉多样性（不同实景背景 / 构图角度）
-3. **尾图**：使用 [references/tail.md](references/tail.md) 的 Prompt 模板单独生成
+2. **内容图**：使用 [references/content.md](references/content.md) 的 Prompt 模板逐张生成（1~3 张），每张独立调用 `generate_image`（不传 ref_image_path，纯文生图），传入对应分组的信息点和布局，并在 prompt 中显式写明本页独立场景/视觉主体；通过共享「风格延续：{style}」文本块保持调性统一，多张内容图之间保证视觉多样性（不同实景背景 / 构图角度）
+3. **尾图（仅当「图片构成要求」指令含尾图时）**：使用 [references/tail.md](references/tail.md) 的 Prompt 模板单独生成；指令不含尾图则跳过此步，不调用 generate_image 生成尾图
 4. **Prompt 备份**：每次调用 `generate_image` 后，必须把实际 prompt、`image_type`、`size`、`output_path`、`ref_image_path`、返回的 `provider`、`model`、`response_type`、`revised_prompt`、`output_mime` 追加写入 `$DIR/image-prompts.md`
 
 ### 步骤 6：质量验证
@@ -179,9 +181,9 @@ description: Generates cover (封面), content pages (内容图), and tail pages
 - [ ] 每张图主题相关度 ≥4/5，与 image-plan.md 当页主题一致
 - [ ] 图片内文字为简体中文，无英文、拼音、乱码、伪词或错别字
 - [ ] 茶类/产品/数字参数准确，不出现误导性内容（例如"10 秒出汤"不得写成"焖泡10秒"）
-- [ ] 封面、内容图、尾图视觉风格一致，内容图之间有视觉多样性
+- [ ] 封面、内容图（、尾图，仅当生成）视觉风格一致，内容图之间有视觉多样性
 
-任一图片低于 4/5 或命中硬性错误时，使用更具体的 prompt 重试一次，并在 `image-review.md` 记录失败原因、重试 prompt 和最终结果。封面重试后仍不合格时停止并报告，不要继续生成后续图片。
+任一图片低于 4/5 或命中硬性错误时，使用更具体的 prompt 重试一次，并在 `image-review.md` 记录失败原因、重试 prompt 和最终结果。封面重试后仍不合格时停止并报告，不要继续生成后续图片。重试必须覆盖同一个 output_path（禁止新增 `image_03_v2.png` 之类的候选文件）；归档前检查目录，仅保留 image-plan.md 中列出的 N 张图（cover/image_01..03/tail），删除任何多余候选/旧版文件，避免交付目录残留重复图。
 
 ---
 
@@ -189,12 +191,12 @@ description: Generates cover (封面), content pages (内容图), and tail pages
 
 | 问题 | 原因 | 修复 |
 |------|------|------|
-| 风格不一致 | 未使用封面作为参考图 | 确保所有后续图片传入封面路径 |
+| 风格不一致 | 共享风格块描述过弱/被忽略 | 强化「风格延续：{style}」块（明确配色/字体/批注/色调），重申禁用元素 |
 | 封面文字渲染错误/缺失 | prompt 文字约束力不够 | 检查 prompt 是否用「」包裹 required_text；缩短到 ≤15 字；明确字号占图宽 12-15% 和位置 |
 | 出现英文/拼音/乱码 | 未显式独立禁止 | prompt 末尾追加独立「禁止项」段，明确「禁止任何英文/拼音/乱码/伪词」 |
 | 内容图信息点错乱 | 模型把多条短句合并或乱序 | 每条短句单独用「」包裹并编号，明确「按列表顺序，禁止合并/拆分/修改任何字符」 |
 | 内容图信息点模糊 | prompt 中信息点描述过于抽象 | 使用 image-plan 中的具体数据/场景作为视觉主体 |
-| 尾图与正文调性断裂 | 尾图 prompt 未沿用统一风格 | 尾图也使用封面作为参考图 |
+| 尾图与正文调性断裂 | 尾图 prompt 未沿用统一风格 | 尾图沿用共享「风格延续：{style}」块（不传参考图） |
 | 茶类识别错误 | 视觉主体不具体 | 明确茶类外观、茶干、花材、茶汤颜色和器具 |
 
 ### 复刻模式适配
@@ -213,12 +215,12 @@ description: Generates cover (封面), content pages (内容图), and tail pages
 通过 MCP 工具调用：
 
 1. **生成封面（单张）**：调用 `generate_image`，image_type 设为 `"cover"`
-2. **逐张生成内容图（N-2 张，不含尾图）**：逐张调用 `generate_image`，每张使用 image-plan.md 中对应的信息点构造 prompt，以封面作为参考图（ref_image_path）
-3. **单独生成尾图**：调用 `generate_image`，传入封面作为参考图
-4. **带参考图（保持风格一致）**：提供参考图路径
+2. **逐张生成内容图（image_01.png 起，张数由信息点分组决定）**：逐张调用 `generate_image`，每张使用 image-plan.md 中对应的信息点构造 prompt（独立场景），不传 ref_image_path（纯文生图）
+3. **单独生成尾图（仅当「图片构成要求」指令含尾图时）**：调用 `generate_image`，不传参考图，沿用共享风格块；指令不含尾图则跳过
+4. **带参考图（保持风格一致）**：仅当频道配置了参考图且用户要求强一致时才传 ref_image_path；默认不传
 5. **带风格描述**：在 prompt 中加入风格描述（如"手绘感，暖色调，小清新"）
 
-**关键规则**：内容图逐张调用 `generate_image` 生成，每张使用 image-plan.md 中对应的信息点构造独立 prompt（output_path 设为 `image_01.png`、`image_02.png` ...），以封面作为参考图保持视觉一致性。尾图单独生成（`tail.png`），封面单独生成（`cover.png`）。
+**关键规则**：内容图逐张调用 `generate_image` 生成，每张使用 image-plan.md 中对应的信息点构造独立 prompt（output_path 设为 `image_01.png`、`image_02.png` ...），通过共享「风格延续：{style}」块保持调性统一，每张使用独立场景/视觉主体（禁止与其他内容图复用同一场景，避免雷同）；不使用封面作为参考图。尾图单独生成（`tail.png`，仅当「图片构成要求」指令含尾图时），封面单独生成（`cover.png`）。
 
 ### 春季花茶/白茶回归示例
 
