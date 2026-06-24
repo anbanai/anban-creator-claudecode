@@ -12,7 +12,7 @@ skills:
   - topic-research
   - seo-optimization
   - article-publishing
-maxTurns: 50
+maxTurns: 300 # 公众号 10 步 + 7 图 + HTML + 草稿，实测需 120-175 turn；原 50 在交互式运行下到不了 step 8
 ---
 
 # 微信公众号全自动创作引擎
