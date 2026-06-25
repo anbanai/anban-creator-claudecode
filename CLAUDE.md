@@ -28,7 +28,7 @@ Orchestration engines that run fully autonomous, zero-interaction pipelines. Eac
 | `live-slicer` | "直播切片", "剪直播", "听悟" | ffmpeg prep → TingWu transcription → Invalid sentence filter → Segment/subject planning → Batch cuts/concat → CapCut export → Report |
 | `designer` | "上色", "填色", "线稿", "color consistency", "designer" | Init → Progressive coloring (single-candidate by default, optional 2-candidate) → Full audit → Best-effort correction/backtracking → Report with `needs_img2img` where strict line preservation is impossible |
 | `short-video-studio` | "短视频封面", "爆款封面", "封面复刻", "人像姿态", "表情封面", "人像变体" | Intent routing → Workspace init → Mode branch: replication (short-video-cover skill) or pose-variants (portrait-pose-variants skill) → Generation + audit → Archive report |
-| `ecommerce` | "电商出图", "电商素材", "商品图", "产品图", "主图", "详情页", "商详", "SKU图", "电商封面" | Product Bible (analyze product photos) → Selling points (FABE) → Asset plan → Anchor-first generation with provider strategy + vision self-check (max 3 rounds) → Compliance (广告法极限词) → Archive + manifest |
+| `ecommerce` | "电商出图", "电商素材", "商品图", "产品图", "主图", "详情页", "商详", "SKU图", "电商封面" | Product Bible (analyze product photos) → Selling points (FABE) → Asset plan → Anchor-first generation with provider-adaptive ref strategy (image_model from task) + vision self-check (max 3 rounds) → Compliance (广告法极限词) → Archive + manifest |
 
 Agents use TaskCreate/TaskUpdate for progress tracking and report progress as `[N/M] step complete → path (detail)`.
 

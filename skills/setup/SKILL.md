@@ -89,6 +89,3 @@ A: 编辑 `.claude/settings.local.json`，修改 `ANBAN_API_URL` 的值，然后
 
 **Q: 已有 API Key 但忘了存在哪里？**
 A: 检查 `~/.claude/settings.json` 的 `env` 字段。项目级配置在 `.claude/settings.local.json`。
-
-**Q: 之前用的是 `ANBANWRITER_API_KEY`，现在 MCP 连不上了？**
-A: 变量名已升级：`ANBANWRITER_API_KEY` → `ANBAN_API_KEY`（`ANBANWRITER_API_URL` → `ANBAN_API_URL`、`ANBANWRITER_DEFAULT_PROJECT` → `ANBAN_DEFAULT_PROJECT` 同理）。把 `~/.claude/settings.json` 和 `.claude/settings.local.json` 里 `env` 的旧键名改成新名，或重新运行 `/setup` 自动写入新名；旧名已失效，留着也不会被读取。
