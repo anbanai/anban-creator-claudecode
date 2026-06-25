@@ -85,8 +85,8 @@ description: Use when generating multiple pose/expression variants from a single
 
 #### 步骤 1：获取项目和工作目录
 
-- `echo $ANBANWRITER_DEFAULT_PROJECT` → `$PROJECT_ID`
-- 如果为空，调用 `list_projects`；只有一个可用项目时自动使用，多个项目且无法从任务上下文判断时停止并提示配置 `ANBANWRITER_DEFAULT_PROJECT`
+- `echo $ANBAN_DEFAULT_PROJECT` → `$PROJECT_ID`
+- 如果为空，调用 `list_projects`；只有一个可用项目时自动使用，多个项目且无法从任务上下文判断时停止并提示配置 `ANBAN_DEFAULT_PROJECT`
 - 从 `.task-context` 获取 `$TASK_ID`，或使用 CWD 目录名
 - 尝试调用 `prepare_workspace(content_type="short-video", task_id=$TASK_ID)` → `$DIR`
   - prepare_workspace 返回的 path 可能是相对路径；相对路径以当前任务工作区 `$CWD` 为根

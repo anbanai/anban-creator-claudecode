@@ -63,7 +63,7 @@ maxTurns: 20
 
 #### 步骤 2：获取项目 ID
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="project", title="项目选择", description="选择目标项目")`。通过 Bash 执行 `echo $ANBANWRITER_DEFAULT_PROJECT` 检查环境变量，若非空则直接使用其值作为 `$PROJECT_ID`。若为空，调用 `list_projects` MCP 工具（参数：`platform="seednote"`）获取项目列表。如果只有一个匹配项目，直接使用其 `project_id`。**如果有多个匹配项目**：根据用户的话题/需求与每个项目的 `name`、`positioning`、`keywords` 进行语义匹配；能明确判断则使用该项目的 `project_id`；否则**向用户展示所有可选项目**让其选择。
+调用 `update_task_progress(task_id=$TASK_ID, stage="project", title="项目选择", description="选择目标项目")`。通过 Bash 执行 `echo $ANBAN_DEFAULT_PROJECT` 检查环境变量，若非空则直接使用其值作为 `$PROJECT_ID`。若为空，调用 `list_projects` MCP 工具（参数：`platform="seednote"`）获取项目列表。如果只有一个匹配项目，直接使用其 `project_id`。**如果有多个匹配项目**：根据用户的话题/需求与每个项目的 `name`、`positioning`、`keywords` 进行语义匹配；能明确判断则使用该项目的 `project_id`；否则**向用户展示所有可选项目**让其选择。
 
 #### 步骤 3：获取账号画像与已有标题
 

@@ -39,7 +39,7 @@ maxTurns: 60
 | 决策点 | 自动策略 |
 |--------|----------|
 | **模式选择** | 用户提供参考封面路径 + 新标题 → **复刻模式**；用户提供人像照片 + 姿态需求 → **姿态模式**；两者都有 → 默认走复刻模式，姿态需求提示用户单独发起；都未提供 → 询问用户 |
-| **项目选择** | `echo $ANBANWRITER_DEFAULT_PROJECT` 非空 → 直接用；为空 → `list_projects`，单项目自动选，多项目无法语义判断时停止询问 |
+| **项目选择** | `echo $ANBAN_DEFAULT_PROJECT` 非空 → 直接用；为空 → `list_projects`，单项目自动选，多项目无法语义判断时停止询问 |
 | **输入收集** | 必填字段缺失时**一次性询问**（不要逐个问）；可选项给默认值（画面比例 9:16、参考深度 light、姿态数 6、逐张确认 false） |
 | **工作区隔离** | `prepare_workspace(content_type="short-video", task_id=$TASK_ID)` → `$DIR`；相对路径以 `$CWD` 为根；调用失败时回退到 `$CWD/output/` |
 | **失败处理** | SKILL 内部已有重试和质量门控逻辑；agent 层不额外重试，直接转发 SKILL 的失败结果和能力边界声明 |
@@ -55,9 +55,9 @@ maxTurns: 60
 - **`analyze_image` 一次只分析一张图片**。调用时传 `image_url` 或 `file_path` 二选一；同时传时服务端只用 `file_path`
 - **MCP 工具不可用时**执行以下诊断步骤：
   1. 检查工具列表是否包含 `mcp__anban__generate_image`、`mcp__anban__analyze_image`、`mcp__anban__download_image`、`mcp__anban__prepare_workspace`、`mcp__anban__update_task_progress`
-  2. 通过 `echo $ANBANWRITER_API_KEY`、`echo $ANBANWRITER_API_URL`、`echo $ANBANWRITER_DEFAULT_PROJECT` 检查环境变量；`ANBANWRITER_API_URL` 为空时按 `.mcp.json` 默认值 `https://api.creator.anbanai.com` 理解
-  3. 如果 `ANBANWRITER_API_KEY` 为空，报告缺少变量并停止
-  4. 如果 `ANBANWRITER_DEFAULT_PROJECT` 为空，调用 `list_projects` 自动选择项目；无法唯一判断时报告可选项目并停止等待配置
+  2. 通过 `echo $ANBAN_API_KEY`、`echo $ANBAN_API_URL`、`echo $ANBAN_DEFAULT_PROJECT` 检查环境变量；`ANBAN_API_URL` 为空时按 `.mcp.json` 默认值 `https://api.creator.anbanai.com` 理解
+  3. 如果 `ANBAN_API_KEY` 为空，报告缺少变量并停止
+  4. 如果 `ANBAN_DEFAULT_PROJECT` 为空，调用 `list_projects` 自动选择项目；无法唯一判断时报告可选项目并停止等待配置
   5. 如果环境变量存在但工具调用失败，记录完整错误信息（状态码、响应体）后停止
   6. 不要绕过 MCP、不要降级到脚本或自定义 HTTP 调用
 
@@ -71,8 +71,8 @@ maxTurns: 60
 
 Call `mcp__anban__update_task_progress(task_id=$TASK_ID, stage="init", title="初始化", description="加载 SKILL、获取项目和工作目录")`。
 
-1. 通过 `echo $ANBANWRITER_DEFAULT_PROJECT` 获取 `$PROJECT_ID`
-   - 如果为空，调用 `list_projects`；只有一个可用项目时自动使用，多个项目且无法从任务上下文判断时停止并提示用户配置 `ANBANWRITER_DEFAULT_PROJECT`
+1. 通过 `echo $ANBAN_DEFAULT_PROJECT` 获取 `$PROJECT_ID`
+   - 如果为空，调用 `list_projects`；只有一个可用项目时自动使用，多个项目且无法从任务上下文判断时停止并提示用户配置 `ANBAN_DEFAULT_PROJECT`
 2. 获取 `$TASK_ID`：先检查 CWD 下是否存在 `.task-context` 文件，从中读取 `TASK_ID=xxx`；否则使用 CWD 目录名
 3. 尝试调用 `mcp__anban__prepare_workspace(content_type="short-video", task_id=$TASK_ID)` 获取 `$DIR`
    - prepare_workspace 返回的 path 可能是相对路径；相对路径以当前任务工作区 `$CWD` 为根，例如返回 `output` 时使用 `$CWD/output`

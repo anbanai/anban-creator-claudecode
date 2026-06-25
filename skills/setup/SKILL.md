@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Use when user mentions "初始化", "setup", "第一次使用", "API Key", "密钥", or when MCP tools fail with auth/connection errors suggesting missing ANBANWRITER_API_KEY.
+description: Use when user mentions "初始化", "setup", "第一次使用", "API Key", "密钥", or when MCP tools fail with auth/connection errors suggesting missing ANBAN_API_KEY.
 ---
 
 # /setup anbanwriter 初始化
@@ -25,14 +25,14 @@ description: Use when user mentions "初始化", "setup", "第一次使用", "AP
 ```json
 {
   "env": {
-    "ANBANWRITER_API_KEY": "<用户提供的密钥>"
+    "ANBAN_API_KEY": "<用户提供的密钥>"
   }
 }
 ```
 
 **注意**：
 - 如果 `~/.claude/settings.json` 已存在，必须先 Read 读取现有内容，然后用 Edit 合并 `env` 字段，不要覆盖其他已有配置。
-- 如果已有 `env` 对象，只添加 `ANBANWRITER_API_KEY` 字段。
+- 如果已有 `env` 对象，只添加 `ANBAN_API_KEY` 字段。
 - 这是**用户级别**配置，对所有项目生效，无需在每个项目中重复设置。
 
 ## 项目级配置
@@ -41,24 +41,24 @@ API Key 设置完成后，提示用户进行项目级配置（写入项目本地
 
 ### 服务地址（可选）
 
-如果用户使用的不是默认地址 `http://localhost:8080`（如远程服务器），写入 `ANBANWRITER_API_URL`：
+如果用户使用的不是默认地址 `http://localhost:8080`（如远程服务器），写入 `ANBAN_API_URL`：
 
 ```json
 {
   "env": {
-    "ANBANWRITER_API_URL": "<用户的服务地址>"
+    "ANBAN_API_URL": "<用户的服务地址>"
   }
 }
 ```
 
 ### 默认项目（可选）
 
-如果 `list_projects` 返回多个项目，询问用户是否要设置默认项目，写入 `ANBANWRITER_DEFAULT_PROJECT`：
+如果 `list_projects` 返回多个项目，询问用户是否要设置默认项目，写入 `ANBAN_DEFAULT_PROJECT`：
 
 ```json
 {
   "env": {
-    "ANBANWRITER_DEFAULT_PROJECT": "<项目 ID>"
+    "ANBAN_DEFAULT_PROJECT": "<项目 ID>"
   }
 }
 ```
@@ -82,10 +82,13 @@ API Key 设置完成后，提示用户进行项目级配置（写入项目本地
 ## 常见问题
 
 **Q: 重启后 `list_projects` 仍然失败？**
-A: 检查 `~/.claude/settings.json` 中 `ANBANWRITER_API_KEY` 是否正确写入（无多余空格或换行）。检查网络是否能访问 `https://api.creator.anbanai.com`（如使用自建服务器，检查 `ANBANWRITER_API_URL` 是否正确）。
+A: 检查 `~/.claude/settings.json` 中 `ANBAN_API_KEY` 是否正确写入（无多余空格或换行）。检查网络是否能访问 `https://api.creator.anbanai.com`（如使用自建服务器，检查 `ANBAN_API_URL` 是否正确）。
 
 **Q: 想切换到另一个 API 地址？**
-A: 编辑 `.claude/settings.local.json`，修改 `ANBANWRITER_API_URL` 的值，然后重启 Claude Code。
+A: 编辑 `.claude/settings.local.json`，修改 `ANBAN_API_URL` 的值，然后重启 Claude Code。
 
 **Q: 已有 API Key 但忘了存在哪里？**
 A: 检查 `~/.claude/settings.json` 的 `env` 字段。项目级配置在 `.claude/settings.local.json`。
+
+**Q: 之前用的是 `ANBANWRITER_API_KEY`，现在 MCP 连不上了？**
+A: 变量名已升级：`ANBANWRITER_API_KEY` → `ANBAN_API_KEY`（`ANBANWRITER_API_URL` → `ANBAN_API_URL`、`ANBANWRITER_DEFAULT_PROJECT` → `ANBAN_DEFAULT_PROJECT` 同理）。把 `~/.claude/settings.json` 和 `.claude/settings.local.json` 里 `env` 的旧键名改成新名，或重新运行 `/setup` 自动写入新名；旧名已失效，留着也不会被读取。

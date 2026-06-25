@@ -50,7 +50,7 @@ maxTurns: 120
 
 - **必须使用 Claude Code 内置 MCP 工具**调用服务端接口（`generate_image`、`analyze_image`、`prepare_workspace`、`archive_workspace`、`get_project_profile`、`list_projects`、`update_task_progress`、`upload_image`/`download_image`/`compress_image`、`list_task_files`、`submit_agent_feedback`）
 - **禁止编写 JavaScript/Node.js/Python 脚本或自定义 HTTP 客户端**调用 MCP 接口
-- **MCP 工具不可用或关键 MCP 调用失败时立即停止并报告错误**，执行诊断：`echo $ANBANWRITER_API_KEY`、`echo $ANBANWRITER_API_URL`、`echo $ANBANWRITER_DEFAULT_PROJECT`；不要绕过 MCP、不要降级到脚本
+- **MCP 工具不可用或关键 MCP 调用失败时立即停止并报告错误**，执行诊断：`echo $ANBAN_API_KEY`、`echo $ANBAN_API_URL`、`echo $ANBAN_DEFAULT_PROJECT`；不要绕过 MCP、不要降级到脚本
 - **`prepare_workspace` / `archive_workspace` 仅返回路径**，目录创建和文件移动由 agent 通过本地 Bash 执行
 - **Claude Code subagent 的 `tools:` 字段是 allowlist**——不要在本 agent frontmatter 声明 `tools:`，省略才能继承包含 MCP 在内的工具；若运行时看不到 `mcp__anban__generate_image` 等工具，停止并报告 MCP 未注入
 - **`generate_image` 当前仅接受单个 `ref_image_path`**——多产品一致性靠「产品档案文本块（汇总全部产品图属性）+ 单张最佳锚点参考 + 视觉自检」实现；不要假设可一次传多张参考图
@@ -70,7 +70,7 @@ maxTurns: 120
 
 用 `TaskCreate` 创建任务列表（公共前置 → 产品档案 → 卖点文案 → 资产规划 → 图片生成 → 合规 → 归档 → 报告），每个任务 `blockedBy` 前一个。后续每步开始前 `TaskUpdate status=in_progress`、完成后 `completed`。
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="project", title="项目选择", description="选择目标电商项目")`。通过 Bash 执行 `echo $ANBANWRITER_DEFAULT_PROJECT`；非空则用作 `$PROJECT_ID`。为空时调用 `list_projects(platform="ecommerce")`；只有一个匹配项目直接用；多个则按用户品类/品牌与项目 `name`/`positioning`/`keywords` 语义匹配，无法判断则向用户展示候选让其选择。
+调用 `update_task_progress(task_id=$TASK_ID, stage="project", title="项目选择", description="选择目标电商项目")`。通过 Bash 执行 `echo $ANBAN_DEFAULT_PROJECT`；非空则用作 `$PROJECT_ID`。为空时调用 `list_projects(platform="ecommerce")`；只有一个匹配项目直接用；多个则按用户品类/品牌与项目 `name`/`positioning`/`keywords` 语义匹配，无法判断则向用户展示候选让其选择。
 
 #### 步骤 2：获取项目画像与 provider 策略
 

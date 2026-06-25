@@ -52,7 +52,7 @@
 ```json
 {
   "env": {
-    "ANBANWRITER_API_KEY": "你的完整 API Key"
+    "ANBAN_API_KEY": "你的完整 API Key"
   }
 }
 ```
@@ -62,13 +62,13 @@
 ```json
 {
   "env": {
-    "ANBANWRITER_API_KEY": "你的完整 API Key",
-    "ANBANWRITER_API_URL": "https://api.creator.anbanai.com"
+    "ANBAN_API_KEY": "你的完整 API Key",
+    "ANBAN_API_URL": "https://api.creator.anbanai.com"
   }
 }
 ```
 
-如果你接的是自建或本地服务，就把 `ANBANWRITER_API_URL` 改成你自己的服务地址。
+如果你接的是自建或本地服务，就把 `ANBAN_API_URL` 改成你自己的服务地址。
 
 如果 `~/.claude/settings.json` 原来已经有别的配置，只需要把 `env` 里的字段合并进去，不要覆盖其他内容。
 
@@ -138,7 +138,7 @@ claude --dangerously-skip-permissions --verbose --agent anbanwriter:live-slicer 
 ## 遇到问题时先检查
 
 1. 是否已经在 [设置页](https://creator.anbanai.com/settings) 创建并复制了完整 API Key
-2. `~/.claude/settings.json` 里是否真的写入了 `ANBANWRITER_API_KEY`
+2. `~/.claude/settings.json` 里是否真的写入了 `ANBAN_API_KEY`
 3. 是否已经完全退出并重启过 Claude Code
 4. 重启后是否重新执行过 `/setup`
 

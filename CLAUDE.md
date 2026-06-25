@@ -48,8 +48,8 @@ Key skill groups:
 
 ### MCP Server (`.mcp.json`)
 
-Connects to the `anbanwriter` MCP server at `$ANBANWRITER_API_URL` (default `https://api.creator.anbanai.com`). Key MCP tools:
-- `$ANBANWRITER_DEFAULT_PROJECT`: Optional default project ID. When set, agents skip `list_projects` and use this directly.
+Connects to the `anbanwriter` MCP server at `$ANBAN_API_URL` (default `https://api.creator.anbanai.com`). Key MCP tools:
+- `$ANBAN_DEFAULT_PROJECT`: Optional default project ID. When set, agents skip `list_projects` and use this directly.
 - `list_projects`, `get_project_profile`, `list_drafts`, `list_published_articles`, `list_project_titles`
 - `prepare_workspace`, `archive_workspace`
 - `write_article`, `convert_markdown`, `humanize_article`
