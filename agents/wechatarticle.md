@@ -206,9 +206,10 @@ using the article-visual-design skill 完成以下五个子步骤。详细规范
      upload_to_cdn=true
    )
    ```
-5. 校验失败时重试一次（更换 prompt 措辞，**仍带 `upload_to_cdn=true`**），仍失败则请求用户协助
+5. 校验失败时重试一次（更换 prompt 措辞，**仍带 `upload_to_cdn=true`**），仍失败则请求用户协助。**封面必须 vision 校验通过后才可作为 `thumb_media_id`**；未通过 vision 的封面不得用于发布
 6. 从返回值取 `media_id`（发布草稿的 thumb）+ `wechat_url`。**不再单独调用 `upload_image`**。若返回 `upload_error`（生成成功但上传失败），用 `upload_image(file_path="$DIR/cover.png")` 单独重传即可，**无需重新生成**
 7. 记录 `$COVER_PATH="$DIR/cover.png"`、`$COVER_MEDIA_ID`、`$COVER_CDN_URL`（供步骤 7/8/10 使用）
+8. **原子写 `$DIR/cover-prompt.md`**（先写 `$DIR/.cover-prompt.md.tmp` → `fsync` → `rename` 覆盖）：完整记录封面生成决策，内容必须含：公众号比例 `2.35:1`、账号视觉风格来源（`$VISUAL_STYLE`/`$COLOR_PALETTE`/`$MOOD` 及其三维分析依据：账号定位/内容主题/受众）、文章核心隐喻、`required_entities`、最终使用的 prompt、vision 校验 prompt 与结果（passed/score）
 
 ##### 6e：创建配图内容规划（升级 schema）
 
@@ -221,7 +222,7 @@ using the article-visual-design skill 完成以下五个子步骤。详细规范
 
 详细正反例和填写规范见 `skills/article-visual-design/references/content.md`。
 
-**产出**：`$DIR/visual-rhythm-plan.md`, `$DIR/cover.png`, `media_id`, `$COVER_CDN_URL`, `$VISUAL_STYLE`, `$COLOR_PALETTE`, `$MOOD`, `$TEMPLATE_NAME`, `$DIR/image-plan.md`
+**产出**：`$DIR/visual-rhythm-plan.md`, `$DIR/cover-prompt.md`, `$DIR/cover.png`, `media_id`, `$COVER_CDN_URL`, `$VISUAL_STYLE`, `$COLOR_PALETTE`, `$MOOD`, `$TEMPLATE_NAME`, `$DIR/image-plan.md`
 
 #### 步骤 7：配图生成（带 vision 校验循环）
 
@@ -247,7 +248,7 @@ generate_image(
 )
 ```
 
-**关键**：`ref_image_path` 始终用 `$DIR/cover.png`（风格锚点）。**不再有独立的批量 `upload_image` 阶段**——每张图生成的瞬间即上 CDN。
+**关键**：`ref_image_path` 始终用 `$DIR/cover.png`（**风格锚点/参考输入，不是把封面图当作正文图复用**）。每张正文图的 `<img src>` 必须是**该图独立生成并上 CDN 后得到的 `wechat_url`**——**严禁**把封面 `$COVER_CDN_URL` 直接填入正文任何 `<img src>`，也**严禁**多张正文图共用同一个 `wechat_url`；否则会触发服务端"正文全图相同"硬拦截导致发布失败。**不再有独立的批量 `upload_image` 阶段**——每张图生成的瞬间即上 CDN。
 
 ##### 7b：vision 校验与失败重试
 
@@ -290,6 +291,7 @@ generate_image(
 - [ ] **Vision 校验通过率**：至少 80% 的内容图 `verification.passed=true`
 - [ ] **审计完整性**：`images.json` 每条含 `visual_brief` / `required_entities` / `must_match_excerpts` / `verification` / `slot_id` / `section_index` / `wechat_url` / `media_id`
 - [ ] **CDN 持久化**：`images.json` 每条都有非空 `wechat_url`（即每张图已上微信 CDN）；缺 `wechat_url` 的 slot 必须补 `generate_image(upload_to_cdn=true)` 或 `upload_image` 重传
+- [ ] **正文图片互不相同**：`images.json` 中所有内容图的 `wechat_url` 两两不同，且没有任何一张等于封面 `$COVER_CDN_URL`（封面只能用于 `thumb_media_id`，**不得复用为正文图**）；服务端 `publish_draft` 会硬拦截"正文 ≥2 图但唯一 URL==1"的草稿，配图失败时宁可缺图降级也不得用封面/他图顶替
 
 未通过检查时按问题类型处理：单图失败降级、节奏/模板违规回 Phase 0、Vision 通过率 <80% 回 Phase 3。超过一半章节配图失败则暂停流程请求用户协助。
 
@@ -412,9 +414,11 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 - [ ] **`visual-rhythm-plan.md` 存在**，记录所选模板、slot 分配表、`layout_plan` JSON
 - [ ] 封面图 `$DIR/cover.png` 存在且可访问，视觉风格与账号定位匹配，**vision 校验通过**
 - [ ] 封面图已上传，获得有效 `media_id`
+- [ ] `$DIR/cover-prompt.md` 存在，含 `2.35:1` 比例、三维风格来源、核心隐喻、`required_entities`、vision 校验结果
 - [ ] `image-plan.md` 存在，每张图含 `slot_id` + `section_index` + `chapter_title` + `core_point` + `composition_type` + `source_excerpt` + **`visual_brief` + `required_entities` + `must_match_excerpts`** + `prompt_strategy`
 - [ ] `images.json` 每条记录含 `slot_id` + `section_index` + `chapter_title` + `composition_type` + **`visual_brief` + `required_entities` + `must_match_excerpts`** + `prompt` + **`verification`** + `ref_image_path` + `image_type` + `quality_status`
 - [ ] 所有内容配图使用了 `ref_image_path="$DIR/cover.png"` 生成并记录
+- [ ] 所有正文内容图的 `wechat_url` 两两不同，且无一张复用封面 `$COVER_CDN_URL`
 - [ ] **至少 80% 的内容图 `verification.passed=true`**
 - [ ] `04-article-final.md` 中每个 `##` 章节都有 CDN 图片链接（按模板 rhythm 规则）
 - [ ] 每个配图提示词包含对应章节的具体物体/比喻/案例（非通用描述）
@@ -448,6 +452,8 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 - [ ] **`required_entities` 是抽象词**（"美感"、"氛围"）→ 重写为可识别的物体
 - [ ] **`must_match_excerpts` 是论点而非原句** → 从章节中摘真实段落
 - [ ] 内容配图未使用 `ref_image_path="$DIR/cover.png"` → 风格不一致风险
+- [ ] **正文 `<img src>` 出现封面 `$COVER_CDN_URL`，或多张正文图共用同一 `wechat_url`** → 服务端 `publish_draft` 会拒绝发布；回步骤 7 为缺失 slot 独立生成，不得用封面/他图顶替
+- [ ] **`$DIR/cover-prompt.md` 缺失** → 步骤 6d 第 8 步必须原子写入
 - [ ] `images.json` 缺少 `verification` 字段 → vision 校验未执行，回步骤 7b
 - [ ] **Vision 校验通过率 < 80%** → 回到步骤 6e 检查 prompt 构建逻辑
 - [ ] 配图提示词为通用描述（如"美丽风景"、"商务场景"）→ 需重写为章节具体内容

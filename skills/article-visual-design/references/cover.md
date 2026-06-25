@@ -112,3 +112,20 @@ A 2.35:1 horizontal image for a WeChat article cover. Traditional Chinese aesthe
 - 文字叠层 / 水印 / logo 占位
 - 纯色 / 渐变背景（无内容实体）
 - 对称 PPT 式布局
+
+---
+
+## 落盘 cover-prompt.md（硬性要求）
+
+封面 prompt 构建完成后，**必须原子写入 `$DIR/cover-prompt.md`**（先写 `.cover-prompt.md.tmp` → `fsync` → `rename` 覆盖），完整记录封面生成决策，便于复盘与风格漂移排查。内容必须包含：
+
+- **比例**：公众号 `2.35:1`（900×383px 标准）
+- **账号视觉风格来源**：`$VISUAL_STYLE` / `$COLOR_PALETTE` / `$MOOD`，以及三维分析依据（账号定位 / 内容主题 / 目标受众 各自如何决定视觉方向）
+- **文章核心隐喻**：封面要表达的文章最强视觉隐喻
+- **`required_entities`**：封面必须出现的具体物体列表（vision 校验依据）
+- **最终 prompt**：实际传给 `generate_image` 的完整 prompt
+- **vision 校验**：校验 prompt + 结果（passed / score / missing_entities）
+
+封面图**必须 vision 校验通过后**才可作为发布草稿的 `thumb_media_id`；未通过则重试或请求用户协助，不得用未通过 vision 的封面发布。
+
+**注意**：封面仅用于 `thumb_media_id`，**不得复用为正文内容图**。正文每张图的 `wechat_url` 必须各自独立生成上 CDN——服务端 `publish_draft` 会硬拦截"正文 ≥2 图但唯一 URL==1"的草稿。
