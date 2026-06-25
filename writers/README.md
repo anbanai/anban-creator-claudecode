@@ -20,7 +20,7 @@ writers/
 ```yaml
 # writers/my-style.yaml
 name: "风格名称"
-english_name: "my-style"  # 英文标识，用于 channel 配置
+english_name: "my-style"  # 英文标识，用于 project 配置
 category: "分类"
 description: "一句话描述这个风格"
 version: "1.0"
@@ -38,13 +38,13 @@ writing_prompt: |
 
 ### 3. 使用新风格
 
-配置文件创建后，在 channel 配置中引用该风格的 `english_name` 即可使用：
+配置文件创建后，在 project 配置中引用该风格的 `english_name` 即可使用：
 
-- **Studio**: 在 channel 编辑页面设置 **写作风格**（`writing_style`）字段为 `my-style`
-- **MCP 工具**: 调用 `write_article` 工具，写作风格由 channel 配置决定
+- **Studio**: 在 project 编辑页面设置 **写作风格**（`writing_style`）字段为 `my-style`
+- **MCP 工具**: 调用 `write_article` 工具，写作风格由 project 配置决定
 - **自然语言**: "用 my-style 风格写一篇文章"
 
-> writer 仅决定**写作风格**（文字调性）。图片视觉与排版样式是另外两个正交维度，分别由 channel 的 `style`（视觉）和 `theme`（排版）字段配置，互不影响。
+> writer 仅决定**写作风格**（文字调性）。图片视觉与排版样式是另外两个正交维度，分别由 project 的 `style`（视觉）和 `theme`（排版）字段配置，互不影响。
 
 ---
 
@@ -55,7 +55,7 @@ writing_prompt: |
 | 字段 | 说明 | 示例 |
 |------|------|------|
 | `name` | 风格中文名称 | `"鲁迅"` |
-| `english_name` | 英文标识，用于 channel 配置 | `"luxun"` |
+| `english_name` | 英文标识，用于 project 配置 | `"luxun"` |
 | `writing_prompt` | AI 写作提示词 | 见下方详细说明 |
 
 ### 可选字段
@@ -70,7 +70,7 @@ writing_prompt: |
 | `title_formulas` | 标题公式库 |
 | `quote_templates` | 金句模板 |
 
-> **关于封面/视觉**：writer **不再携带任何视觉身份**（曾经的 `cover_prompt`/`cover_style`/`cover_mood` 字段已移除）。图片视觉是与写作风格**正交**的独立维度，由 channel/template/plan/task 各自的 `style`（视觉）字段承载。
+> **关于封面/视觉**：writer **不再携带任何视觉身份**（曾经的 `cover_prompt`/`cover_style`/`cover_mood` 字段已移除）。图片视觉是与写作风格**正交**的独立维度，由 project/template/plan/task 各自的 `style`（视觉）字段承载。
 
 ---
 
@@ -157,9 +157,9 @@ A: 检查以下几点：
 A:
 
 1. 将风格文件放在 `plugin/writers/` 目录下（内置风格）或 `./writers/` 目录下（项目级）
-2. 在 channel 配置中将 **写作风格**（`writing_style`）字段设为对应的 `english_name`（如 `my-style`）
-3. 通过 MCP 工具 `write_article` 发起写作请求，写作风格由 channel 自动应用
-4. 或通过 Studio 界面在 channel 编辑页面配置写作风格后创建内容任务
+2. 在 project 配置中将 **写作风格**（`writing_style`）字段设为对应的 `english_name`（如 `my-style`）
+3. 通过 MCP 工具 `write_article` 发起写作请求，写作风格由 project 自动应用
+4. 或通过 Studio 界面在 project 编辑页面配置写作风格后创建内容任务
 
 ### Q: 可以分享我的风格吗？
 

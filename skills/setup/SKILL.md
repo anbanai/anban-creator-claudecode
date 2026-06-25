@@ -7,9 +7,9 @@ description: Use when user mentions "初始化", "setup", "第一次使用", "AP
 
 ## 预检
 
-尝试调用 `list_channels` MCP 工具：
+尝试调用 `list_projects` MCP 工具：
 
-- **成功** → 输出连接状态和可用频道，结束
+- **成功** → 输出连接状态和可用项目，结束
 - **失败**（认证错误、连接失败）→ 进入下方密钥设置流程
 
 ## 用户级配置：API Key
@@ -51,14 +51,14 @@ API Key 设置完成后，提示用户进行项目级配置（写入项目本地
 }
 ```
 
-### 默认频道（可选）
+### 默认项目（可选）
 
-如果 `list_channels` 返回多个频道，询问用户是否要设置默认频道，写入 `ANBANWRITER_DEFAULT_CHANNEL`：
+如果 `list_projects` 返回多个项目，询问用户是否要设置默认项目，写入 `ANBANWRITER_DEFAULT_PROJECT`：
 
 ```json
 {
   "env": {
-    "ANBANWRITER_DEFAULT_CHANNEL": "<频道 ID>"
+    "ANBANWRITER_DEFAULT_PROJECT": "<项目 ID>"
   }
 }
 ```
@@ -76,12 +76,12 @@ API Key 设置完成后，提示用户进行项目级配置（写入项目本地
 ## 重启后验证
 
 用户重启 Claude Code 后，`/setup` 的预检步骤应自动执行。预期结果：
-- `list_channels` 调用成功，返回可用频道列表
-- 输出每个频道的 platform、name 和 ID
+- `list_projects` 调用成功，返回可用项目列表
+- 输出每个项目的 platform、name 和 ID
 
 ## 常见问题
 
-**Q: 重启后 `list_channels` 仍然失败？**
+**Q: 重启后 `list_projects` 仍然失败？**
 A: 检查 `~/.claude/settings.json` 中 `ANBANWRITER_API_KEY` 是否正确写入（无多余空格或换行）。检查网络是否能访问 `https://api.creator.anbanai.com`（如使用自建服务器，检查 `ANBANWRITER_API_URL` 是否正确）。
 
 **Q: 想切换到另一个 API 地址？**

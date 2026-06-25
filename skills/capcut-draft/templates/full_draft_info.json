@@ -61,8 +61,8 @@
     ],
     "effects": [],
     "material_animations": [],
-    "sound_channel_mappings": [
-      __SOUND_CHANNEL_MAPPINGS__
+    "sound_project_mappings": [
+      __SOUND_PROJECT_MAPPINGS__
     ],
     "speeds": [
       __SPEED_MATERIALS__

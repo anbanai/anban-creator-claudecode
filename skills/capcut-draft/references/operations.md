@@ -84,11 +84,11 @@ Use the `config` section from `templates/full_draft_info.json` directly -- it co
 
 ##### 5c. Initialize empty materials arrays
 
-`videos`, `audios`, `texts`, `effects`, `transitions`, `canvases`, `speeds`, `sound_channel_mappings`, `material_animations`, `drafts` -- all start as `[]`.
+`videos`, `audios`, `texts`, `effects`, `transitions`, `canvases`, `speeds`, `sound_project_mappings`, `material_animations`, `drafts` -- all start as `[]`.
 
 ##### 5d. For each video/image segment
 
-Generate UUIDs: `videoId`, `canvasId`, `speedId`, `soundChannelMappingId`, `segmentId`.
+Generate UUIDs: `videoId`, `canvasId`, `speedId`, `soundProjectMappingId`, `segmentId`.
 
 1. Copy `templates/material_video.json` and replace:
    - `__VIDEO_ID__` -> new UUID
@@ -104,15 +104,15 @@ Generate UUIDs: `videoId`, `canvasId`, `speedId`, `soundChannelMappingId`, `segm
 3. Copy `templates/aux_speed.json` -> replace `__SPEED_ID__` with new UUID. Insert into `materials.speeds[]`.
    - Only `{ "id": "<speedId>", "speed": 1.0, "type": "speed" }` -- no `mode` or `name` fields.
 
-4. Copy `templates/aux_sound_channel.json` -> replace `__SOUND_CHANNEL_ID__` with new UUID. Insert into `materials.sound_channel_mappings[]`.
-   - Only `{ "id": "<soundChannelMappingId>", "type": "none" }` -- no `audio_channel_mapping` field.
-   - Note: sound_channel_mapping is NOT included in `extra_material_refs`.
+4. Copy `templates/aux_sound_project.json` -> replace `__SOUND_PROJECT_ID__` with new UUID. Insert into `materials.sound_project_mappings[]`.
+   - Only `{ "id": "<soundProjectMappingId>", "type": "none" }` -- no `audio_project_mapping` field.
+   - Note: sound_project_mapping is NOT included in `extra_material_refs`.
 
 5. Copy `templates/segment_video.json` -> replace all `__*__` placeholders with generated IDs and timing values. Add to video track's `segments[]`.
    - `render_index`: fixed `0`. For photos: `source_timerange.start` = 0, duration = target duration.
    - `clip.scale`: `{ "x": 2.0, "y": 2.0 }` for video segments. `volume`: `1.0`.
 
-6. `extra_material_refs` = `[audioId, canvasId, speedId]` (omit audioId if no audio; append animationId if animation applied). Do NOT include soundChannelMappingId.
+6. `extra_material_refs` = `[audioId, canvasId, speedId]` (omit audioId if no audio; append animationId if animation applied). Do NOT include soundProjectMappingId.
 
 7. **Optional animation**: generate `animationId`, add to `materials.material_animations[]`, append to `extra_material_refs`. See `references/presets.md` for animation presets.
 
@@ -221,8 +221,8 @@ Append a new video or image segment to the video track.
 
 1. **Read `draft_info.json`**.
 2. **Calculate video track end time**: max of all segments' `target_timerange.start + target_timerange.duration` (0 if empty).
-3. **Generate UUIDs**: `videoId`, `canvasId`, `speedId`, `soundChannelMappingId`, `segmentId`.
-4. Use templates: `material_video.json`, `aux_canvas.json`, `aux_speed.json`, `aux_sound_channel.json`, `segment_video.json` -- replace all `__*__` placeholders with generated IDs and timing values. Set `target_timerange.start` to calculated end time. `render_index: 0`, `clip.scale: { "x": 2.0, "y": 2.0 }`. Include `audioId` in `extra_material_refs` if applicable.
+3. **Generate UUIDs**: `videoId`, `canvasId`, `speedId`, `soundProjectMappingId`, `segmentId`.
+4. Use templates: `material_video.json`, `aux_canvas.json`, `aux_speed.json`, `aux_sound_project.json`, `segment_video.json` -- replace all `__*__` placeholders with generated IDs and timing values. Set `target_timerange.start` to calculated end time. `render_index: 0`, `clip.scale: { "x": 2.0, "y": 2.0 }`. Include `audioId` in `extra_material_refs` if applicable.
 5. **Append** segment to video track's `segments[]`, increment `track.flag`.
 6. **Update duration** if segment extends beyond current: `max(currentDuration, segment end time)`.
 7. **Write back** and **update timestamps**.
@@ -269,7 +269,7 @@ Remove a segment and all its associated materials.
 1. **Read `draft_info.json`**.
 2. Find target track and segment (by `material_id` or `target_timerange`).
 3. Remove segment from `track.segments[]`, decrement `track.flag`.
-4. Remove corresponding material (by `id == material_id`) and all `extra_material_refs` materials from their respective arrays (canvases, speeds, sound_channel_mappings, material_animations, etc.).
+4. Remove corresponding material (by `id == material_id`) and all `extra_material_refs` materials from their respective arrays (canvases, speeds, sound_project_mappings, material_animations, etc.).
 5. **Write back** and **update timestamps**.
 
 ---

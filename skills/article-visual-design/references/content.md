@@ -224,7 +224,7 @@ Rule of thirds composition, shoots at the right intersection. Warm earth tones w
 
 ```
 generate_image(
-  channel_id=$CHANNEL_ID,
+  project_id=$PROJECT_ID,
   prompt=<上面的 prompt>,
   image_type="content",
   output_path="$DIR/img_01.png",
@@ -303,7 +303,7 @@ $REQUIRED_ENTITIES（逐行列出）
 
 ```
 analyze_image(
-  channel_id=$CHANNEL_ID,
+  project_id=$PROJECT_ID,
   file_path=$DIR/img_01.png,
   prompt=<步骤 2 的校验 prompt>
 )

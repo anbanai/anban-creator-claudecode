@@ -9,10 +9,10 @@ description: Manages images for WeChat article (公众号图文) content includi
 
 | MCP 工具 | 说明 |
 |----------|------|
-| `generate_image` (channel_id, prompt, image_type, output_path, task_id, ref_image_path, verify_with_vision?, verification_prompt?, upload_to_cdn?) | 生成单张图片。`upload_to_cdn=true`（**生成与上传原子化**）时在同一调用内完成"生成→保存→视觉校验→压缩→上传微信 CDN"，直接返回 `wechat_url` + `media_id`；校验未通过则**不上传**；上传失败返回 `upload_error`（生成不浪费，仅重试上传）。返回 download_url（始终为可 HTTP fetch 的存储 URL，不再返回 base64 data URL）、file_path、wechat_url、media_id、verification（可选） |
-| `analyze_image` (channel_id, image_url 或 file_path, prompt) | 用 vision 模型分析图片，用于人工二次校验或失败诊断 |
-| `upload_image` (channel_id, file_path) | 上传**外部/下载来的**图片到微信 CDN，返回 CDN URL。**已生成的图不再用此工具**——生成时直接用 `generate_image(upload_to_cdn=true)` 原子上传 |
-| `download_image` (channel_id, url) | 下载在线图片 |
+| `generate_image` (project_id, prompt, image_type, output_path, task_id, ref_image_path, verify_with_vision?, verification_prompt?, upload_to_cdn?) | 生成单张图片。`upload_to_cdn=true`（**生成与上传原子化**）时在同一调用内完成"生成→保存→视觉校验→压缩→上传微信 CDN"，直接返回 `wechat_url` + `media_id`；校验未通过则**不上传**；上传失败返回 `upload_error`（生成不浪费，仅重试上传）。返回 download_url（始终为可 HTTP fetch 的存储 URL，不再返回 base64 data URL）、file_path、wechat_url、media_id、verification（可选） |
+| `analyze_image` (project_id, image_url 或 file_path, prompt) | 用 vision 模型分析图片，用于人工二次校验或失败诊断 |
+| `upload_image` (project_id, file_path) | 上传**外部/下载来的**图片到微信 CDN，返回 CDN URL。**已生成的图不再用此工具**——生成时直接用 `generate_image(upload_to_cdn=true)` 原子上传 |
+| `download_image` (project_id, url) | 下载在线图片 |
 | `compress_image` (file_path) | 压缩图片 |
 
 ---
@@ -75,10 +75,10 @@ Phase 4: 配图生成（带 vision 校验）
 
 公众号"模板"由三个**正交**维度组成：图片视觉（`style`）、写作风格（`writing_style`）、排版样式（`theme`）。三者各自独立解析，互不推导——**写作风格绝不决定图片视觉**。
 
-`get_channel_profile` 已按 `task > template > plan > channel` 解析并返回视觉维度的最终值：
+`get_project_profile` 已按 `task > template > plan > project` 解析并返回视觉维度的最终值：
 - `$VISUAL_STYLE_CONFIGURED` = profile 的 `style` 字段（解析后的视觉风格描述/关键词）
 - `$TEMPLATE_VISUAL_STYLE` = profile 的 `template_style` 字段（任务带模板时）
-- `$VISUAL_STYLE_SOURCE` = profile 的 `style_source`（task / template / plan / channel）
+- `$VISUAL_STYLE_SOURCE` = profile 的 `style_source`（task / template / plan / project）
 
 **关键规则**：
 - 若 `$VISUAL_STYLE_CONFIGURED` 非空 → 它是**权威视觉锚点**。以它为 `$VISUAL_STYLE` 的核心，三维分析只做**补充细化**（配色、情绪、构图），**绝不可覆盖或偏离**配置的视觉方向。例如配置了"温暖自然的生活摄影"，分析就只能往暖色调、自然光、真实场景细化，**不得**生成维多利亚木刻/黑白版画等冲突风格。
@@ -86,7 +86,7 @@ Phase 4: 配图生成（带 vision 校验）
 
 ### 步骤 1b：三维风格分析（细化 / 兜底）
 
-基于 `get_channel_profile` 返回的 `$ACCOUNT_POSITIONING` / `$ACCOUNT_KEYWORDS` / `$ACCOUNT_AUDIENCE` 和 `$DIR/04-article-final.md` 内容，执行三维分析。当步骤 1a 有配置锚点时，分析必须向该锚点收敛（即用账号/内容主题来**充实**已指定的视觉方向），而非另起炉灶。
+基于 `get_project_profile` 返回的 `$ACCOUNT_POSITIONING` / `$ACCOUNT_KEYWORDS` / `$ACCOUNT_AUDIENCE` 和 `$DIR/04-article-final.md` 内容，执行三维分析。当步骤 1a 有配置锚点时，分析必须向该锚点收敛（即用账号/内容主题来**充实**已指定的视觉方向），而非另起炉灶。
 
 详细规范见 [references/cover.md](references/cover.md)。
 
@@ -101,7 +101,7 @@ Phase 4: 配图生成（带 vision 校验）
 流程：
 1. 从 `$DIR/04-article-final.md` 提取核心论点和最强视觉隐喻
 2. 按 [references/cover.md](references/cover.md) 的模板构建 prompt
-3. 调用 `generate_image`（`channel_id=$CHANNEL_ID`, `prompt=封面提示词`, `image_type="cover"`, `output_path="$DIR/cover.png"`, `task_id=$TASK_ID`, `size="2.35:1"`, **`upload_to_cdn=true`**, `verify_with_vision=true`, `verification_prompt=<步骤 4 构建的校验 prompt>`）——**生成与上传原子化**：同一调用内完成生成→保存→校验→压缩→上传，直接返回 `media_id`（封面 thumb）+ `wechat_url`。
+3. 调用 `generate_image`（`project_id=$PROJECT_ID`, `prompt=封面提示词`, `image_type="cover"`, `output_path="$DIR/cover.png"`, `task_id=$TASK_ID`, `size="2.35:1"`, **`upload_to_cdn=true`**, `verify_with_vision=true`, `verification_prompt=<步骤 4 构建的校验 prompt>`）——**生成与上传原子化**：同一调用内完成生成→保存→校验→压缩→上传，直接返回 `media_id`（封面 thumb）+ `wechat_url`。
 4. **Vision 校验 prompt 模板**：
    ```
    这张图用于文章《$ARTICLE_TITLE》的封面。
@@ -175,7 +175,7 @@ Phase 4: 配图生成（带 vision 校验）
 
 ```
 generate_image(
-  channel_id=$CHANNEL_ID,
+  project_id=$PROJECT_ID,
   prompt=<步骤 4a 构建的 prompt>,
   image_type="content",
   output_path="$DIR/img_N.png",
@@ -195,7 +195,7 @@ generate_image(
 
 ```
 analyze_image(
-  channel_id=$CHANNEL_ID,
+  project_id=$PROJECT_ID,
   file_path=$DIR/img_N.png,
   prompt=<步骤 4b 构建的校验 prompt>
 )

@@ -9,11 +9,11 @@ description: Use when replicating viral short-video covers, generating a short-v
 
 | MCP 工具 | 说明 |
 |----------|------|
-| `analyze_image` (channel_id, image_url, file_path, prompt) | 图像视觉分析——传入图像 URL 或服务器文件路径，返回 AI 视觉分析结果。**Read 工具不用于图像视觉分析**，只用来获取 CDN URL。一次只分析一张图；同时传 `file_path` 和 `image_url` 时服务端只用 `file_path` |
-| `generate_image` (channel_id, prompt, image_type, output_path, ref_image_path, size, task_id) | 生成单张图片，返回 `download_url`（始终为可 HTTP fetch 的存储 URL，不再返回 base64 data URL）和 `file_path`。当前是参考图生成，不是 ControlNet/img2img |
-| `download_image` (channel_id, url) | 下载在线图片到 MCP 服务器临时路径或上传到存储，返回 `file_path`。用于把 Read 得到的 CDN URL 注册成 `ref_image_path` 可用的服务器端路径 |
+| `analyze_image` (project_id, image_url, file_path, prompt) | 图像视觉分析——传入图像 URL 或服务器文件路径，返回 AI 视觉分析结果。**Read 工具不用于图像视觉分析**，只用来获取 CDN URL。一次只分析一张图；同时传 `file_path` 和 `image_url` 时服务端只用 `file_path` |
+| `generate_image` (project_id, prompt, image_type, output_path, ref_image_path, size, task_id) | 生成单张图片，返回 `download_url`（始终为可 HTTP fetch 的存储 URL，不再返回 base64 data URL）和 `file_path`。当前是参考图生成，不是 ControlNet/img2img |
+| `download_image` (project_id, url) | 下载在线图片到 MCP 服务器临时路径或上传到存储，返回 `file_path`。用于把 Read 得到的 CDN URL 注册成 `ref_image_path` 可用的服务器端路径 |
 | `compress_image` (file_path) | 压缩图片——`analyze_image` 的 `file_path` 方式有 10MB 限制，超出时先压缩 |
-| `upload_image` (channel_id, file_path) | 上传图片，用于 `compress_image` 仍超 10MB 的兜底场景 |
+| `upload_image` (project_id, file_path) | 上传图片，用于 `compress_image` 仍超 10MB 的兜底场景 |
 
 ---
 
@@ -56,10 +56,10 @@ description: Use when replicating viral short-video covers, generating a short-v
 
 ### Phase 0 — 初始化
 
-#### 步骤 1：获取频道和工作目录
+#### 步骤 1：获取项目和工作目录
 
-- `echo $ANBANWRITER_DEFAULT_CHANNEL` → `$CHANNEL_ID`
-- 如果为空，调用 `list_channels` 获取频道列表；只有一个可用频道时自动使用，多个频道且无法从任务上下文判断时停止并提示配置 `ANBANWRITER_DEFAULT_CHANNEL`
+- `echo $ANBANWRITER_DEFAULT_PROJECT` → `$PROJECT_ID`
+- 如果为空，调用 `list_projects` 获取项目列表；只有一个可用项目时自动使用，多个项目且无法从任务上下文判断时停止并提示配置 `ANBANWRITER_DEFAULT_PROJECT`
 - 从 `.task-context` 获取 `$TASK_ID`，或使用 CWD 目录名
 - 尝试调用 `prepare_workspace(content_type="short-video", task_id=$TASK_ID)` → `$DIR`
   - prepare_workspace 返回的 path 可能是相对路径；相对路径以当前任务工作区 `$CWD` 为根，例如返回 `output` 时使用 `$CWD/output`
@@ -95,7 +95,7 @@ description: Use when replicating viral short-video covers, generating a short-v
 
 ## Workspace
 
-- $CHANNEL_ID: <频道 ID>
+- $PROJECT_ID: <项目 ID>
 - $DIR: <工作目录>
 - $TASK_ID: <任务 ID>
 ```
@@ -112,7 +112,7 @@ description: Use when replicating viral short-video covers, generating a short-v
 
 ```
 1. Read 参考封面本地路径 → 得到 CDN_URL（约 30 分钟过期，立即使用）
-2. download_image(channel_id="$CHANNEL_ID", url=CDN_URL) → 返回 REF_SERVER_PATH
+2. download_image(project_id="$PROJECT_ID", url=CDN_URL) → 返回 REF_SERVER_PATH
 ```
 
 把 `REF_SERVER_PATH` 记录到 `$DIR/server-paths.md`。
@@ -123,7 +123,7 @@ description: Use when replicating viral short-video covers, generating a short-v
 
 ```
 analyze_image(
-  channel_id="$CHANNEL_ID",
+  project_id="$PROJECT_ID",
   file_path="$REF_SERVER_PATH",
   prompt=<参考 references/analysis-template.md 的 8 维度分析模板>
 )
@@ -202,7 +202,7 @@ analyze_image(
 
 ```
 result = generate_image(
-  channel_id="$CHANNEL_ID",
+  project_id="$PROJECT_ID",
   prompt=<5a 构建的 prompt>,
   image_type="cover",
   output_path="/tmp/anbanwriter-short-video-cover/$TASK_ID/cover.png",
@@ -229,7 +229,7 @@ COVER_SERVER_PATH = result.file_path
 
 ```
 analyze_image(
-  channel_id="$CHANNEL_ID",
+  project_id="$PROJECT_ID",
   file_path="$COVER_SERVER_PATH",
   prompt=<参考 references/optimization-checklist.md 的 5 项审计模板>
 )

@@ -38,7 +38,7 @@
 
 ### MCP 工具
 
-调用 `publish_draft`，传入 channel_id 和 articles 数组。
+调用 `publish_draft`，传入 project_id 和 articles 数组。
 
 ### 响应格式
 

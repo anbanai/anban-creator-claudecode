@@ -81,7 +81,7 @@
     ],
     "effects": [],
     "material_animations": [],
-    "sound_channel_mappings": [
+    "sound_project_mappings": [
       { "id": "E5F6A7B8-C9D0-1234-5678-901234567890", "type": "none" }
     ],
     "speeds": [

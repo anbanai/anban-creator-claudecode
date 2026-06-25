@@ -9,12 +9,12 @@ description: Researches WeChat topics (选题研究), scores engagement potentia
 
 | MCP 工具 | 说明 |
 |----------|------|
-| `list_channel_titles` (channel_id) | 查看系统内已有标题（定标题前必调） |
-| `list_drafts` (channel_id) | 查看已有草稿 |
-| `list_published_articles` (channel_id) | 查看已发布文章 |
-| `research_topics` (channel_id, keywords?, domain?, count?) | 选题研究 |
-| `score_article` (channel_id, content, title?, domain?) | 话题评分 |
-| `generate_outline` (channel_id, topic, template?, domain?, style?, keywords?) | 内容框架生成 |
+| `list_project_titles` (project_id) | 查看系统内已有标题（定标题前必调） |
+| `list_drafts` (project_id) | 查看已有草稿 |
+| `list_published_articles` (project_id) | 查看已发布文章 |
+| `research_topics` (project_id, keywords?, domain?, count?) | 选题研究 |
+| `score_article` (project_id, content, title?, domain?) | 话题评分 |
+| `generate_outline` (project_id, topic, template?, domain?, style?, keywords?) | 内容框架生成 |
 
 ---
 
@@ -28,9 +28,9 @@ description: Researches WeChat topics (选题研究), scores engagement potentia
 
 调用以下三个工具：
 ```
-list_channel_titles(channel_id="$CHANNEL_ID")
-list_drafts(channel_id="$CHANNEL_ID")
-list_published_articles(channel_id="$CHANNEL_ID")
+list_project_titles(project_id="$PROJECT_ID")
+list_drafts(project_id="$PROJECT_ID")
+list_published_articles(project_id="$PROJECT_ID")
 ```
 
 从结果中提取所有已有标题和选题关键词，构建**排除列表**。后续标题必须避开这些已有标题和近似表达。
@@ -43,15 +43,15 @@ list_published_articles(channel_id="$CHANNEL_ID")
 
 ```
 research_topics(
-  channel_id="$CHANNEL_ID",
-  keywords=["关键词1", "关键词2"],  // 从 get_channel_profile 获取
+  project_id="$PROJECT_ID",
+  keywords=["关键词1", "关键词2"],  // 从 get_project_profile 获取
   domain="general",                // 可选: general, tea, tech, lifestyle, culture, business, education
   count=5                          // 生成 5 个候选
 )
 ```
 
 **参数说明**：
-- `keywords`：从频道 profile 中的 keywords 字段获取，结合用户输入的选题方向
+- `keywords`：从项目 profile 中的 keywords 字段获取，结合用户输入的选题方向
 - `domain`：根据账号领域选择，不确定时使用 `general`
 - `count`：建议 5-10 个候选，以便对比筛选
 
@@ -63,7 +63,7 @@ research_topics(
 
 ```
 score_article(
-  channel_id="$CHANNEL_ID",
+  project_id="$PROJECT_ID",
   title="候选标题",
   content="话题的核心观点描述（2-3句话）",
   domain="general"
@@ -80,11 +80,11 @@ score_article(
 
 ```
 generate_outline(
-  channel_id="$CHANNEL_ID",
+  project_id="$PROJECT_ID",
   topic="选定的话题",
   template="authoritative",    // 选择匹配的模板
   domain="general",
-  style="dan-koe",             // 从频道 profile 获取
+  style="dan-koe",             // 从项目 profile 获取
   keywords=["关键词1", "关键词2"]
 )
 ```

@@ -114,7 +114,7 @@ writing_prompt: |
 
 详细格式参考 `writers/dan-koe.yaml`。
 
-> **注意**：writer YAML 只定义**写作风格**，不再包含 `cover_prompt`/`cover_style`/`cover_mood` 等封面字段。图片视觉是与写作风格正交的独立维度，由频道/模板/任务各自配置，详见 `article-visual-design` skill。
+> **注意**：writer YAML 只定义**写作风格**，不再包含 `cover_prompt`/`cover_style`/`cover_mood` 等封面字段。图片视觉是与写作风格正交的独立维度，由项目/模板/任务各自配置，详见 `article-visual-design` skill。
 
 ---
 

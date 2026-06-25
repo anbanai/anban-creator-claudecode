@@ -9,10 +9,10 @@ description: Creates and manages WeChat news article drafts (图文草稿) with 
 
 | MCP 工具 | 说明 |
 |----------|------|
-| `upload_image` (channel_id, file_path) | 上传图片到微信素材库 |
-| `publish_draft` (channel_id, articles) | 创建图文文章草稿 |
-| `list_drafts` (channel_id) | 查看已有草稿 |
-| `list_published_articles` (channel_id) | 查看已发布文章 |
+| `upload_image` (project_id, file_path) | 上传图片到微信素材库 |
+| `publish_draft` (project_id, articles) | 创建图文文章草稿 |
+| `list_drafts` (project_id) | 查看已有草稿 |
+| `list_published_articles` (project_id) | 查看已发布文章 |
 
 ---
 

@@ -23,10 +23,10 @@ description: 种草笔记图文全自动创作。用户提到"种草笔记"、"s
 
 **先解析 `$TASK_ID`**：检查 CWD 下是否存在 `.task-context` 文件，从中读取 `TASK_ID=xxx`；否则使用 CWD 目录名作为 `$TASK_ID`。后续所有需要 task_id 的 MCP 工具调用都复用此值。
 
-然后通过 Bash 执行 `echo $ANBANWRITER_DEFAULT_CHANNEL` 检查环境变量。若非空，直接使用其值作为 `$CHANNEL_ID`，跳过下面的 `list_channels`。若为空（如本地无服务端上下文的纯 CLI 场景），调用 MCP 工具：
-- `list_channels(platform="seednote")` → 获取频道列表。只有一个匹配频道时记为 `$CHANNEL_ID`；多个匹配时按用户话题与频道 `name`/`positioning`/`keywords` 语义匹配，能明确判断则用之，否则向用户展示候选让其选择
-- `get_channel_profile(channel_id="$CHANNEL_ID", scope="seednote", task_id="$TASK_ID")` → 获取账号定位、关键词等信息。`task_id` 让服务端用任务派生的模板风格覆盖 channel 默认风格（`style_source="task"`），不传则只拿到 channel 级风格。
-- `list_channel_titles(channel_id="$CHANNEL_ID")` → 查看系统内已有标题，后续标题避开
+然后通过 Bash 执行 `echo $ANBANWRITER_DEFAULT_PROJECT` 检查环境变量。若非空，直接使用其值作为 `$PROJECT_ID`，跳过下面的 `list_projects`。若为空（如本地无服务端上下文的纯 CLI 场景），调用 MCP 工具：
+- `list_projects(platform="seednote")` → 获取项目列表。只有一个匹配项目时记为 `$PROJECT_ID`；多个匹配时按用户话题与项目 `name`/`positioning`/`keywords` 语义匹配，能明确判断则用之，否则向用户展示候选让其选择
+- `get_project_profile(project_id="$PROJECT_ID", scope="seednote", task_id="$TASK_ID")` → 获取账号定位、关键词等信息。`task_id` 让服务端用任务派生的模板风格覆盖 project 默认风格（`style_source="task"`），不传则只拿到 project 级风格。
+- `list_project_titles(project_id="$PROJECT_ID")` → 查看系统内已有标题，后续标题避开
 
 ### 步骤 2：创建工作目录
 
@@ -105,7 +105,7 @@ description: 种草笔记图文全自动创作。用户提到"种草笔记"、"s
 
 | 步骤 | 调用技能 | 产出 |
 |------|----------|------|
-| 1 | Bash + MCP 调用 | `$CHANNEL_ID` |
+| 1 | Bash + MCP 调用 | `$PROJECT_ID` |
 | 2 | 直接 MCP 调用 | `$DIR` |
 | 3 | `seednote-research` | `topic-analysis.md`（原创）或 `source-note.md`（复刻） |
 | 3b | `seednote-viral-analysis` | `source-analysis.md`, `viral-template.json`, `template-meta.json`（仅复刻模式） |

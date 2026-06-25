@@ -11,6 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Live video slicing** (直播切片)
 - **Line art coloring** (线稿上色)
 - **Short video cover** (短视频封面复刻 + 人像姿态变体)
+- **E-commerce product imagery** (电商出图：主图/详情/封面/分享/SKU，多产品图输入保一致)
 
 The plugin follows an **Agent + Skill + MCP** architecture: Claude Code agents orchestrate end-to-end pipelines, skills encapsulate domain knowledge, and an external MCP server provides WeChat/Seednote API access.
 
@@ -18,7 +19,7 @@ The plugin follows an **Agent + Skill + MCP** architecture: Claude Code agents o
 
 ### Agents (`agents/`)
 
-Orchestration engines that run fully autonomous, zero-interaction pipelines. Each agent has a frontmatter block with `name`, `skills`, `mcpServers`, `maxTurns`, and `memory` config. The agent definition is the single source of truth for its pipeline's flow, quality standards, risk mitigation, and success criteria. Do not add a `tools` allowlist to agents that need MCP tools; Claude Code treats `tools` as an allowlist and can hide `mcp__anbanwriter__...` tools from subagents.
+Orchestration engines that run fully autonomous, zero-interaction pipelines. Each agent has a frontmatter block with `name`, `skills`, `mcpServers`, `maxTurns`, and `memory` config. The agent definition is the single source of truth for its pipeline's flow, quality standards, risk mitigation, and success criteria. Do not add a `tools` allowlist to agents that need MCP tools; Claude Code treats `tools` as an allowlist and can hide `mcp__anban__...` tools from subagents.
 
 | Agent | Trigger | Pipeline |
 |-------|---------|----------|
@@ -27,6 +28,7 @@ Orchestration engines that run fully autonomous, zero-interaction pipelines. Eac
 | `live-slicer` | "直播切片", "剪直播", "听悟" | ffmpeg prep → TingWu transcription → Invalid sentence filter → Segment/subject planning → Batch cuts/concat → CapCut export → Report |
 | `designer` | "上色", "填色", "线稿", "color consistency", "designer" | Init → Progressive coloring (single-candidate by default, optional 2-candidate) → Full audit → Best-effort correction/backtracking → Report with `needs_img2img` where strict line preservation is impossible |
 | `short-video-studio` | "短视频封面", "爆款封面", "封面复刻", "人像姿态", "表情封面", "人像变体" | Intent routing → Workspace init → Mode branch: replication (short-video-cover skill) or pose-variants (portrait-pose-variants skill) → Generation + audit → Archive report |
+| `ecommerce` | "电商出图", "电商素材", "商品图", "产品图", "主图", "详情页", "商详", "SKU图", "电商封面" | Product Bible (analyze product photos) → Selling points (FABE) → Asset plan → Anchor-first generation with provider strategy + vision self-check (max 3 rounds) → Compliance (广告法极限词) → Archive + manifest |
 
 Agents use TaskCreate/TaskUpdate for progress tracking and report progress as `[N/M] step complete → path (detail)`.
 
@@ -41,13 +43,14 @@ Key skill groups:
 - **Live slicing**: `live-slice`, `capcut-draft`
 - **Design**: `line-art-coloring`
 - **Short video**: `short-video-cover`, `portrait-pose-variants`
+- **E-commerce**: `ecommerce`, `ecommerce-product-analysis`, `ecommerce-copywriting`, `ecommerce-visual-design`, `ecommerce-platform-specs` (bespoke to e-commerce — buyer audience, conversion goals; does NOT reuse seednote/designer skill content)
 - **Setup**: `setup` (first-time setup, key configuration, and connectivity verification)
 
 ### MCP Server (`.mcp.json`)
 
 Connects to the `anbanwriter` MCP server at `$ANBANWRITER_API_URL` (default `https://api.creator.anbanai.com`). Key MCP tools:
-- `$ANBANWRITER_DEFAULT_CHANNEL`: Optional default channel ID. When set, agents skip `list_channels` and use this directly.
-- `list_channels`, `get_channel_profile`, `list_drafts`, `list_published_articles`, `list_channel_titles`
+- `$ANBANWRITER_DEFAULT_PROJECT`: Optional default project ID. When set, agents skip `list_projects` and use this directly.
+- `list_projects`, `get_project_profile`, `list_drafts`, `list_published_articles`, `list_project_titles`
 - `prepare_workspace`, `archive_workspace`
 - `write_article`, `convert_markdown`, `humanize_article`
 - `image upload`, `draft article`
@@ -56,11 +59,11 @@ Connects to the `anbanwriter` MCP server at `$ANBANWRITER_API_URL` (default `htt
 
 ### Themes (Server-managed)
 
-Themes define visual styling for article排版. Themes are managed server-side via the MCP server's `convert_markdown` tool. Each channel has a configured theme that is applied automatically during Markdown-to-WeChat-HTML conversion.
+Themes define visual styling for article排版. Themes are managed server-side via the MCP server's `convert_markdown` tool. Each project has a configured theme that is applied automatically during Markdown-to-WeChat-HTML conversion.
 
 ### Writers (`writers/`)
 
-YAML files defining **writing** styles (the writer dimension only). Each has `name`, `english_name`, `writing_prompt` (required), plus optional `core_beliefs`, `title_formulas`, `quote_templates`. Writers **do not** carry visual identity — image visual style is an orthogonal dimension configured per channel/template/plan/task (see `article-visual-design` skill). Built-in styles: `dan-koe`, `cultural-depth`, `casual-science`.
+YAML files defining **writing** styles (the writer dimension only). Each has `name`, `english_name`, `writing_prompt` (required), plus optional `core_beliefs`, `title_formulas`, `quote_templates`. Writers **do not** carry visual identity — image visual style is an orthogonal dimension configured per project/template/plan/task (see `article-visual-design` skill). Built-in styles: `dan-koe`, `cultural-depth`, `casual-science`.
 
 ### Layout Modules (`layouts/`)
 

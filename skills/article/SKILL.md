@@ -21,18 +21,18 @@ description: 微信公众号图文文章全自动创作。用户提到"写文章
 
 ### Phase 1: 信息收集
 
-### 步骤 1：获取频道信息与工作目录
+### 步骤 1：获取项目信息与工作目录
 
-**频道选择（必须先完成，再调用频道 API）：**
+**项目选择（必须先完成，再调用项目 API）：**
 
-- 检查 `$ANBANWRITER_DEFAULT_CHANNEL` 环境变量，非空则直接使用
-- 否则调用 `list_channels(platform="article")`，**仅根据** `name`、`positioning`、`keywords` 语义匹配或让用户选择 → `$CHANNEL_ID`
-- **⚠️ 禁止基于 API 可用性选择频道**：不要对多个频道调用 `get_channel_profile`/`list_published_articles` 来评估哪个"可用"。频道选择仅依据 `list_channels` 返回的 `name`、`positioning`、`keywords`。选定频道后，即使后续 API 调用返回错误也不得切换到其他频道
+- 检查 `$ANBANWRITER_DEFAULT_PROJECT` 环境变量，非空则直接使用
+- 否则调用 `list_projects(platform="article")`，**仅根据** `name`、`positioning`、`keywords` 语义匹配或让用户选择 → `$PROJECT_ID`
+- **⚠️ 禁止基于 API 可用性选择项目**：不要对多个项目调用 `get_project_profile`/`list_published_articles` 来评估哪个"可用"。项目选择仅依据 `list_projects` 返回的 `name`、`positioning`、`keywords`。选定项目后，即使后续 API 调用返回错误也不得切换到其他项目
 
-**频道选定后，仅对 `$CHANNEL_ID` 调用：**
+**项目选定后，仅对 `$PROJECT_ID` 调用：**
 
-- `get_channel_profile(channel_id="$CHANNEL_ID", scope="article", task_id="$TASK_ID")` → 获取账号定位、受众、写作风格。`task_id` 让服务端额外返回任务关联模板的内容脚手架（`template_writing_style` 写作风格 / `template_structure` 内容结构 / `template_example` 示例），若返回了这些字段，创作正文与配图时必须严格遵守；不传则只拿到 channel 级信息。
-- `list_drafts(channel_id="$CHANNEL_ID")` 和 `list_published_articles(channel_id="$CHANNEL_ID")` → 已有文章标题（如返回错误可忽略，用空列表继续）
+- `get_project_profile(project_id="$PROJECT_ID", scope="article", task_id="$TASK_ID")` → 获取账号定位、受众、写作风格。`task_id` 让服务端额外返回任务关联模板的内容脚手架（`template_writing_style` 写作风格 / `template_structure` 内容结构 / `template_example` 示例），若返回了这些字段，创作正文与配图时必须严格遵守；不传则只拿到 project 级信息。
+- `list_drafts(project_id="$PROJECT_ID")` 和 `list_published_articles(project_id="$PROJECT_ID")` → 已有文章标题（如返回错误可忽略，用空列表继续）
 - `prepare_workspace(content_type="articles", task_id=TASK_ID)` → 工作目录路径 `$DIR`
 - Bash 执行 `mkdir -p "$DIR"` 创建目录
 
@@ -41,7 +41,7 @@ description: 微信公众号图文文章全自动创作。用户提到"写文章
 使用 `topic-research` skill：
 - 结合账号关键词和用户需求搜索热门话题
 - 生成文章大纲
-- 创建 `$DIR/context-brief.md`，记录用户原始需求、频道定位、关键词、目标受众、历史文章避重结论、选题理由，以及每个 `##` 章节的上下文锚点
+- 创建 `$DIR/context-brief.md`，记录用户原始需求、项目定位、关键词、目标受众、历史文章避重结论、选题理由，以及每个 `##` 章节的上下文锚点
 - 保存为 `$DIR/01-research.md`、`$DIR/02-outline.md`、`$DIR/context-brief.md`
 
 ### Phase 2: 内容创作
@@ -76,7 +76,7 @@ description: 微信公众号图文文章全自动创作。用户提到"写文章
 
 使用 `article-visual-design` skill：
 - **6a: 三维风格分析** — 基于账号定位 + 内容主题 + 受众确定视觉风格（不使用 writer YAML 的 `cover_style`/`cover_prompt`）
-- **6b: 生成封面（生成与上传原子化）** — 从零构建封面 prompt，调用 `generate_image(channel_id="$CHANNEL_ID", prompt=封面提示词, image_type="cover", output_path="$DIR/cover.png", task_id="$TASK_ID", size="2.35:1", upload_to_cdn=true, verify_with_vision=true, verification_prompt=...)`。**同一调用内完成生成→校验→压缩→上传微信 CDN**，直接返回 `media_id`（发布草稿的 thumb）+ `wechat_url`。**不再单独调用 `upload_image`**。若返回 `upload_error`（生成成功但上传失败），用 `upload_image(file_path="$DIR/cover.png")` 单独重传即可，无需重新生成。
+- **6b: 生成封面（生成与上传原子化）** — 从零构建封面 prompt，调用 `generate_image(project_id="$PROJECT_ID", prompt=封面提示词, image_type="cover", output_path="$DIR/cover.png", task_id="$TASK_ID", size="2.35:1", upload_to_cdn=true, verify_with_vision=true, verification_prompt=...)`。**同一调用内完成生成→校验→压缩→上传微信 CDN**，直接返回 `media_id`（发布草稿的 thumb）+ `wechat_url`。**不再单独调用 `upload_image`**。若返回 `upload_error`（生成成功但上传失败），用 `upload_image(file_path="$DIR/cover.png")` 单独重传即可，无需重新生成。
 - **6c: 创建配图规划** — 逐章分析文章，创建 `$DIR/image-plan.md`；每张图必须包含 `chapter_title`、`core_point`、`source_excerpt`、`visual_subject`、`composition_type`、`prompt_strategy`
 - 记录 `$VISUAL_STYLE`、`$COLOR_PALETTE`、`$COVER_PATH`、封面 `media_id`
 
@@ -94,7 +94,7 @@ description: 微信公众号图文文章全自动创作。用户提到"写文章
 
 使用 `content-writing` skill：
 - 读取已插入 CDN 图片链接的 `$DIR/04-article-final.md`
-- 将文件内容作为 `markdown` 参数传给 `convert_markdown(channel_id="$CHANNEL_ID", markdown=文章全文, theme=可选主题)`
+- 将文件内容作为 `markdown` 参数传给 `convert_markdown(project_id="$PROJECT_ID", markdown=文章全文, theme=可选主题)`
 - `$DIR/images.json` 仅作为审计记录，`convert_markdown` 不会读取该文件
 - 保存为 `$DIR/05-article.html`
 
@@ -141,7 +141,7 @@ description: 微信公众号图文文章全自动创作。用户提到"写文章
 
 | 步骤 | 调用技能 | 产出 |
 |------|----------|------|
-| 1 | 直接 MCP 调用 | `$CHANNEL_ID`, `$DIR` |
+| 1 | 直接 MCP 调用 | `$PROJECT_ID`, `$DIR` |
 | 2 | `topic-research` | `01-research.md`, `02-outline.md`, `context-brief.md` |
 | 3 | `content-writing` | `03-article.md` |
 | 4 | `content-writing` | `04-article-final.md`, `content-quality-report.md` |

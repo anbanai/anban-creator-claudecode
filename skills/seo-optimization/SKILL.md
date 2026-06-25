@@ -9,7 +9,7 @@ description: Optimizes titles (标题优化), keywords (关键词), and article 
 
 | MCP 工具 | 说明 |
 |----------|------|
-| `optimize_seo` (channel_id, content, title, keywords?) | SEO 优化分析 |
+| `optimize_seo` (project_id, content, title, keywords?) | SEO 优化分析 |
 
 ---
 

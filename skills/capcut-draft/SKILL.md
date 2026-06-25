@@ -111,7 +111,7 @@ See `references/operations.md` for the full workflow. Summary:
 
 ### Modify a draft
 Read `draft_info.json` → make changes → write back. Common modifications:
-- Add video segment: new Video material + Canvas + Speed + SoundChannelMapping + TrackSegment on video track
+- Add video segment: new Video material + Canvas + Speed + SoundProjectMapping + TrackSegment on video track
 - Add subtitle: new Text material + TrackSegment on text track (render_index: 14002, clip.transform.y: -0.75)
 - Add effect: clone preset with new UUID + TrackSegment on effect track (render_index: 11005)
 - Adjust timing: modify target_timerange on segment
@@ -169,13 +169,13 @@ All templates use `__PLACEHOLDER__` format. Copy a template, replace placeholder
 **Auxiliary material templates** (one per video segment):
 - `templates/aux_canvas.json` — Canvas material (1 placeholder: CANVAS_ID)
 - `templates/aux_speed.json` — Speed material (1 placeholder: SPEED_ID)
-- `templates/aux_sound_channel.json` — Sound channel mapping (1 placeholder: SOUND_CHANNEL_ID)
+- `templates/aux_sound_project.json` — Sound project mapping (1 placeholder: SOUND_PROJECT_ID)
 
 ### Workflow: Create a new draft using templates
 
 1. Generate UUIDs: `for i in $(seq 1 20); do uuidgen | tr '[:lower:]' '[:upper:]'; done`
 2. Copy `full_draft_info.json` → replace top-level placeholders (CANVAS, FPS, DRAFT_ID, DURATION)
-3. For each video segment: copy `material_video.json` + `segment_video.json` + `aux_canvas.json` + `aux_speed.json` + `aux_sound_channel.json`, fill IDs/timing, insert into the arrays
+3. For each video segment: copy `material_video.json` + `segment_video.json` + `aux_canvas.json` + `aux_speed.json` + `aux_sound_project.json`, fill IDs/timing, insert into the arrays
 4. For each subtitle: copy `material_text.json` + `segment_text.json`, fill TEXT_ID/timing
 5. For audio: copy `material_audio.json` + `segment_audio.json`, fill AUDIO_ID/duration
 6. Copy `full_draft_meta_info.json` → replace placeholders

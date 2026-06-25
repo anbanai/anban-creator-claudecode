@@ -51,6 +51,15 @@
             "prompt": "short-video-studio agent 已完成执行。请先读取工作目录下的 input-manifest.md 确定本次运行的模式（replication 或 pose-variants），然后按对应模式检查产出文件，生成结构化交付摘要。\n\n**步骤 1：确定模式**\n读取 $DIR/input-manifest.md 的 Mode Decision.selected_mode 字段。若无法读取或字段缺失，检查文件存在情况并报告问题。\n\n**步骤 2：模式相关产出检查**\n\n**复刻模式（replication）**：\n1. 输入清单：input-manifest.md 是否包含 mode_decision 依据\n2. 参考分析：reference-analysis.md 是否包含 8 维度拆解\n3. 迁移规划：cover-plan.md 是否包含标题分行、放大词、主体位置、背景决策\n4. 主交付：cover.png 是否存在且文件大小 > 0；如重试则检查 cover_v2.png\n5. Prompt 备份：cover-prompts.md 是否记录实际 prompt 和生成参数\n6. 审计报告：cover-review.md 是否包含 5 项 PASS/MINOR/FAIL 评级\n\n**姿态模式（pose-variants）**：\n1. 输入清单：input-manifest.md 是否包含 mode_decision 依据\n2. 身份锁：identity-lock.md 是否包含 12 维度描述\n3. 姿态规划：selected-poses.md 是否包含 N 个姿态模板（每个含表情、手势、情绪基调、prompt 段落）\n4. 主交付：variant_01.png ~ variant_0N.png 是否全部存在且大小 > 0；检查是否有 variant_0N_v2.png（重试产物）\n5. Prompt 备份：image-prompts.md 是否记录每张变体的实际 prompt 和生成参数\n6. 一致性审计：consistency-report.md 是否包含 12 维度逐张评级汇总和综合评级\n\n**步骤 3：问题检查**\n1. 主交付文件缺失或大小为 0 → 标记关键问题\n2. 复刻模式 5 项审计中有未处理的 FAIL（无重试记录、无 needs_manual_edit 标注）→ 标记质量问题\n3. 姿态模式关键维度（脸型/五官比例/发型发色）FAIL 但无重试记录或 needs_img2img 标注 → 标记质量问题\n4. 手势畸形（多指、缺指、关节扭曲）未在审计中提及但视觉可见 → 提醒人工复核\n5. input-manifest.md 中 mode_decision 缺乏关键词或文件类型证据 → 标记决策透明度问题\n\n如发现问题请明确指出并建议从哪个步骤继续修复。\n\n最后，调用 submit_agent_feedback(task_id=$TASK_ID, agent_name=\"short-video-studio\", scores={quality:N, completeness:N, efficiency:N}, errors=\"<errors>\", optimizations=\"<optimizations>\", summary=\"<brief summary with selected mode>\") 提交本次 agent 执行反馈。scores 按 1-10 评分，errors 填写遇到的问题（无则填空字符串），optimizations 填写可改进之处，summary 填写简要执行摘要（必须包含本次运行的模式）。"
           }
         ]
+      },
+      {
+        "matcher": "ecommerce",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "ecommerce agent 已完成执行。请检查工作目录（归档后为 $ARCHIVE_DIR，归档前为 $DIR）下的产出文件，生成结构化交付摘要：\n\n1. **产品档案**：product-bible.md 是否存在，是否含品类/品牌/色彩/材质/形状/包装文字/卖点候选 + 锚点 $ANCHOR_REF\n2. **卖点文案**：copywriting.md 是否含 3-5 个排序卖点、主图 5 张文案、详情页 FABE 章节文案\n3. **资产规划**：asset-plan.md 是否仅含已选模块（selected_modules）；计划图片数量是否与实际产物一致\n4. **图片产物**：按模块列出 main_01..05.png、detail_01..NN.png、cover_01..NN.png、share_01..NN.png、sku_<variant>.png，确认文件存在且大小>0；未选模块不得有产物\n5. **一致性自检**：best-refs.md 是否记录逐图 provider/自检结果；一致性关键模块是否 verify_with_vision 通过；needs_reference 项是否已披露\n6. **合规**：compliance-report.md 是否生成；是否有未处理的高风险极限词/违禁词\n7. **清单**：manifest.json 是否生成，是否按模块含文件名/尺寸/provider/自检结果/合规状态\n8. **问题检查**：产品跨图是否一致（logo/主色/形状）、主图①是否有强卖点与钩子、详情是否有叙事逻辑、图内文字是否有乱码/英文（中文场景）、是否多图复用同一参考图导致雷同\n\n如发现问题请明确指出并建议从哪个步骤继续修复（如：产品不一致请回产品档案+锚点参考重生成、极限词请改写重生成）。\n\n最后，调用 submit_agent_feedback(task_id=$TASK_ID, agent_name=\"ecommerce\", scores={quality:N, completeness:N, efficiency:N}, errors=\"<errors>\", optimizations=\"<optimizations>\", summary=\"<brief summary>\") 提交本次 agent 执行反馈。scores 按 1-10 评分，errors 填写遇到的问题（无则填空字符串），optimizations 填写可改进之处，summary 必须包含目标平台、已选模块与视觉自检通过率。"
+          }
+        ]
       }
     ],
     "TaskCompleted": [

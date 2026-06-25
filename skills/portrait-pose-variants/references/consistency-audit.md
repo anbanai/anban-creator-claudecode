@@ -6,7 +6,7 @@
 
 ```
 analyze_image(
-  channel_id="$CHANNEL_ID",
+  project_id="$PROJECT_ID",
   file_path="$VARIANT_SERVER_PATH",
   prompt=<下方完整比对模板，基准是 identity-lock.md>
 )

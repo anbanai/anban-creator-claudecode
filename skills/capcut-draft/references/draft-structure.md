@@ -275,7 +275,7 @@ The materials object holds all material definitions referenced by track segments
   "realtime_denoises": [],
   "shapes": [],
   "smart_crops": [],
-  "sound_channel_mappings": SoundChannelMapping[],
+  "sound_project_mappings": SoundProjectMapping[],
   "speeds": Speed[],
   "texts": Text[],
   "stickers": [],
@@ -856,7 +856,7 @@ Default values by segment type:
 }
 ```
 
-### SoundChannelMapping (声道映射 - per video segment)
+### SoundProjectMapping (声道映射 - per video segment)
 
 ```json
 {

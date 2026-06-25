@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "anbanwriter": {
+    "anban": {
       "type": "http",
       "url": "${ANBANWRITER_API_URL:-https://api.creator.anbanai.com}/mcp",
       "headers": {

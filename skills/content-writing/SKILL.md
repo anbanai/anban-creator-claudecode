@@ -9,9 +9,9 @@ description: Writes WeChat articles with style guidance, removes AI traces (去A
 
 | MCP 工具 | 说明 |
 |----------|------|
-| `write_article` (channel_id, topic, input_type?, article_type?, length?) | 调用 LLM 按频道写作风格生成文章 |
-| `convert_markdown` (channel_id, markdown, theme?) | 调用 LLM 将 Markdown 转为 WeChat HTML |
-| `humanize_article` (channel_id, content, intensity?) | 调用 LLM 去除 AI 痕迹 |
+| `write_article` (project_id, topic, input_type?, article_type?, length?) | 调用 LLM 按项目写作风格生成文章 |
+| `convert_markdown` (project_id, markdown, theme?) | 调用 LLM 将 Markdown 转为 WeChat HTML |
+| `humanize_article` (project_id, content, intensity?) | 调用 LLM 去除 AI 痕迹 |
 | `list_resources` (category) | 获取可用排版模块列表（如可用） |
 | `get_resource` (category, name) | 获取特定排版模块的详细语法和示例（如可用） |
 
@@ -31,7 +31,7 @@ description: Writes WeChat articles with style guidance, removes AI traces (去A
 
 ```
 write_article(
-  channel_id="$CHANNEL_ID",
+  project_id="$PROJECT_ID",
   topic="大纲中选定的主题",
   input_type="outline",     // 从大纲扩展
   article_type="essay",     // 可选: essay, commentary, story, tutorial, review
@@ -62,7 +62,7 @@ write_article(
 
 ```
 humanize_article(
-  channel_id="$CHANNEL_ID",
+  project_id="$PROJECT_ID",
   content="文章全文",
   intensity="gentle"        // 可选: gentle, medium, aggressive, authentic
 )
@@ -135,9 +135,9 @@ humanize_article(
 
 ```
 convert_markdown(
-  channel_id="$CHANNEL_ID",
+  project_id="$PROJECT_ID",
   markdown="文章全文（含已插入的 CDN 图片链接）",
-  theme="default"        // 可选，默认使用频道配置的主题
+  theme="default"        // 可选，默认使用项目配置的主题
 )
 ```
 
@@ -165,7 +165,7 @@ convert_markdown(
 - [cultural-depth.yaml](../../writers/cultural-depth.yaml) — 文化底蕴、文学修辞、深度思考
 - [casual-science.yaml](../../writers/casual-science.yaml) — 通俗易懂、生动有趣、科学严谨
 
-写作风格由频道配置决定，调用 `write_article` 时自动应用。
+写作风格由项目配置决定，调用 `write_article` 时自动应用。
 
 ## 深入参考
 

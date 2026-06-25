@@ -9,11 +9,11 @@ description: Use when coloring line art images, batch coloring multiple images, 
 
 | MCP 工具 | 说明 |
 |----------|------|
-| `analyze_image` (channel_id, image_url, file_path, prompt) | 图像视觉分析——传入图像 URL 或服务器文件路径，返回 AI 视觉分析结果。analyze_image 一次只分析一张图片；同时传 `file_path` 和 `image_url` 时服务端只会使用 `file_path`。用于实体识别、候选评估、一致性审计、线稿验证 |
-| `generate_image` (channel_id, prompt, image_type, output_path, ref_image_path, size, task_id) | 生成单张图片，返回 download_url（始终为可 HTTP fetch 的存储 URL，不再返回 base64 data URL）和 file_path。当前不是专用的 `colorize_lineart`，也不是严格的 img2img/ControlNet 上色 |
-| `upload_image` (channel_id, file_path) | 上传图片 |
+| `analyze_image` (project_id, image_url, file_path, prompt) | 图像视觉分析——传入图像 URL 或服务器文件路径，返回 AI 视觉分析结果。analyze_image 一次只分析一张图片；同时传 `file_path` 和 `image_url` 时服务端只会使用 `file_path`。用于实体识别、候选评估、一致性审计、线稿验证 |
+| `generate_image` (project_id, prompt, image_type, output_path, ref_image_path, size, task_id) | 生成单张图片，返回 download_url（始终为可 HTTP fetch 的存储 URL，不再返回 base64 data URL）和 file_path。当前不是专用的 `colorize_lineart`，也不是严格的 img2img/ControlNet 上色 |
+| `upload_image` (project_id, file_path) | 上传图片 |
 | `compress_image` (file_path) | 压缩图片 |
-| `download_image` (channel_id, url) | 下载在线图片到 MCP 服务器临时路径或上传到存储，不写入 agent 本地 `$DIR` |
+| `download_image` (project_id, url) | 下载在线图片到 MCP 服务器临时路径或上传到存储，不写入 agent 本地 `$DIR` |
 
 ---
 
@@ -67,12 +67,12 @@ CRITICAL: PRESERVE the exact line art composition. Every line, stroke, and propo
    - MCP 服务器端文件路径：直接传 `file_path` 参数
    - 已有 CDN URL：传 `image_url` 参数
    - Read 返回 CDN URL 的场景：先 Read 获取 URL，再用 `image_url` 参数传入
-2. **调用 analyze_image**：`analyze_image(channel_id="$CHANNEL_ID", image_url=URL或file_path=路径, prompt=分析提示)`
+2. **调用 analyze_image**：`analyze_image(project_id="$PROJECT_ID", image_url=URL或file_path=路径, prompt=分析提示)`
 3. **处理结果**：根据返回的文本描述进行实体匹配、颜色评估等
 
 > **注意**：Read 返回的 CDN URL 约 30 分钟过期。获取后立即使用；需要重新分析时重新 Read 获取新 URL。
 >
-> **大小限制**：`file_path` 方式分析有 10MB 限制。若 `analyze_image(file_path=...)` 返回图片过大，先调用 `compress_image(file_path=...)` 得到较小文件；仍失败时调用 `upload_image(channel_id, file_path)` 获取 URL，再用 `image_url` 重试。
+> **大小限制**：`file_path` 方式分析有 10MB 限制。若 `analyze_image(file_path=...)` 返回图片过大，先调用 `compress_image(file_path=...)` 得到较小文件；仍失败时调用 `upload_image(project_id, file_path)` 获取 URL，再用 `image_url` 重试。
 
 ### 各场景的 analyze_image prompt 模板
 
@@ -184,10 +184,10 @@ Color Bible 不在开始时一次性建完，而是逐图渐进构建：
 
 ### Phase 0 — 初始化
 
-#### 步骤 1：获取频道和工作目录
+#### 步骤 1：获取项目和工作目录
 
-- `echo $ANBANWRITER_DEFAULT_CHANNEL` → `$CHANNEL_ID`
-- 如果为空，调用 `list_channels` 获取频道列表并选择；只有一个可用频道时自动使用，多个频道且无法从任务上下文判断时停止并提示配置 `ANBANWRITER_DEFAULT_CHANNEL`
+- `echo $ANBANWRITER_DEFAULT_PROJECT` → `$PROJECT_ID`
+- 如果为空，调用 `list_projects` 获取项目列表并选择；只有一个可用项目时自动使用，多个项目且无法从任务上下文判断时停止并提示配置 `ANBANWRITER_DEFAULT_PROJECT`
 - 从 `.task-context` 获取 `$TASK_ID`，或使用 CWD 目录名
 - 尝试调用 `prepare_workspace(content_type="design", task_id=$TASK_ID)` → `$DIR`
   - prepare_workspace 返回的 path 可能是相对路径；相对路径以当前任务工作区 `$CWD` 为根，例如返回 `output` 时使用 `$CWD/output`
@@ -224,7 +224,7 @@ Color Bible 不在开始时一次性建完，而是逐图渐进构建：
 
 #### 步骤 3：读取线稿，识别实体
 
-Read 当前线稿图获取 CDN URL → 调用 `analyze_image(channel_id="$CHANNEL_ID", image_url=CDN_URL, prompt=实体识别prompt)` → 识别所有实体：
+Read 当前线稿图获取 CDN URL → 调用 `analyze_image(project_id="$PROJECT_ID", image_url=CDN_URL, prompt=实体识别prompt)` → 识别所有实体：
 
 - **角色类**：人物、动物、拟人角色
   - 描述：位置、姿态、朝向、大小、服装特征、配饰、与其他角色的空间关系
@@ -312,7 +312,7 @@ COLOR RELATIONSHIPS:
    # 后续使用该图作参考时
    generate_image(..., ref_image_path=server_path_a)
    ```
-2. **用户提供的本地线稿图**（仅用于需要以线稿本身作为参考图的场景）：先 Read 获取 CDN URL，再调用 `download_image(channel_id, CDN_URL)` 让服务器下载注册，返回的 `file_path` 作为 `ref_image_path`
+2. **用户提供的本地线稿图**（仅用于需要以线稿本身作为参考图的场景）：先 Read 获取 CDN URL，再调用 `download_image(project_id, CDN_URL)` 让服务器下载注册，返回的 `file_path` 作为 `ref_image_path`
 3. **无参考图**（纯 prompt 驱动）：不传 ref_image_path 参数
 
 确定参考图：
@@ -327,7 +327,7 @@ COLOR RELATIONSHIPS:
 生成候选 A：
 ```
 result_a = generate_image(
-  channel_id="$CHANNEL_ID",
+  project_id="$PROJECT_ID",
   prompt="[主 prompt]",
   image_type="content",
   output_path="/tmp/anbanwriter-line-art/$TASK_ID/colored_NN_a.png",
@@ -344,7 +344,7 @@ SERVER_PATH_A = result_a.file_path
 
 ```
 result_b = generate_image(
-  channel_id="$CHANNEL_ID",
+  project_id="$PROJECT_ID",
   prompt="[微调后 prompt]",
   image_type="content",
   output_path="/tmp/anbanwriter-line-art/$TASK_ID/colored_NN_b.png",
@@ -356,7 +356,7 @@ SERVER_PATH_B = result_b.file_path
 
 #### 步骤 7：候选评估 + 最优选
 
-1. 调用 `analyze_image(channel_id="$CHANNEL_ID", file_path=SERVER_PATH_A, prompt=候选颜色评估prompt)` → 获取候选 A 的颜色描述。如果因 10MB 限制失败，先 `compress_image`；仍失败则 `upload_image` 后用 `image_url` 分析。
+1. 调用 `analyze_image(project_id="$PROJECT_ID", file_path=SERVER_PATH_A, prompt=候选颜色评估prompt)` → 获取候选 A 的颜色描述。如果因 10MB 限制失败，先 `compress_image`；仍失败则 `upload_image` 后用 `image_url` 分析。
 2. 高质量模式下，同样分析 SERVER_PATH_B。
 3. 对每个候选，逐实体逐部位比对 Color Bible → 计算匹配分，同时记录线稿/构图差异。
 4. 选择颜色得分最高且线稿风险最低的候选。
@@ -378,7 +378,7 @@ SERVER_PATH_B = result_b.file_path
 
 #### 步骤 8：全面审计
 
-对每张 `$DIR/colored_NN.png`：调用 `analyze_image(channel_id="$CHANNEL_ID", file_path=服务器端路径, prompt=一致性审计prompt)` → 对 Color Bible 中每个跨图实体逐部位比对。
+对每张 `$DIR/colored_NN.png`：调用 `analyze_image(project_id="$PROJECT_ID", file_path=服务器端路径, prompt=一致性审计prompt)` → 对 Color Bible 中每个跨图实体逐部位比对。
 
 生成 `$DIR/consistency-report.md`：
 

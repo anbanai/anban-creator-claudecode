@@ -20,8 +20,8 @@ description: Generates cover (封面), content pages (内容图), and tail pages
 
 | MCP 工具 | 说明 |
 |----------|------|
-| `generate_image` (channel_id, prompt, image_type, output_path, ref_image_path) | 生成单张图片 |
-| `upload_image` (channel_id, file_path) | 上传图片到微信素材库 |
+| `generate_image` (project_id, prompt, image_type, output_path, ref_image_path) | 生成单张图片 |
+| `upload_image` (project_id, file_path) | 上传图片到微信素材库 |
 
 ---
 
@@ -217,7 +217,7 @@ description: Generates cover (封面), content pages (内容图), and tail pages
 1. **生成封面（单张）**：调用 `generate_image`，image_type 设为 `"cover"`
 2. **逐张生成内容图（image_01.png 起，张数由信息点分组决定）**：逐张调用 `generate_image`，每张使用 image-plan.md 中对应的信息点构造 prompt（独立场景），不传 ref_image_path（纯文生图）
 3. **单独生成尾图（仅当「图片构成要求」指令含尾图时）**：调用 `generate_image`，不传参考图，沿用共享风格块；指令不含尾图则跳过
-4. **带参考图（保持风格一致）**：仅当频道配置了参考图且用户要求强一致时才传 ref_image_path；默认不传
+4. **带参考图（保持风格一致）**：仅当项目配置了参考图且用户要求强一致时才传 ref_image_path；默认不传
 5. **带风格描述**：在 prompt 中加入风格描述（如"手绘感，暖色调，小清新"）
 
 **关键规则**：内容图逐张调用 `generate_image` 生成，每张使用 image-plan.md 中对应的信息点构造独立 prompt（output_path 设为 `image_01.png`、`image_02.png` ...），通过共享「风格延续：{style}」块保持调性统一，每张使用独立场景/视觉主体（禁止与其他内容图复用同一场景，避免雷同）；不使用封面作为参考图。尾图单独生成（`tail.png`，仅当「图片构成要求」指令含尾图时），封面单独生成（`cover.png`）。

@@ -6,7 +6,7 @@
 
 ```
 analyze_image(
-  channel_id="$CHANNEL_ID",
+  project_id="$PROJECT_ID",
   file_path="$COVER_SERVER_PATH",
   prompt=<下方完整审计模板>
 )

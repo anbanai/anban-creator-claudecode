@@ -1,6 +1,6 @@
 ---
 name: config
-description: Configures anbanwriter channel settings including writer style (写作风格), theme (排版主题), image provider (图片生成服务), and API keys. Use when user wants to initialize, view, or modify anbanwriter configuration. Also use when user mentions '配置频道', '设置风格', '修改配置', 'config', '频道设置', '查看配置', '写作风格', '排版主题', or when wanting to check or change channel-level settings.
+description: Configures anbanwriter project settings including writer style (写作风格), theme (排版主题), image provider (图片生成服务), and API keys. Use when user wants to initialize, view, or modify anbanwriter configuration. Also use when user mentions '配置项目', '设置风格', '修改配置', 'config', '项目设置', '查看配置', '写作风格', '排版主题', or when wanting to check or change project-level settings.
 ---
 
 # anbanwriter 配置管理
@@ -9,14 +9,14 @@ description: Configures anbanwriter channel settings including writer style (写
 
 | MCP 工具 | 说明 |
 |----------|------|
-| `get_channel_profile` (channel_id, scope?) | 查看频道配置信息（定位、风格、主题、图片服务等） |
-| `list_channels` () | 列出所有频道 |
+| `get_project_profile` (project_id, scope?) | 查看项目配置信息（定位、风格、主题、图片服务等） |
+| `list_projects` () | 列出所有项目 |
 
 ---
 
 ## 查看当前配置
 
-调用 `get_channel_profile(channel_id="$CHANNEL_ID")` 获取完整的频道配置。
+调用 `get_project_profile(project_id="$PROJECT_ID")` 获取完整的项目配置。
 
 返回结果包含以下字段（与下方配置项对应）：
 
@@ -55,7 +55,7 @@ description: Configures anbanwriter channel settings including writer style (写
 |--------|------|
 | `default` | 经典商务排版（黑白灰），通用 |
 
-主题由服务器管理，通过 `convert_markdown` MCP 工具自动应用频道配置的主题。
+主题由服务器管理，通过 `convert_markdown` MCP 工具自动应用项目配置的主题。
 
 ### 图片生成服务（image_provider）
 
@@ -73,7 +73,7 @@ description: Configures anbanwriter channel settings including writer style (写
 
 ### 第一步：查看当前状态
 
-调用 `get_channel_profile` 了解当前配置。对比上方参考表，确定需要修改的项。
+调用 `get_project_profile` 了解当前配置。对比上方参考表，确定需要修改的项。
 
 ### 第二步：按需修改
 
@@ -86,7 +86,7 @@ description: Configures anbanwriter channel settings including writer style (写
 
 ### 第三步：验证配置
 
-修改后再次调用 `get_channel_profile` 确认配置已生效。
+修改后再次调用 `get_project_profile` 确认配置已生效。
 
 ---
 
