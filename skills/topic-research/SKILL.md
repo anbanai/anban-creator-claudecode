@@ -9,6 +9,7 @@ description: Researches WeChat topics (选题研究), scores engagement potentia
 
 | MCP 工具 | 说明 |
 |----------|------|
+| `claim_topic` (project_id, task_id?) | 从项目选题池认领下一个未用选题（选题**首选来源**，池非空必用） |
 | `list_project_titles` (project_id) | 查看系统内已有标题（定标题前必调） |
 | `list_drafts` (project_id) | 查看已有草稿 |
 | `list_published_articles` (project_id) | 查看已发布文章 |
@@ -21,6 +22,27 @@ description: Researches WeChat topics (选题研究), scores engagement potentia
 ## 完整研究流程
 
 按以下步骤执行选题研究，每一步都产出可追溯的文件。
+
+### 步骤 0：确定选题来源（优先选题池）
+
+选题研究前，先确定本次选题，**不要凭空 research**。
+
+**如何判断任务是否已指定主题**：检查本任务的 user prompt（用户消息）——
+- 含 `create content about: <X>`（`about:` 后跟具体话题）→ `<X>` 就是任务指定主题。
+- 是 `research and create content ... choose the optimal theme` 这类让你**自己选题**的措辞 → 任务**未**指定主题。
+- ⚠️ 项目 profile 的 keywords **不是**主题，不能当作"已指定主题"。
+
+分两种情况：
+
+1. **任务已指定主题**（user prompt 含 `about: <X>`）：**直接采用 `<X>`，禁止调用 `claim_topic`**（避免与服务端建任务时的预认领重复消费）。仍需执行**步骤 1 查重**（若与已有标题冲突，调整措辞而非换题），通过后跳到**步骤 4**生成大纲，跳过步骤 2～3 的候选研究。
+2. **任务未指定主题**：先认领选题池：
+   ```
+   claim_topic(project_id="$PROJECT_ID", task_id="$TASK_ID")
+   ```
+   - 返回非空 `topic` → **直接采用**（该选题已被原子标记为 used），执行**步骤 1 查重**后跳到**步骤 4**。
+   - 返回 `null`（选题池为空）→ 执行下方步骤 1～3 的完整研究流程作为候补。
+
+> 选题池是用户预置、希望被优先消费的选题。**只要池里有，就必须用池里的**，不得绕过去调 `research_topics`。
 
 ### 步骤 1：查重——收集已有内容
 
