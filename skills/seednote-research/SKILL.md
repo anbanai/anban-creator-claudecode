@@ -67,16 +67,27 @@ list_feeds()                         // 了解平台当前推广内容
 
 ### 步骤 4：评分与选题
 
-使用互动率评分模型：
+使用 2026 小红书 CES 互动评分模型（业界共识权重，2025→2026 未变，字段名直接取自 `get_feed_detail` 返回）：
 
 ```
 topic_score = engagement_rate × recency_weight × novelty_bonus
-engagement_rate = (likes + favorites + 2×comments) / max(total, 1)
+
+# CES 核心原则：深度互动权重远高于浅层互动（关注 > 转发 ≈ 评论 > 收藏 ≈ 点赞）
+# 关注(follow)是账号级指标，单条笔记取不到，选题期用点赞/收藏/评论/转发四项
+engagement_rate = (like_count×1 + collect_count×1 + comment_count×4 + share_count×4) / max(total, 1)
+
+# 按内容类型差异化核心信号权重（覆盖到上式对应项）
+# - 干货 / 教程 / 攻略类：收藏是核心信号 → collect_count 权重 ×3
+# - 话题 / 情绪 / 争议类：评论是核心信号 → comment_count×4（已含）
+# - 种草 / 好物推荐类：点赞 + 收藏并重（默认权重即可）
+
 recency_weight: 24h→1.0, 7d→0.8, 30d→0.5, 更早→0.3
 novelty_bonus: 同角度笔记<3 → 1.2, 否则 → 1.0
 ```
 
-计算所有候选选题的 `topic_score`，自动选择得分最高者。
+> **字段缺失降级**：若某条笔记的 `share_count` 取不到（部分接口不返回），按 0 计入并继续评分，**不阻塞流程**；在 `$DIR/topic-analysis.md` 标注数据完整度。为什么这么做：宁可少算一项也不要凭空补数，CES 的评论×4 仍是主导项，足以区分候选优劣。
+
+计算所有候选选题的 `topic_score`，自动选择得分最高者。**为什么用这套权重**：2026 小红书官方 CES 把转发/评论/关注这类"深度互动"权重抬到远高于点赞收藏——旧公式 `(likes + favorites + 2×comments)` 完全漏掉转发、且把评论低估一倍，会让真正有传播潜力的选题（高评论/高转发）排到后面。选题占爆款成败约 50%，这个权重对得越准，选题越接近真实流量潜力。
 
 **产出**：将评分明细与选题理由写入 `$DIR/topic-analysis.md`。
 
