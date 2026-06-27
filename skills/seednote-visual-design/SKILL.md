@@ -20,7 +20,7 @@ description: Generates cover (封面), content pages (内容图), and tail pages
 
 | MCP 工具 | 说明 |
 |----------|------|
-| `generate_image` (project_id, prompt, image_type, output_path, ref_image_path) | 生成单张图片 |
+| `generate_image` (project_id, prompt, image_type, output_path, task_id, ref_image_path) | 生成单张图片。**`task_id=$TASK_ID` 必传**：服务端据此在「生成即落盘」的同一调用里把图片登记为 task_file，`list_task_files` 立即可见（漏传则任务运行中 `list_task_files` 返回 0，图片要等任务结束才被补登记） |
 | `upload_image` (project_id, file_path) | 上传图片到微信素材库 |
 
 ---
@@ -212,13 +212,21 @@ description: Generates cover (封面), content pages (内容图), and tail pages
 
 ## 图片生成方式
 
-通过 MCP 工具调用：
+通过 MCP 工具调用。**每次 `generate_image` 都必须传 `task_id=$TASK_ID` 和 `project_id=$PROJECT_ID`**——服务端据此在生成瞬间把图片登记为 task_file，`list_task_files` 随即可见（漏传 `task_id` 会导致任务运行中 `list_task_files` 返回 0，中途可见性丢失；图片要等任务结束才被补登记）。`$TASK_ID`/`$PROJECT_ID` 由 seednote agent 一次解析、全程复用。
 
 1. **生成封面（单张）**：调用 `generate_image`，image_type 设为 `"cover"`
 2. **逐张生成内容图（image_01.png 起，张数由信息点分组决定）**：逐张调用 `generate_image`，每张使用 image-plan.md 中对应的信息点构造 prompt（独立场景），不传 ref_image_path（纯文生图）
 3. **单独生成尾图（仅当「图片构成要求」指令含尾图时）**：调用 `generate_image`，不传参考图，沿用共享风格块；指令不含尾图则跳过
 4. **带参考图（保持风格一致）**：仅当项目配置了参考图且用户要求强一致时才传 ref_image_path；默认不传
 5. **带风格描述**：在 prompt 中加入风格描述（如"手绘感，暖色调，小清新"）
+
+**调用示例（封面，务必带上 task_id）**：
+
+```
+generate_image(project_id=$PROJECT_ID, task_id=$TASK_ID, prompt=<封面提示词>, image_type="cover", output_path="$DIR/cover.png")
+```
+
+内容图、尾图同理，逐张调用时只替换 `image_type` 与 `output_path`（如 `$DIR/image_01.png`、`$DIR/tail.png`），`task_id=$TASK_ID` 每张都必须带。`$DIR` 由 `prepare_workspace(task_id=$TASK_ID)` 返回，任务模式下为相对路径 `output`，故 output_path 形如 `output/cover.png`，服务端可直接登记为 task_file。
 
 **关键规则**：内容图逐张调用 `generate_image` 生成，每张使用 image-plan.md 中对应的信息点构造独立 prompt（output_path 设为 `image_01.png`、`image_02.png` ...），通过共享「风格延续：{style}」块保持调性统一，每张使用独立场景/视觉主体（禁止与其他内容图复用同一场景，避免雷同）；不使用封面作为参考图。尾图单独生成（`tail.png`，仅当「图片构成要求」指令含尾图时），封面单独生成（`cover.png`）。
 
