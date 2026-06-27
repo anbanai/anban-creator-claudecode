@@ -1,5 +1,7 @@
 # 公众号封面图设计规范
 
+> **生成流程与官方比例规范的权威入口是 `article-cover-design` skill**（硬编码 900×383 / 2.35:1、中心安全区、纯图无文字、vision 6 维评分卡、迭代闭环）。本文档是该 skill 的**三维风格方向参考**与设计原则补充。
+
 ## 角色定位
 
 封面在 `visual-rhythm-plan.md` 中对应 `hero` slot（`image_size=full-bleed`, `2.35:1`），是全篇的视觉锚点。封面定调后，所有内容配图通过 `ref_image_path="$DIR/cover.png"` 继承风格。详见 [rhythm.md](rhythm.md)。
@@ -103,7 +105,8 @@ A 2.35:1 horizontal image for a WeChat article cover. Traditional Chinese aesthe
 - 摄影级或绘画级质感，与账号领域匹配
 - 与文章内容有视觉隐喻关联（不是通用素材图）
 - 温暖/积极的情感基调（适合大多数中文内容账号）
-- 2.35:1 横版比例（900×383px 标准）
+- **2.35:1 横版（900×383px 标准）**：生成用 `size="21:9"`（Volcengine 支持的最近比），服务端按 `platform=article + image_type=cover` 精确中心裁剪到 900×383 并像素断言——微信零裁剪，告别「需要手动裁剪的纯图」
+- **主体居中安全区**：主体落在画面中央 ≈1:1 区域，转发卡 1:1 自动裁切后仍完整；避开底部 20%（微信会在底部叠加文章标题）
 
 **禁止**：
 - 3D 渲染 / 合成感
