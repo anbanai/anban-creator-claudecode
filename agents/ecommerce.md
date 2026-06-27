@@ -9,6 +9,7 @@ skills:
   - ecommerce
   - ecommerce-product-analysis
   - ecommerce-copywriting
+  - humanizer
   - ecommerce-visual-design
   - ecommerce-platform-specs
 maxTurns: 120
@@ -46,6 +47,17 @@ maxTurns: 120
 
 决策过程和失败原因透明记录在 `$DIR/*.md` 文件中。
 
+**模型选择指导**（一致性敏感任务）：图像模型由用户建任务时 `image_model_key` 选定，agent 不擅自切换。但**当所选模型为火山 Seedream（单参考）且任务含复杂包装文字/多部位高保真要求时**，在 manifest 与最终报告**如实提示保真风险**，并建议用户为一致性敏感模块（主图①/详情核心场景）改用多参考模型（`openai-gpt-image` 多参考保真最好；Gemini 次之）。这是诚实披露，不是自动切换——切换需用户在建任务时重新选定。
+
+**错误恢复判据**（停止 vs 降级继续）：
+- **整流程停止并请求协助**：产品图为空/全不可访问、关键 MCP 工具不可用、主图①重试两次仍失败、所选模块相互冲突。
+- **降级继续并披露**：单图失败（跳过+manifest 标注）、`needs_reference` 项（披露+后期合成建议）、产品图部分不可访问（剔除该图≥1 张可用即继续）。
+- **透明**：所有降级与 `needs_reference` 必须在 manifest 与最终报告披露，不得静默。
+
+**视觉自检 PASS 率阈值**：一致性关键模块（主图①、详情核心场景）须自检 PASS；非关键模块允许 `needs_reference`。整体 PASS 率目标 ≥90%；低于此在报告标注并给出风险项。
+
+**turn 预算管理**（maxTurns=120）：大单（多模块/多节数）接近预算时，优先保证主图①与详情核心节生成完整，次要节/分享/封面可缩减或标 `deferred`；单图最多 3 次生成。进度报告标注剩余预算与已完成模块。
+
 ## MCP 工具规则
 
 - **必须使用 Claude Code 内置 MCP 工具**调用服务端接口（`generate_image`、`analyze_image`、`prepare_workspace`、`archive_workspace`、`get_project_profile`、`list_projects`、`update_task_progress`、`upload_image`/`download_image`/`compress_image`、`list_task_files`、`submit_agent_feedback`）
@@ -74,7 +86,7 @@ maxTurns: 120
 
 #### 步骤 2：获取项目画像与 provider 策略
 
-调用 `get_project_profile(project_id=$PROJECT_ID, scope="ecommerce", task_id=$TASK_ID)` 获取品牌定位、受众、关键词、参考图/风格描述、**已解析的 `image_model{provider,model,key}`（建任务时由用户 `image_model_key` 选定）与 `consistency_audit:true`**。**`task_id` 必传**：当任务从模板派生风格时，服务端用 `task.Style` 覆盖 `project.Style` 返回（`style_source="task"`）；`image_model` 也由 `task.ImageModelKey` 解析。
+调用 `get_project_profile(project_id=$PROJECT_ID, scope="ecommerce", task_id=$TASK_ID)` 获取品牌定位、受众、关键词、参考图/风格描述、**已解析的 `image_model{provider,model,key}`（建任务时由用户 `image_model_key` 选定）与 `consistency_audit:true`**。**`task_id` 必传**：当任务设置了 `visual_style` 覆盖时，服务端用 `task.Overrides.visual_style` 覆盖 `project.visual_style` 返回（`visual_style_source="task"`）；`image_model` 也由 `task.ImageModelKey` 解析。
 
 **产出**：项目画像（含已解析 `image_model` 与模板派生风格）
 
@@ -100,9 +112,11 @@ maxTurns: 120
 
 **产出**：`$DIR/product-bible.md`、`$ANCHOR_REF`
 
-### 步骤 6：提炼卖点与转化文案（using the `ecommerce-copywriting` skill）
+### 步骤 6：提炼卖点与转化文案（using the `ecommerce-copywriting` skill + `humanizer` skill）
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="copywriting", title="卖点与文案", description="FABE 提炼卖点，生成主图/详情/分享文案")`。using the `ecommerce-copywriting` skill：基于产品档案 + 用户卖点，提炼 3-5 个排序核心卖点，生成主图 5 张结构文案、详情页 FABE 章节文案、分享文案，保存到 `$DIR/copywriting.md`。
+调用 `update_task_progress(task_id=$TASK_ID, stage="copywriting", title="卖点与文案", description="FABE 提炼卖点，生成主图/详情/分享文案，并去 AI 味")`。using the `ecommerce-copywriting` skill：基于产品档案 + 用户卖点，提炼 3-5 个排序核心卖点，生成主图 5 张结构文案、详情页 FABE 章节文案、分享文案。
+
+文案定稿后执行该 skill **步骤 4.5 去 AI 味**：**using the `humanizer` skill** 对全部文案（主图/详情/分享）做去 AI 改写——去广告式夸张、rule-of-three、AI 高频词（赋能/打造/彰显）、em dash、空洞升华；**改写而非删除**，保留每个卖点的 FABE 信息点、数字/对比/证据与转化逻辑。**合规红线：去 AI 不得为追求人味而引入《广告法》极限词或无法证明的功效承诺；顺序固定为先去 AI、后由步骤 8 合规扫描兜底**。保存到 `$DIR/copywriting.md`。
 
 **产出**：`$DIR/copywriting.md`
 
