@@ -55,6 +55,8 @@ description: Creates and manages WeChat news article drafts (图文草稿) with 
   - `template_author_avatar`：人设头像 URL，仅视觉参考。
   - `writing_style`：writer 资源 key（如 `dan-koe`），决定文风，不决定署名。
 
+- **署名污染自检（防回归闸门）**：若顶层 `author` 命中 `get_project_profile` 返回的 `available_writers` 中任一写作风格的**人设名**（`name`，如 "Dan Koe"）或 **key**（`english_name`，如 `dan-koe`），几乎肯定是上游 Studio「从写作风格库导入」按钮把人设名误写进了署名字段——真实发布署名不该等于某个写作风格人设。此时**不要盲目发布**：按真实发布者署名修正后再发，并在 `submit_agent_feedback` 里标注「疑似署名污染：author 命中 writer 人设 X」。仅当署名确属真实同名（如作者本人就叫某人设名）才放行。
+
 映射示例：
 
 ```

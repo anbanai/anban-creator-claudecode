@@ -319,6 +319,8 @@ render_template(
 
 `render_template` 服务端按 `layout_plan` 中的 slot 顺序确定性渲染 HTML 骨架，图片占位符按 slot 位置精确插入，layout module 按 `module_vars` 渲染。返回 `{ html, slots_rendered }`。
 
+> **图片单一路径（避免重复 `<img>`）**：`render_template` 按 `layout_plan` 的 slot 自动注入配图 `![alt](image_url)`。若传入的 `markdown`（`04-article-final.md`）里已内联同一张图，服务端**按 URL 去重**——同一 URL 只渲染一个 `<img>`，**无需手动 Edit 清理重复 img**。配图位置以 `layout_plan` 为单一权威路径；`04-article-final.md` 的内联图仅作人工可读 markdown 产物。
+
 把返回的 `html` 字段保存为 `$DIR/05-article.html`，把 `slots_rendered` 写入 `$DIR/final-review.md` 作为渲染审计。
 
 **产出**：`$DIR/05-article.html`（含 CDN 图片 + 结构化 slot）
