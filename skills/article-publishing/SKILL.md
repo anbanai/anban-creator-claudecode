@@ -34,7 +34,7 @@ description: Creates and manages WeChat news article drafts (图文草稿) with 
     {
       "title": "文章标题",
       "content": "<p>HTML 正文...</p>",
-      "author": "作者",
+      "author": "署名（仅取自 get_project_profile 顶层 author，详见「作者字段来源」）",
       "digest": "摘要（120字符以内）",
       "thumb_media_id": "封面图的 media_id",
       "show_cover_pic": 1,
@@ -42,6 +42,26 @@ description: Creates and manages WeChat news article drafts (图文草稿) with 
     }
   ]
 }
+```
+
+## 作者字段来源（硬性）
+
+`draft.json` 的 `author`（公众号署名）**必须且仅能**取自 `get_project_profile` 返回的**顶层 `author`** 字段（已按 task > template > project 解析；可看返回的 `author_source` 追溯来源）。
+
+- 顶层 `author` 非空 → `articles[0].author = <顶层 author>`，**原样填入，不改写**。
+- 顶层 `author` 为空 → **省略 `author` 字段**（或留空），由公众号后台用默认署名。
+- **严禁**用下列任一字段顶替 `author`（它们都**不是**署名）：
+  - `template_writing_style`：写作口吻（模仿内容的框架/笔迹），只驱动正文语气。
+  - `template_author_avatar`：人设头像 URL，仅视觉参考。
+  - `writing_style`：writer 资源 key（如 `dan-koe`），决定文风，不决定署名。
+
+映射示例：
+
+```
+get_project_profile 返回            → draft.articles[0].author
+author = "张三"                      → "张三"
+template_writing_style = "幽默犀利…"  → 不入 author（仅用于正文口吻）
+author 为空                          → 省略 author 字段（切勿用 template_writing_style 顶替）
 ```
 
 ## 响应格式

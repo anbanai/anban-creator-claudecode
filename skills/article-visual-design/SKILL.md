@@ -94,27 +94,16 @@ Phase 4: 配图生成（带 vision 校验）
 
 ---
 
-## Phase 2：封面生成
+## Phase 2：封面生成（委托 article-cover-design skill）
 
-基于 Phase 1 的风格分析（配置锚点优先）和文章核心隐喻，从零构建封面 prompt。视觉方向取自任务解析的 `style` 字段——**不从 writer YAML 推视觉**（writer 仅决定文字风格，已不再携带任何视觉/封面字段）。
+封面是全篇风格锚点（产物 `$DIR/cover.png` 供 Phase 4 内容图 `ref_image_path` 继承）。**封面设计已独立成稿**——using the `article-cover-design` skill，它硬编码官方比例（900×383 / 2.35:1）、中心安全区构图（转发卡 1:1 兼容）、纯图无文字、从文章核心隐喻推导视觉概念、vision 6 维评分卡把关。本阶段只交代与本 skill 的衔接：
 
-流程：
-1. 从 `$DIR/04-article-final.md` 提取核心论点和最强视觉隐喻
-2. 按 [references/cover.md](references/cover.md) 的模板构建 prompt
-3. 调用 `generate_image`（`project_id=$PROJECT_ID`, `prompt=封面提示词`, `image_type="cover"`, `output_path="$DIR/cover.png"`, `task_id=$TASK_ID`, `size="2.35:1"`, **`upload_to_cdn=true`**, `verify_with_vision=true`, `verification_prompt=<步骤 4 构建的校验 prompt>`）——**生成与上传原子化**：同一调用内完成生成→保存→校验→压缩→上传，直接返回 `media_id`（封面 thumb）+ `wechat_url`。
-4. **Vision 校验 prompt 模板**：
-   ```
-   这张图用于文章《$ARTICLE_TITLE》的封面。
-   文章核心论点：$CORE_THESIS
-   必须出现的视觉元素：$COVER_REQUIRED_ENTITIES（列表）
-   请回答：
-   1. 是否包含上述所有元素？缺哪个？
-   2. 与文章主题的语义相关度（high/medium/low）
-   3. 是否有不应出现的元素（文字水印、播放标记、低俗内容）？
-   ```
-   校验未通过时 `upload_to_cdn` **不会上传**（不浪费微信素材位）。
-5. 校验失败时重试一次（更换 prompt 措辞，**仍带 `upload_to_cdn=true`**），仍失败则请求用户协助
-6. 从 `generate_image` 返回值取 `media_id`（用于发布草稿的 thumb）+ `wechat_url`。若返回 `upload_error`（生成成功但上传失败），用 `upload_image(file_path="$DIR/cover.png")` 单独重试上传即可，**无需重新生成**
+- **核心规格**：大图 2.35:1（900×383px，服务端强制精确裁剪），转发卡 1:1 由中心安全区自动覆盖，纯图无文字（微信自动叠加标题）。
+- **生成调用**：`generate_image(project_id=$PROJECT_ID, prompt=<封面提示词>, image_type="cover", output_path="$DIR/cover.png", task_id=$TASK_ID, size="21:9", upload_to_cdn=true, verify_with_vision=true, verification_prompt=<6 维评分卡>)`。
+  - `size="21:9"` 是生成提示比（Volcengine 支持的最近比）；**服务端按 `platform=article + image_type=cover` 把成品精确裁到 900×383 并像素断言**——微信零裁剪，告别「需要手动裁剪的纯图」。
+  - `upload_to_cdn=true`：vision 校验通过才上传，直接返回 `media_id`（封面 thumb）+ `wechat_url`；校验未通过不上传（不浪费素材位）。
+- **vision 评分卡不过** → 按 `sharper_prompt_hint` 锐化 prompt 重试，最多 3 次；仍不过请求用户协助，**不得**用未通过封面发布。
+- 详细推导链、6 维评分卡模板、迭代策略、`cover-prompt.md` 审计见 [article-cover-design/SKILL.md](../article-cover-design/SKILL.md)；三维风格方向参考见 [references/cover.md](references/cover.md)。
 
 **产出**：`$DIR/cover.png`, `media_id`, `$COVER_PATH`
 
