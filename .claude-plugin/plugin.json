@@ -1,7 +1,7 @@
 {
   "name": "anbanwriter",
   "description": "Professional WeChat and Seednote (种草笔记) content creation toolkit — MCP server with AI-powered writing, visual design, and multi-platform publishing",
-  "version": "2.10.0",
+  "version": "2.10.1",
   "author": {
     "name": "Rick",
     "email": "medivhzhan@gmail.com",

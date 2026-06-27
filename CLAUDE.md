@@ -44,7 +44,7 @@ Key skill groups:
 - **Design**: `line-art-coloring`
 - **Short video**: `short-video-cover`, `portrait-pose-variants`
 - **E-commerce**: `ecommerce`, `ecommerce-product-analysis`, `ecommerce-copywriting`, `ecommerce-visual-design`, `ecommerce-platform-specs` (bespoke to e-commerce — buyer audience, conversion goals; does NOT reuse seednote/designer skill content)
-- **Setup**: `setup` (first-time setup, key configuration, and connectivity verification)
+- **Setup**: `anban-setup` (first-time setup, key configuration, and connectivity verification)
 
 ### MCP Server (`.mcp.json`)
 
