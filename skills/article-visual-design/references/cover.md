@@ -10,13 +10,13 @@
 
 ## 核心原则：配置优先，账号/内容细化，Writer 无关
 
-公众号视觉是三个**正交**维度之一（图片视觉 `style` / 写作风格 `writing_style` / 排版样式 `theme`），互不推导。**Writer YAML 仅定义文字风格，不携带任何视觉/封面字段**（曾经的 `cover_style`/`cover_prompt` 已移除）。
+公众号视觉是三个**正交**维度之一（图片视觉 `visual_style` / 写作者 `writer_key` / 排版样式 `theme`），互不推导。**Writer YAML 仅定义文字风格，不携带任何视觉/封面字段**（曾经的 `cover_style`/`cover_prompt` 已移除）。
 
-视觉风格的**权威来源**是任务已解析的 `style` 字段（由 `get_project_profile` 按 `task > template > plan > project` 返回）：
-- **有配置值**（`style_source` 为 task/template/plan/project 之一）→ 以它为视觉锚点，下面的三维分析只做**细化充实**（配色、情绪、构图），**不得偏离或冲突**。
-- **无配置值**（所有层级均为空）→ 完全由账号定位、内容主题、目标受众三维分析确定。
+视觉风格的**权威来源**是任务已解析的 `visual_style` 字段（由 `get_project_profile` 按 `task > project` 两层返回）：
+- **有配置值**（`visual_style_source` 为 task/project 之一）→ 以它为视觉锚点，下面的三维分析只做**细化充实**（配色、情绪、构图），**不得偏离或冲突**。
+- **无配置值**（两层均为空）→ 完全由账号定位、内容主题、目标受众三维分析确定。
 
-这彻底切断了"writer key 泄漏为图片风格"的诱因链（曾经的 dan-koe → 维多利亚木刻 bug）：即使某项目写作风格是 dan-koe，只要视觉维度配置为温暖自然，配图就绝不可生成维多利亚版画。
+这彻底切断了"writer key 泄漏为图片风格"的诱因链（曾经的 dan-koe → 维多利亚木刻 bug）：即使某项目写作者是 dan-koe，只要视觉维度配置为温暖自然，配图就绝不可生成维多利亚版画。
 
 ---
 

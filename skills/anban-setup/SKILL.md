@@ -69,6 +69,8 @@ API Key 设置完成后，提示用户进行项目级配置（写入项目本地
 
 ## 完成
 
+**写作去 AI SKILL 可用性校验**：确认去 AI 味能力已随插件内置——用 Bash 执行 `test -f "${CLAUDE_PLUGIN_ROOT}/skills/humanizer/SKILL.md" && echo OK`（或 Glob 检查 `skills/humanizer/SKILL.md`）。该 SKILL 被 `content-writing`、`seednote-writing`、`ecommerce-copywriting` 写作流程调用，随插件安装即就绪，无需联网或 `git clone`。若缺失，提示用户重新安装 anbanwriter 插件。
+
 告知用户：
 
 > 配置完成。**请退出并重新启动 Claude Code**，让 MCP 连接生效。重启后再次运行 `/anban-setup` 验证连接。

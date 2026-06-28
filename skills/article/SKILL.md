@@ -31,7 +31,7 @@ description: 微信公众号图文文章全自动创作。用户提到"写文章
 
 **项目选定后，仅对 `$PROJECT_ID` 调用：**
 
-- `get_project_profile(project_id="$PROJECT_ID", scope="article", task_id="$TASK_ID")` → 获取账号定位、受众、写作风格。`task_id` 让服务端额外返回任务关联模板的内容脚手架（`template_writing_style` 写作风格 / `template_structure` 内容结构 / `template_example` 示例），若返回了这些字段，创作正文与配图时必须严格遵守；不传则只拿到 project 级信息。**务必区分两个易混字段**：顶层 `author` 是公众号**署名**（步骤 10 发布时原样填入 `draft.json` 的 author，空则省略）；`template_writing_style` 是**写作口吻**（驱动正文语气），**绝非署名**。二者绝不混用。
+- `get_project_profile(project_id="$PROJECT_ID", scope="article", task_id="$TASK_ID")` → 获取账号定位、受众、风格维度。`task_id` 让服务端用任务级覆盖解析（`task > project` 两层），不传则只拿到 project 级信息。**务必区分两个易混字段**：顶层 `byline` 是公众号**署名**（步骤 10 发布时原样填入 `draft.json` 的 author，空则省略）；`writing_voice` 是**写作口吻**（驱动正文语气），**绝非署名**。二者绝不混用。
 - `list_drafts(project_id="$PROJECT_ID")` 和 `list_published_articles(project_id="$PROJECT_ID")` → 已有文章标题（如返回错误可忽略，用空列表继续）
 - `prepare_workspace(content_type="articles", task_id=TASK_ID)` → 工作目录路径 `$DIR`
 - Bash 执行 `mkdir -p "$DIR"` 创建目录
@@ -58,7 +58,7 @@ description: 微信公众号图文文章全自动创作。用户提到"写文章
 ### 步骤 4：AI 去痕与合规检查
 
 使用 `content-writing` skill：
-- 先执行 AI 去痕（`gentle` 模式）
+- 先执行 AI 去痕（`humanizer` skill，无强度档位）
 - 再执行违禁词合规检查
 - 创建 `$DIR/content-quality-report.md`，检查用户需求覆盖、账号定位一致性、历史文章差异、章节实质内容、研究结论引用、AI 套话风险
 - 任一检查项不通过时，必须回到步骤 3/4 重写；不得进入 SEO、视觉或发布阶段
@@ -108,7 +108,7 @@ description: 微信公众号图文文章全自动创作。用户提到"写文章
 
 使用 `article-publishing` skill：
 - 从 `$DIR/seo-result.md` 读取优化后的标题和摘要
-- 创建 `draft.json`：`title` 用 SEO 优化标题，`digest` 用 SEO 优化摘要，`author` **仅**取自步骤 1 `get_project_profile` 的顶层 `author`（公众号署名，原样填入；空则省略，**禁用** `template_writing_style` 顶替——见 article-publishing skill「作者字段来源」）
+- 创建 `draft.json`：`title` 用 SEO 优化标题，`digest` 用 SEO 优化摘要，`author` **仅**取自步骤 1 `get_project_profile` 的顶层 `byline`（公众号署名，原样填入；空则省略，**禁用** `writing_voice` 顶替——见 article-publishing skill「作者字段来源」）
 - 仅当 `$DIR/final-review.md` 全部通过时，发布到草稿箱：`publish_draft`
 
 ---

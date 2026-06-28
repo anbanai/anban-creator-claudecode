@@ -52,7 +52,7 @@ Connects to the `anbanwriter` MCP server at `$ANBAN_API_URL` (default `https://a
 - `$ANBAN_DEFAULT_PROJECT`: Optional default project ID. When set, agents skip `list_projects` and use this directly.
 - `list_projects`, `get_project_profile`, `list_drafts`, `list_published_articles`, `list_project_titles`
 - `prepare_workspace`, `archive_workspace`
-- `write_article`, `convert_markdown`, `humanize_article`
+- `write_article`, `convert_markdown`
 - `image upload`, `draft article`
 - `get_feed_detail` (SeedNote source note fetching)
 - `upload_live_audio`, `create_live_analysis_task`, `query_live_analysis_task`, `recognize_live_invalid_sentences`, `recognize_live_segments`, `build_live_clip_plan`, `build_live_subject_clip_plan`, `build_live_clip_manifest`, `recognize_live_subjects`, `complete_live_subject`
@@ -63,7 +63,7 @@ Themes define visual styling for article排版. Themes are managed server-side v
 
 ### Writers (`writers/`)
 
-YAML files defining **writing** styles (the writer dimension only). Each has `name`, `english_name`, `writing_prompt` (required), plus optional `core_beliefs`, `title_formulas`, `quote_templates`. Writers **do not** carry visual identity — image visual style is an orthogonal dimension configured per project/template/plan/task (see `article-visual-design` skill). Built-in styles: `dan-koe`, `cultural-depth`, `casual-science`.
+YAML files defining **writing** styles (the writer dimension only). Each has `name`, `english_name`, `writing_prompt` (required), plus optional `core_beliefs`, `title_formulas`, `quote_templates`. Writers **do not** carry visual identity — image visual style is an orthogonal dimension configured per project/task (see `article-visual-design` skill). Built-in styles: `dan-koe`, `cultural-depth`, `casual-science`.
 
 ### Layout Modules (`layouts/`)
 

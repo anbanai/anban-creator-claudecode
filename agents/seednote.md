@@ -10,6 +10,7 @@ skills:
   - seednote-research
   - seednote-viral-analysis
   - seednote-writing
+  - humanizer
   - seednote-visual-design
 maxTurns: 20
 ---
@@ -67,7 +68,7 @@ maxTurns: 20
 
 #### 步骤 3：获取账号画像与已有标题
 
-调用 `get_project_profile`（`project_id=$PROJECT_ID`, `scope="seednote"`, `task_id=$TASK_ID`）获取账号定位、关键词、受众、参考图或风格配置。**`task_id` 必传**：当任务从模板派生了风格时，服务端用 `task.Style` 覆盖 `project.Style` 返回（`style_source="task"`），让本任务继承模板的视觉风格；不传 `task_id` 只能拿到 project 级风格。调用 `list_project_titles`（`project_id=$PROJECT_ID`）获取已有标题列表，原创模式后续必须避开重复或近似标题；复刻模式用于判断改写角度是否过近。已有标题为空时也要记录为空列表。
+调用 `get_project_profile`（`project_id=$PROJECT_ID`, `scope="seednote"`, `task_id=$TASK_ID`）获取账号定位、关键词、受众、参考图或风格配置。**`task_id` 必传**：当任务设置了 `visual_style` 覆盖时，服务端用 `task.Overrides.visual_style` 覆盖 `project.visual_style` 返回（`visual_style_source="task"`）；不传 `task_id` 只能拿到 project 级风格。调用 `list_project_titles`（`project_id=$PROJECT_ID`）获取已有标题列表，原创模式后续必须避开重复或近似标题；复刻模式用于判断改写角度是否过近。已有标题为空时也要记录为空列表。
 
 **产出**：账号画像（含模板派生风格）、已有标题列表
 
@@ -89,7 +90,9 @@ maxTurns: 20
 
 #### 步骤 6：创作内容
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="writing", title="内容写作", description="生成标题、正文和话题标签")`。using the `seednote-writing` skill 基于账号画像和 `$DIR/topic-analysis.md` 生成标题、正文和话题标签，保存到 `$DIR/content.md`。标题、正文格式和话题标签规范以 `seednote-writing` skill 为准。
+调用 `update_task_progress(task_id=$TASK_ID, stage="writing", title="内容写作", description="生成标题、正文和话题标签并去 AI 味")`。using the `seednote-writing` skill 基于账号画像和 `$DIR/topic-analysis.md` 生成标题、正文和话题标签，保存到 `$DIR/content.md`。标题、正文格式和话题标签规范以 `seednote-writing` skill 为准。
+
+随后 **using the `humanizer` skill** 对 `$DIR/content.md` 的标题+正文做轻量去 AI 改写：重点去掉空洞升华、三段式套话、AI 高频词、过度总结，保留种草笔记的人称代入与情绪节奏（见 `seednote-writing` skill §2.7），改写后复核字数仍 ≤1000 字。直接覆写 `$DIR/content.md`。
 
 **产出**：`$DIR/content.md`
 
@@ -117,7 +120,9 @@ maxTurns: 20
 
 #### 步骤 7：改写内容
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="writing", title="内容写作", description="基于爆款模板改写标题、正文和话题标签")`。using the `seednote-writing` skill 读取 `$DIR/viral-template.json`，根据 `recommended_clone_depth`、用户指定模式和账号画像生成标题、正文和话题标签。若用户指定强度高于模板建议，但 `confidence=low` 或 `do_not_copy` 风险高，自动降级并记录原因。内容相似度过高时重新改写角度并记录原因。
+调用 `update_task_progress(task_id=$TASK_ID, stage="writing", title="内容写作", description="基于爆款模板改写标题、正文和话题标签并去 AI 味")`。using the `seednote-writing` skill 读取 `$DIR/viral-template.json`，根据 `recommended_clone_depth`、用户指定模式和账号画像生成标题、正文和话题标签。若用户指定强度高于模板建议，但 `confidence=low` 或 `do_not_copy` 风险高，自动降级并记录原因。内容相似度过高时重新改写角度并记录原因。
+
+随后 **using the `humanizer` skill** 对 `$DIR/content.md` 的标题+正文做轻量去 AI 改写：重点去掉空洞升华、三段式套话、AI 高频词、过度总结，保留种草笔记的人称代入与情绪节奏（见 `seednote-writing` skill §2.7），改写后复核字数仍 ≤1000 字。直接覆写 `$DIR/content.md`。
 
 **产出**：`$DIR/content.md`
 

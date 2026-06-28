@@ -11,7 +11,6 @@ description: Writes WeChat articles with style guidance, removes AI traces (去A
 |----------|------|
 | `write_article` (project_id, topic, input_type?, article_type?, length?) | 调用 LLM 按项目写作风格生成文章 |
 | `convert_markdown` (project_id, markdown, theme?) | 调用 LLM 将 Markdown 转为 WeChat HTML |
-| `humanize_article` (project_id, content, intensity?) | 调用 LLM 去除 AI 痕迹 |
 | `list_resources` (category) | 获取可用排版模块列表（如可用） |
 | `get_resource` (category, name) | 获取特定排版模块的详细语法和示例（如可用） |
 
@@ -56,28 +55,11 @@ write_article(
 
 保存为 `$DIR/03-article.md`。
 
-### 步骤 3：AI 去痕
+### 步骤 3：去 AI 味（humanizer skill）
 
-调用 `humanize_article`：
+**using the `humanizer` skill** 就地对 `$DIR/03-article.md` 全文执行去 AI 改写：扫描 33 类 AI 写作模式（意义拔高、AI 高频词、三段式、否定排比、破折号滥用、空洞结尾等），按 draft → audit → final 流程改写。**改写而非删除**——覆盖原文全部信息点，保持段落数与字数量级，保留人称代入、情绪节奏与具体细节等人味。本步骤不调用任何 MCP 工具、不计费、无强度档位。
 
-```
-humanize_article(
-  project_id="$PROJECT_ID",
-  content="文章全文",
-  intensity="gentle"        // 可选: gentle, medium, aggressive, authentic
-)
-```
-
-**intensity 选择**：
-
-| 强度 | 适用场景 |
-|------|----------|
-| `gentle` | 文章已比较自然，只去除明显 AI 痕迹 |
-| `medium` | 大多数场景的默认选择 |
-| `aggressive` | AI 味很重的文本 |
-| `authentic` | 追求极致真人感，使用独立的六维规则重写 |
-
-去痕后检查质量评分（总分 50，35+ 为良好）。如果分数偏低，可提高强度重试。
+中文等价映射、「不该标记为 AI 的特征」（看集群而非孤例）与「人味特征」详见 `humanizer` skill。
 
 保存为 `$DIR/04-article-final.md`。
 
@@ -111,7 +93,7 @@ humanize_article(
 | 历史文章差异 | 与已有文章选题不重复，角度有差异 |
 | 章节实质内容 | 每个 `##` 章节包含具体素材，不是泛泛而谈 |
 | 研究结论引用 | 大纲中的核心观点在正文中得到展开 |
-| AI 套话风险 | 无明显 AI 痕迹（参考 [humanizer.md](references/humanizer.md) 的 24 种模式） |
+| AI 套话风险 | 无明显 AI 痕迹（参考 `humanizer` skill 的 33 类模式） |
 
 任一检查项不通过时，必须回到步骤 2/3 重写（最多重试 2 次，超过则记录问题继续后续流程）。
 
@@ -169,6 +151,6 @@ convert_markdown(
 
 ## 深入参考
 
-- AI 去痕详细指南（24 种 AI 痕迹模式 + authentic 六维规则）：[humanizer.md](references/humanizer.md)
+- AI 去痕详细指南（33 类 AI 写作模式 + draft→audit→final 流程）：`humanizer` skill
 - 写作工具完整参数说明：[writing-guide.md](references/writing-guide.md)
 - 内容合规详细规则：[content-compliance.md](references/content-compliance.md)

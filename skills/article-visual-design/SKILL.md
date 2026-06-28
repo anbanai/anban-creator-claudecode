@@ -73,12 +73,11 @@ Phase 4: 配图生成（带 vision 校验）
 
 ### 步骤 1a：读取任务已解析的视觉风格（权威来源）
 
-公众号"模板"由三个**正交**维度组成：图片视觉（`style`）、写作风格（`writing_style`）、排版样式（`theme`）。三者各自独立解析，互不推导——**写作风格绝不决定图片视觉**。
+公众号"模板"由三个**正交**维度组成：图片视觉（`visual_style`）、写作者（`writer_key`）、排版样式（`theme`）。三者各自独立解析，互不推导——**写作者绝不决定图片视觉**。
 
-`get_project_profile` 已按 `task > template > plan > project` 解析并返回视觉维度的最终值：
-- `$VISUAL_STYLE_CONFIGURED` = profile 的 `style` 字段（解析后的视觉风格描述/关键词）
-- `$TEMPLATE_VISUAL_STYLE` = profile 的 `template_style` 字段（任务带模板时）
-- `$VISUAL_STYLE_SOURCE` = profile 的 `style_source`（task / template / plan / project）
+`get_project_profile` 已按 `task > project` 两层解析并返回视觉维度的最终值：
+- `$VISUAL_STYLE_CONFIGURED` = profile 的 `visual_style` 字段（解析后的视觉风格描述/关键词）
+- `$VISUAL_STYLE_SOURCE` = profile 的 `visual_style_source`（task / project）
 
 **关键规则**：
 - 若 `$VISUAL_STYLE_CONFIGURED` 非空 → 它是**权威视觉锚点**。以它为 `$VISUAL_STYLE` 的核心，三维分析只做**补充细化**（配色、情绪、构图），**绝不可覆盖或偏离**配置的视觉方向。例如配置了"温暖自然的生活摄影"，分析就只能往暖色调、自然光、真实场景细化，**不得**生成维多利亚木刻/黑白版画等冲突风格。
