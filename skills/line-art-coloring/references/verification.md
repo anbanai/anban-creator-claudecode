@@ -10,6 +10,10 @@
 
 如果颜色问题需要“只改颜色不动线稿”才能修复，标记 `needs_img2img`，不要把重新生成说成严格修正。
 
+**两条关键纪律**：
+- **早标 `needs_img2img`**：颜色问题若需“只改色不动线”才能修，直接标 `needs_img2img`，不反复全量重绘——当前重绘会改线，可能越修越破。
+- **回归守卫**：任何修正/回溯后，必须比对线稿保真度“修正前 vs 修正后”；若线稿退化，拒收该结果、回退修正前版本。一个“颜色变好但线稿退化”的结果不算成功。
+
 ## 图像分析方法
 
 **所有图像视觉分析通过 `analyze_image` MCP 工具执行，不依赖 Read 的视觉能力。**
@@ -42,8 +46,8 @@
 | FAIL | 色调错误 | Color Bible: "deep navy blue" → 观察: "appears black" 或 "appears royal blue" |
 
 4. 线稿完整性验证分两次单图分析：
-   - 原始线稿：调用 `analyze_image(project_id="$PROJECT_ID", image_url=原始线稿CDN_URL, prompt="只描述这张原始线稿的可验证线稿指纹，不评论颜色。包括：画面宽高方向、主体数量、主体位置、姿态、轮廓关键线、服装/道具/背景线条、构图边界、容易被重绘或丢失的小线条。")` → 写入 `$DIR/lineart-fingerprints.md`
-   - 上色图：调用 `analyze_image(project_id="$PROJECT_ID", file_path=上色图服务器端路径, prompt="只描述这张上色图的线条和构图状态，不评论颜色。按原始线稿指纹逐项检查：画面宽高方向、主体数量、主体位置、姿态、轮廓关键线、服装/道具/背景线条、构图边界、小线条是否存在。输出 PASS/MINOR/FAIL，并列出任何线条重绘、模糊、构图偏移、比例变化或元素增删。")`
+   - 原始线稿：调用 `analyze_image(project_id="$PROJECT_ID", image_url=原始线稿CDN_URL, prompt="只描述这张原始线稿的可验证线稿指纹，不评论颜色。包括：画面宽高方向、主体数量、主体位置、姿态、轮廓关键线（含线条粗细与曲率）、服装/道具/背景线条、构图边界、容易被重绘或丢失的小线条，以及线条整体锐利还是模糊。")` → 写入 `$DIR/lineart-fingerprints.md`
+   - 上色图：调用 `analyze_image(project_id="$PROJECT_ID", file_path=上色图服务器端路径, prompt="只描述这张上色图的线条和构图状态，不评论颜色。按原始线稿指纹逐项检查：画面宽高方向、主体数量、主体位置、姿态、轮廓关键线（粗细/曲率是否一致）、服装/道具/背景线条、构图边界、小线条是否存在、线条锐度（是否变模糊或变锐化）。输出 PASS/MINOR/FAIL，并列出任何线条重绘、模糊、锐化变化、构图偏移、比例变化或元素增删。")`
    - 将上色图审计结果与线稿指纹逐项比对；不能确认时标记 `needs_img2img`
 
 **产出**：更新 `$DIR/best-refs.md` 中的质量评估。
@@ -193,24 +197,38 @@ Details:
 | 次要部位 MINOR + 多张图类似 | 可接受 |
 | 背景元素 MINOR | 可接受 |
 | 线稿被修改 | 标记 `needs_img2img`；只有用户接受 best-effort 时才重新生成 |
+| 颜色问题需“只改色不动线”才能修 | **直接标 `needs_img2img`**，不烧轮次全量重绘（重绘会改线） |
+
+## 回归检查（回归守卫）
+
+每次修正或回溯后，**必须**做线稿保真度的“修正前 vs 修正后”比对，用 `analyze_image` 线稿审计逐项核对：
+
+| 比对结果 | 动作 |
+|----------|------|
+| 颜色改善 + 线稿未退化 | 接受修正，更新 best_ref / consistency-report |
+| 颜色改善 + 线稿退化 | **拒收**——回退修正前版本，该项标 `needs_img2img`（“颜色变好但线稿退化”不算成功） |
+| 颜色未改善 + 线稿未变 | 继续下一轮或换策略 |
+| 颜色未改善 + 线稿退化 | **拒收**——回退修正前版本，标 `needs_manual_review` / `needs_img2img` |
+
+回归守卫的目的是防止“为了追颜色反复全量重绘，越修越破线”。颜色一致性不应以牺牲线稿保真为代价——平台做不到“只改色不动线”，所以这类需求直接交给 `needs_img2img`。
 
 ## 修正策略
 
 ### FAIL 修正
 
-1. 确定该实体的当前 best_ref
-2. 用 best_ref 的服务器端 `file_path` 作 `ref_image_path`
-3. 构建 correction prompt（明确指出偏差 + 正确值）
+1. 确定该图对应的**原线稿服务器路径**（单源 ref）；OpenAI/Gemini 可叠加该实体 best_ref 作颜色锚点
+2. Seedream：`ref_image_path` = 原线稿；OpenAI(gpt-image)：`ref_image_paths` = [原线稿, best_ref]（≤16）/ Gemini（≤10）
+3. 构建 correction prompt（明确指出偏差 + 正确值 + 保线固定语）
 4. 默认生成 1 个候选；质量优先模式生成 2 个候选选最优
-5. 验证修正结果
+5. **回归检查**：验证修正结果的颜色改善 + 线稿是否退化（见「回归检查」）；退化则拒收、回退修正前版本
 
 ### MINOR 修正
 
 1. 用当前图的原 prompt
 2. 增加反面约束（"must NOT be slightly too dark, must be exact [color]"）
-3. 用该实体 best_ref 作参考
+3. 以**原线稿作单源 ref**（OpenAI/Gemini 可叠加该实体 best_ref 锚点）
 4. 生成 1 个候选
-5. 验证修正结果
+5. **回归检查**：验证修正结果，线稿退化则拒收、回退
 
 ### 修正 Prompt 模板
 
@@ -229,9 +247,10 @@ Use the reference image's colors EXACTLY for [Entity].
 The result must be visually indistinguishable from the reference
 in terms of [Entity]'s colors.
 
-CRITICAL LINE PRESERVATION: Every line, stroke, and proportion must remain
-100% identical to the original line art. Do NOT modify, blur, redraw, add,
-or remove any lines. Only change the COLOR of [Entity], nothing else.
+CRITICAL: PRESERVE the exact line art composition. Every line, stroke, and
+proportion must remain identical to the original line art. Do NOT modify,
+blur, redraw, add, or remove any lines. Only change the COLOR of [Entity],
+nothing else.
 ```
 
 上面的 line preservation 文案是 prompt 约束，不是能力承诺。若输出仍改变线稿，记录 `needs_img2img`。
@@ -260,14 +279,12 @@ or remove any lines. Only change the COLOR of [Entity], nothing else.
 
 最大轮次：3 轮。超过后未解决项标记 `needs_manual_review`；需要局部保线稿换色的项标记 `needs_img2img`。
 
-## 回溯触发
+## 回溯触发（opt-in，默认前向不回溯）
 
-在以下情况下触发回溯：
+**默认前向不回溯**（对齐同仓 agent）。仅当任务要求严格跨图一致、且颜色一致性收益明确大于线稿重绘风险时才 opt-in：
 
 1. 修正后某实体的 best_ref 从 `colored_XX` 变成了 `colored_YY`
 2. 且 `colored_XX` 中也包含该实体
-3. 那么 `colored_XX` 需要用 `colored_YY` 作参考重新上色
+3. 用新 best_ref 作颜色锚点、**仍以原线稿作单源 ref**，回溯重上 `colored_XX`
 
-回溯范围：只回溯包含该实体、且非 best_ref 的图。
-
-回溯后重新审计确认。若回溯会明显改变线稿，停止并标记 `needs_img2img`。
+回溯范围：只回溯包含该实体、且非 best_ref 的图。回溯同样带回归守卫：回溯后线稿退化则放弃回溯、标 `needs_img2img`。回溯后重新审计确认。
