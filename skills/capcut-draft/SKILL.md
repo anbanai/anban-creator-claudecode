@@ -132,6 +132,23 @@ Remove entry from `root_meta_info.json` → delete draft folder with `rm -rf`
 - new_version: `"79.0.0"`
 - source: `"default"`
 
+## Short-Video Captions (短视频字幕)
+
+For livestream-sliced short videos (抖音/快手 9:16), subtitles must stay readable on mobile over busy backgrounds. Apply this style to **every** `material_text`/`segment_text` you emit for a `live-slicer` clip draft, overriding the generic text defaults above:
+
+| Field | Value | Notes |
+| --- | --- | --- |
+| `font_size` | `10.0` | larger than default 8.0 for mobile |
+| `bold_width` | `0.1` | synthetic bold weight — this is the documented bold mechanism; do NOT use `<b>` tags (with `is_rich_text:false` they render as literal text) |
+| `text_color` | `#FFFFFF` | white; use `#FFD60A` yellow for selling points/numbers |
+| `border_width` | `0.12` | black stroke (描边) for contrast |
+| `border_color` | `#000000` | |
+| `shadow_alpha` | `0.8` | drop shadow |
+| `transform.y` | `-0.78` | lower-third, clear of platform UI |
+| `content` | `<size=10.0>文本</size>` | size only; weight comes from `bold_width` (or a bold `font_resource_id` when known) |
+
+**Chunking:** ASR sentences are often 10-20 chars — too long for one line. Split a sentence >8 chars into ≤2 chunks at a natural pause (comma, conjunction, breath) and create a separate text segment per chunk. Distribute each chunk's duration by character-count proportion from the sentence's total time (`chunk.duration = sentence.duration × chunk.chars / sentence.chars`) so chunks tile the sentence without overlap and with no gaps. Word-level exact alignment is out of scope for now; this proportional split is the approximation.
+
 ## Important Notes
 
 - **Close CapCut before modifying drafts** — if CapCut is running, it may overwrite your changes or cause corruption
