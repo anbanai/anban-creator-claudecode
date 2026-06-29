@@ -87,7 +87,7 @@ Phase 4: 配图生成（带 vision 校验）
 
 ### 步骤 1a：读取任务已解析的视觉风格（权威来源）
 
-公众号"模板"由三个**正交**维度组成：图片视觉（`visual_style`）、写作者（`writer_key`）、排版样式（`theme`）。三者各自独立解析，互不推导——**写作者绝不决定图片视觉**。
+公众号"模板"由三个**正交**维度组成：图片视觉（`visual_style`）、写作者（`writer`）、排版样式（`theme`）。三者各自独立解析，互不推导——**写作者绝不决定图片视觉**。
 
 `get_project_profile` 已按 `task > project` 两层解析并返回视觉维度的最终值：
 - `$VISUAL_STYLE_CONFIGURED` = profile 的 `visual_style` 字段（解析后的视觉风格描述/关键词）

@@ -34,7 +34,7 @@ description: Creates and manages WeChat news article drafts (图文草稿) with 
     {
       "title": "文章标题",
       "content": "<p>HTML 正文...</p>",
-      "author": "署名（仅取自 get_project_profile 顶层 byline，详见「作者字段来源」）",
+      "author": "署名（仅取自 get_project_profile 顶层 author，详见「作者字段来源」）",
       "digest": "摘要（120字符以内）",
       "thumb_media_id": "封面图的 media_id",
       "show_cover_pic": 1,
@@ -46,24 +46,23 @@ description: Creates and manages WeChat news article drafts (图文草稿) with 
 
 ## 作者字段来源（硬性）
 
-`draft.json` 的 `author`（公众号署名）**必须且仅能**取自 `get_project_profile` 返回的**顶层 `byline`** 字段（已按 task > project 两层解析；可看返回的 `byline_source` 追溯来源）。
+`draft.json` 的 `author`（公众号署名）**必须且仅能**取自 `get_project_profile` 返回的**顶层 `author`** 字段（已按 task > project 两层解析；可看返回的 `author_source` 追溯来源）。
 
-- 顶层 `byline` 非空 → `articles[0].author = <顶层 byline>`，**原样填入，不改写**。
-- 顶层 `byline` 为空 → **省略 `author` 字段**（或留空），由公众号后台用默认署名。
+- 顶层 `author` 非空 → `articles[0].author = <顶层 author>`，**原样填入，不改写**。
+- 顶层 `author` 为空 → **省略 `author` 字段**（或留空），由公众号后台用默认署名。
 - **严禁**用下列任一字段顶替 `author`（它们都**不是**署名）：
-  - `writing_voice`：写作口吻（模仿内容的框架/笔迹），只驱动正文语气。
-  - `persona_avatar`：人设头像 URL，仅视觉参考。
-  - `writer_key`：writer 资源 key（如 `dan-koe`），决定文风，不决定署名。
+  - `writer`：writer 资源 key（如 `dan-koe`），决定文风，不决定署名。
+  - 写作风格头像/昵称：仅 Studio 展示元数据，不会出现在 `get_project_profile`，不得用于发布。
 
-- **署名污染自检（防回归闸门）**：若顶层 `byline` 命中 `get_project_profile` 返回的 `available_writers` 中任一写作风格的**人设名**（`name`，如 "Dan Koe"）或 **key**（`english_name`，如 `dan-koe`），几乎肯定是上游 Studio「从写作风格库导入」按钮把人设名误写进了署名字段——真实发布署名不该等于某个写作风格人设。此时**不要盲目发布**：按真实发布者署名修正后再发，并在 `submit_agent_feedback` 里标注「疑似署名污染：byline 命中 writer 人设 X」。仅当署名确属真实同名（如作者本人就叫某人设名）才放行。
+- **署名污染自检（防回归闸门）**：若顶层 `author` 命中 `get_project_profile` 返回的 `available_writers` 中任一写作风格的**人设名**（`name`，如 "Dan Koe"）或 **key**（`english_name`，如 `dan-koe`），几乎肯定是上游把写作风格误写进了署名字段——真实发布署名不该等于某个写作风格人设。此时**不要盲目发布**：按真实发布者署名修正后再发，并在 `submit_agent_feedback` 里标注「疑似署名污染：author 命中 writer 人设 X」。仅当署名确属真实同名（如作者本人就叫某人设名）才放行。
 
 映射示例：
 
 ```
 get_project_profile 返回            → draft.articles[0].author
-byline = "张三"                      → "张三"
-writing_voice = "幽默犀利…"          → 不入 author（仅用于正文口吻）
-byline 为空                         → 省略 author 字段（切勿用 writing_voice 顶替）
+author = "张三"                      → "张三"
+writer = "dan-koe"                  → 不入 author（仅用于正文口吻）
+author 为空                         → 省略 author 字段（切勿用 writer 顶替）
 ```
 
 ## thumb_media_id 来源（按图片开关，硬性）

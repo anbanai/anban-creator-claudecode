@@ -31,7 +31,7 @@ description: 微信公众号图文文章全自动创作。用户提到"写文章
 
 **项目选定后，仅对 `$PROJECT_ID` 调用：**
 
-- `get_project_profile(project_id="$PROJECT_ID", scope="article", task_id="$TASK_ID")` → 获取账号定位、受众、风格维度。`task_id` 让服务端用任务级覆盖解析（`task > project` 两层），不传则只拿到 project 级信息。**务必区分两个易混字段**：顶层 `byline` 是公众号**署名**（步骤 10 发布时原样填入 `draft.json` 的 author，空则省略）；`writing_voice` 是**写作口吻**（驱动正文语气），**绝非署名**。二者绝不混用。
+- `get_project_profile(project_id="$PROJECT_ID", scope="article", task_id="$TASK_ID")` → 获取账号定位、受众、风格维度。`task_id` 让服务端用任务级覆盖解析（`task > project` 两层），不传则只拿到 project 级信息。**务必区分两个易混字段**：顶层 `author` 是公众号**署名**（步骤 10 发布时原样填入 `draft.json` 的 author，空则省略）；顶层 `writer` 是**写作风格资源 key**（驱动正文语气），**绝非署名**。二者绝不混用。写作风格头像/昵称只是 Studio 展示元数据，不会出现在 MCP profile 中。
 - `list_drafts(project_id="$PROJECT_ID")` 和 `list_published_articles(project_id="$PROJECT_ID")` → 已有文章标题（如返回错误可忽略，用空列表继续）
 - `prepare_workspace(content_type="articles", task_id=TASK_ID)` → 工作目录路径 `$DIR`
 - Bash 执行 `mkdir -p "$DIR"` 创建目录
@@ -108,7 +108,7 @@ description: 微信公众号图文文章全自动创作。用户提到"写文章
 
 使用 `article-publishing` skill：
 - 从 `$DIR/seo-result.md` 读取优化后的标题和摘要
-- 创建 `draft.json`：`title` 用 SEO 优化标题，`digest` 用 SEO 优化摘要，`author` **仅**取自步骤 1 `get_project_profile` 的顶层 `byline`（公众号署名，原样填入；空则省略，**禁用** `writing_voice` 顶替——见 article-publishing skill「作者字段来源」）
+- 创建 `draft.json`：`title` 用 SEO 优化标题，`digest` 用 SEO 优化摘要，`author` **仅**取自步骤 1 `get_project_profile` 的顶层 `author`（公众号署名，原样填入；空则省略，**禁用** `writer` 顶替——见 article-publishing skill「作者字段来源」）
 - 仅当 `$DIR/final-review.md` 全部通过时，发布到草稿箱：`publish_draft`
 
 ---
