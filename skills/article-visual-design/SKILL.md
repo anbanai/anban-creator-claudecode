@@ -5,6 +5,20 @@ description: Manages images for WeChat article (公众号图文) content includi
 
 # 公众号图文图片管理（模板化 + 视觉校验）
 
+## 图片开关与跳过条件（用户 prompt 驱动）
+
+公众号文章的**封面**与**正文配图**可由用户在创建任务/计划时独立开关，经用户 prompt 末尾的「图片生成要求（必须严格遵守，覆盖 skill 默认数量规则）」指令段传达。默认两开→该段不存在，按既有全流程执行。读到该段时：
+
+| prompt 禁令 | 受影响阶段 |
+|-------------|-----------|
+| 含「禁止生成封面」**或**「禁止生成任何图片」 | **Phase 2（封面生成）跳过**——封面已委托 `article-cover-design` skill，见其「跳过条件」；不生成 `$DIR/cover.png`，不取 `media_id`/`$COVER_PATH` |
+| 含「禁止生成任何正文配图」**或**「禁止生成任何图片」 | **Phase 3（配图规划）+ Phase 4（配图生成）跳过**——不写 `image-plan.md`/`images.json`；正文不内联 `<img>`；模板 `image_count.min` **不再生效**，不得据此强制生成配图 |
+| 两条都命中（纯文字） | Phase 2/3/4 全跳过 |
+
+**封面关·配图开**时，Phase 4 正文图因无封面作 `ref_image_path` 风格锚点，改为各自独立生成（不传 `ref_image_path`，或链到首张已生成图），**严禁**指向不存在的 `$DIR/cover.png`。Phase 0/1（模板选择、节奏规划、三维风格分析）不受开关影响，始终执行。
+
+下方各 Phase 顶部再次标注其跳过条件；质量验证的图片相关项在配图开关关闭时跳过。
+
 ## MCP 工具
 
 | MCP 工具 | 说明 |
@@ -95,6 +109,8 @@ Phase 4: 配图生成（带 vision 校验）
 
 ## Phase 2：封面生成（委托 article-cover-design skill）
 
+> **封面开关守卫**：用户 prompt 含「禁止生成封面」/「禁止生成任何图片」时，**Phase 2 整体跳过**——不调 `generate_image`、不生成 `$DIR/cover.png`、不取 `media_id`/`$COVER_PATH`。`article-cover-design` skill 同步跳过（见其「跳过条件」）。封面关·配图开时，Phase 4 正文图改用无锚点独立生成。
+
 封面是全篇风格锚点（产物 `$DIR/cover.png` 供 Phase 4 内容图 `ref_image_path` 继承）。**封面设计已独立成稿**——using the `article-cover-design` skill，它硬编码官方比例（900×383 / 2.35:1）、中心安全区构图（转发卡 1:1 兼容）、纯图无文字、从文章核心隐喻推导视觉概念、vision 6 维评分卡把关。本阶段只交代与本 skill 的衔接：
 
 - **核心规格**：大图 2.35:1（900×383px，服务端强制精确裁剪），转发卡 1:1 由中心安全区自动覆盖，纯图无文字（微信自动叠加标题）。
@@ -109,6 +125,8 @@ Phase 4: 配图生成（带 vision 校验）
 ---
 
 ## Phase 3：配图内容规划（升级 schema）
+
+> **配图开关守卫**：用户 prompt 含「禁止生成任何正文配图」/「禁止生成任何图片」时，**Phase 3 整体跳过**——不创建 `image-plan.md`；模板 `image_count.min` **不再生效**，不得据此强制规划配图。节奏规划（Phase 0b）仍创建，所有非 hero slot 的 `image_url=null`。
 
 ### 新 schema：visual_brief + required_entities + must_match_excerpts
 
@@ -127,6 +145,8 @@ Phase 4: 配图生成（带 vision 校验）
 ---
 
 ## Phase 4：配图生成（带 vision 校验循环）
+
+> **配图开关守卫**：用户 prompt 含「禁止生成任何正文配图」/「禁止生成任何图片」时，**Phase 4 整体跳过**——不生成任何正文图、不写 `images.json`、正文不内联 `<img>`。封面关·配图开时本 Phase 仍执行，但步骤 4c 的 `ref_image_path` 不得指向未生成的 `$DIR/cover.png`（改不传或链首图）。
 
 按 `$DIR/visual-rhythm-plan.md` 中 slot 的顺序生成。每个 slot 执行：
 
@@ -176,7 +196,7 @@ generate_image(
 ```
 
 **关键**：
-- `ref_image_path` 始终用 `$DIR/cover.png`（风格锚点）。
+- `ref_image_path`：**封面开关开启时**用 `$DIR/cover.png`（风格锚点）；**封面关·配图开时**不传（或链到首张已生成图），**严禁**指向不存在的 `$DIR/cover.png`。
 - `upload_to_cdn=true` 让**生成与上传原子化**：同一调用内完成生成→保存→校验→压缩→上传微信 CDN。校验通过才上传（不浪费素材位），返回值直接带 `wechat_url` + `media_id`；校验失败则不上传，结果无 `wechat_url`。**不再有独立的 `upload_image` 阶段**——每张图生成的瞬间即持久化到 CDN。
 
 **旧版 server 兼容**：若 server 不支持 `verify_with_vision` / `upload_to_cdn` 参数，去掉这两个参数生成图后，单独调用 `analyze_image` 做校验 + `upload_image` 上传，并按 `references/content.md` 的容错解析规则处理返回文本：
@@ -252,6 +272,8 @@ analyze_image(
 ---
 
 ## 质量验证
+
+> **配图开关守卫**：配图开关关闭时，下方所有图片相关检查项（文件完整性/风格一致性/视觉多样性/Vision 通过率/审计完整性/CDN 持久化）跳过，不计为失败；节奏完整性、模板一致性（slot 映射）仍执行。封面关·配图开时，「风格一致性」改为"无 `ref_image_path` 或链首图"。
 
 生成完成后执行 7 项检查：
 
