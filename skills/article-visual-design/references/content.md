@@ -11,14 +11,14 @@
 
 ## 参考链机制
 
-所有内容配图使用封面图作为风格参考锚点：
+内容配图的参考链由 `article_image_mode` 决定：
 
 ```
-封面图先生成 → $DIR/cover.png
-所有内容配图使用 ref_image_path="$DIR/cover.png"（始终用封面，不用上一张）
+cover_and_content → 封面图先生成 → 内容配图使用 ref_image_path="$DIR/cover.png"
+content_only → 不生成封面 → 内容配图不传 ref_image_path，或链到首张已生成图
 ```
 
-**为什么始终用封面**：如果每张图引用上一张，风格漂移会累积放大。封面是风格锚点，确保所有配图保持一致的视觉基准。
+**为什么优先用封面**：封面开启时，如果每张图引用上一张，风格漂移会累积放大。封面是风格锚点，确保所有配图保持一致的视觉基准。封面关闭时，严禁把 `ref_image_path` 指向不存在的 `$DIR/cover.png`。
 
 **注意**：`ref_image_path` 只传递"风格语言"。内容贴切度由 prompt 中的 `visual_brief` 和 `required_entities` 决定，并由 vision 校验把关。
 

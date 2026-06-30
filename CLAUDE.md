@@ -82,6 +82,7 @@ Lifecycle hooks for quality verification:
 ## Key Conventions
 
 - **Zero user interaction**: All agents run autonomously. Decisions are recorded in `$DIR/*.md` files, never by asking the user.
+- **Runtime controls**: The server may append a compact `运行控制：` block to the user message, for example `article_image_mode=cover_only` or `seednote_image_mode=cover_content`. Treat these keys as structured state, not prose. Agents route pipeline steps from the keys, skills define the detailed skip/quality/publishing semantics, and server-side Go code should not embed long workflow instructions that duplicate agent or skill documents.
 - **Workspace isolation**: Each creation task calls `prepare_workspace` MCP tool to obtain the canonical workspace path, then creates the directory locally with `mkdir -p`. The MCP tool only computes and returns the path — it does not create directories or move files.
 - **File naming**: Agents use numbered prefixes (`01-research.md`, `02-outline.md`...) or semantic names (`cover.png`, `content.md`, `image-plan.md`).
 - **Image reference chain**: First image establishes visual style; subsequent images use the first as reference to maintain consistency. For line-art coloring, current `generate_image` is best-effort reference-image generation, not a guaranteed line-preserving colorize tool.

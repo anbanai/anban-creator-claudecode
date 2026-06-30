@@ -15,6 +15,12 @@ description: 种草笔记图文全自动创作。用户提到"种草笔记"、"s
 
 ---
 
+## 图片构成规则（运行控制）
+
+图片构成以结构化运行控制 `seednote_image_mode` 为准。缺失时按 `cover_content`。四种模式：`cover_only`（仅封面）、`cover_content`（封面 + 1~3 张内容图）、`cover_tail`（封面 + 尾图）、`full`（封面 + 1~3 张内容图 + 尾图）。未包含尾图的模式禁止生成 `tail.png`，`image-plan.md` 不得含 `## tail` 节；未包含内容图的模式禁止生成 `image_0N.png`。
+
+---
+
 ## 必须执行的步骤
 
 按顺序执行以下步骤。每一步都必须调用对应的工具，不能跳过。
@@ -60,7 +66,7 @@ description: 种草笔记图文全自动创作。用户提到"种草笔记"、"s
 
 使用 `seednote-visual-design` skill：
 - 传入 `$DIR/content.md`
-- 生成封面 `$DIR/cover.png`、内容图 `$DIR/image_01.png` ... `$DIR/image_03.png`、尾图 `$DIR/tail.png`（**仅当「图片构成要求」指令含尾图时**；指令不含或禁止尾图则不生成尾图、`image-plan.md` 不含 `## tail` 节）
+- 生成封面 `$DIR/cover.png`、内容图 `$DIR/image_01.png` ... `$DIR/image_03.png`（仅含内容图的模式）、尾图 `$DIR/tail.png`（仅含尾图的模式）；不含尾图的模式不得生成尾图、`image-plan.md` 不含 `## tail` 节
 - 图片规划写入 `$DIR/image-plan.md`
 
 ### 步骤 6：合规检查（复刻模式）
@@ -110,6 +116,6 @@ description: 种草笔记图文全自动创作。用户提到"种草笔记"、"s
 | 3 | `seednote-research` | `topic-analysis.md`（原创）或 `source-note.md`（复刻） |
 | 3b | `seednote-viral-analysis` | `source-analysis.md`, `viral-template.json`, `template-meta.json`（仅复刻模式） |
 | 4 | `seednote-writing` | `content.md` |
-| 5 | `seednote-visual-design` | `cover.png`, `image_0*.png`, `tail.png`（可选，按「图片构成要求」指令）, `image-plan.md` |
+| 5 | `seednote-visual-design` | `cover.png`, `image_0*.png`（按 `seednote_image_mode`）, `tail.png`（按 `seednote_image_mode`）, `image-plan.md` |
 | 6 | `seednote-writing` | `compliance-report.md`（仅复刻模式） |
 | 7 | 直接 MCP 调用 | 归档到 `$ARCHIVE_DIR` |

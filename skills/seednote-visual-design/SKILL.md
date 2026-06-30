@@ -102,16 +102,16 @@ description: Generates cover (封面), content pages (内容图), and tail pages
 
 ### 步骤 3：图片构成与布局选择
 
-**图片构成严格按 user prompt 中的「图片构成要求」指令执行**（指令由服务端根据用户在创建任务/计划时的勾选注入）。四种组合：
+**图片构成严格按结构化运行控制 `seednote_image_mode` 执行**。缺失时按 `cover_content`。四种组合：
 
-| user prompt 指令 | 应生成文件 | 总数 |
+| `seednote_image_mode` | 应生成文件 | 总数 |
 |---|---|---|
-| 仅封面 | cover.png | 1 |
-| 封面 + 内容图 | cover.png + image_01.png … image_0N.png（1~3 张） | 2~4 |
-| 封面 + 尾图 | cover.png + tail.png | 2 |
-| 封面 + 内容图 + 尾图 | cover.png + image_01.png … image_0N.png（1~3 张）+ tail.png | 3~5 |
+| `cover_only` | cover.png | 1 |
+| `cover_content` | cover.png + image_01.png … image_0N.png（1~3 张） | 2~4 |
+| `cover_tail` | cover.png + tail.png | 2 |
+| `full` | cover.png + image_01.png … image_0N.png（1~3 张）+ tail.png | 3~5 |
 
-> **禁止规则（与上表同等优先级）**：若「图片构成要求」指令不含尾图、或写明「禁止生成尾图」，则**禁止生成 `tail.png`**——`image-plan.md` 不得包含 `## tail` 节，步骤 5 不得执行尾图生成，步骤 6 质量验证跳过尾图项，最终产物不含尾图。同理，指令不含内容图则不生成 `image_0N.png`。
+> **禁止规则（与上表同等优先级）**：未包含尾图的模式（`cover_only` / `cover_content`）禁止生成 `tail.png`——`image-plan.md` 不得包含 `## tail` 节，步骤 5 不得执行尾图生成，步骤 6 质量验证跳过尾图项，最终产物不含尾图。未包含内容图的模式（`cover_only` / `cover_tail`）禁止生成 `image_0N.png`。
 
 **内容图张数按信息点自适应（1~3 张）**：N 由步骤 2 的信息点分组决定，每张承载 2-4 个信息点，最多 3 张（image_01.png、image_02.png、image_03.png）。布局模式参考 [references/content.md](references/content.md) 的 6 种布局。
 
@@ -160,7 +160,7 @@ description: Generates cover (封面), content pages (内容图), and tail pages
 
 ---
 
-## tail [尾部] 类型：{follow|comment|traffic}（**仅当「图片构成要求」指令含尾图时添加本节；指令不含尾图则整节省略**）
+## tail [尾部] 类型：{follow|comment|traffic}（**仅当 `seednote_image_mode` 包含尾图时添加本节；不含尾图则整节省略**）
 
 匹配依据：{根据内容类型自动判断——知识干货→follow, 测评对比→comment, 种草推荐→traffic}
 - 内容点: （见 tail.md 规范，根据类型填充）
@@ -172,7 +172,7 @@ description: Generates cover (封面), content pages (内容图), and tail pages
 
 1. **封面**：使用 [references/cover.md](references/cover.md) 的 Prompt 模板生成
 2. **内容图**：使用 [references/content.md](references/content.md) 的 Prompt 模板逐张生成（1~3 张），每张独立调用 `generate_image`（不传 ref_image_path，纯文生图），传入对应分组的信息点和布局，并在 prompt 中显式写明本页独立场景/视觉主体；通过共享「风格延续：{style}」文本块保持调性统一，多张内容图之间保证视觉多样性（不同实景背景 / 构图角度）
-3. **尾图（仅当「图片构成要求」指令含尾图时）**：使用 [references/tail.md](references/tail.md) 的 Prompt 模板单独生成；指令不含尾图则跳过此步，不调用 generate_image 生成尾图
+3. **尾图（仅当 `seednote_image_mode` 包含尾图时）**：使用 [references/tail.md](references/tail.md) 的 Prompt 模板单独生成；不含尾图则跳过此步，不调用 generate_image 生成尾图
 4. **Prompt 备份**：每次调用 `generate_image` 后，必须把实际 prompt、`image_type`、`size`、`output_path`、`ref_image_path`、返回的 `provider`、`model`、`response_type`、`revised_prompt`、`output_mime` 追加写入 `$DIR/image-prompts.md`
 
 ### 步骤 6：质量验证
@@ -207,7 +207,7 @@ description: Generates cover (封面), content pages (内容图), and tail pages
 当提供改写模式和 `$DIR/viral-template.json` 时：
 - `style-only`：只参考 `cover_template` 的风格方向、信息层级和色彩倾向，完全重做具体构图
 - `medium`：参考源笔记的信息结构重新设计内容图主题，但替换视觉主体、场景和版式
-- `tight`：仅在 `recommended_clone_depth=tight` 且 `do_not_copy` 风险低时参考图片张数和各页主题关键词；不得复用源图人物姿势、图标组合、文字框位置或可识别构图。**图片构成仍以 user prompt 指令为准；若源笔记超过预期张数，按信息点优先级合并到 user prompt 指令允许的范围内，并在 image-plan.md 记录合并理由**
+- `tight`：仅在 `recommended_clone_depth=tight` 且 `do_not_copy` 风险低时参考图片张数和各页主题关键词；不得复用源图人物姿势、图标组合、文字框位置或可识别构图。**图片构成仍以 `seednote_image_mode` 为准；若源笔记超过模式允许张数，按信息点优先级合并到该模式允许范围内，并在 image-plan.md 记录合并理由**
 
 无论哪种模式，`do_not_copy` 中列出的元素都必须写入 `image-plan.md` 的风险提示，并在生成 prompt 时显式避开。若模板 `confidence=low` 或视觉证据不足，按 `style-only` 处理。
 
@@ -219,7 +219,7 @@ description: Generates cover (封面), content pages (内容图), and tail pages
 
 1. **生成封面（单张）**：调用 `generate_image`，image_type 设为 `"cover"`
 2. **逐张生成内容图（image_01.png 起，张数由信息点分组决定）**：逐张调用 `generate_image`，每张使用 image-plan.md 中对应的信息点构造 prompt（独立场景），不传 ref_image_path（纯文生图）
-3. **单独生成尾图（仅当「图片构成要求」指令含尾图时）**：调用 `generate_image`，不传参考图，沿用共享风格块；指令不含尾图则跳过
+3. **单独生成尾图（仅当 `seednote_image_mode` 包含尾图时）**：调用 `generate_image`，不传参考图，沿用共享风格块；不含尾图则跳过
 4. **带参考图（保持风格一致）**：仅当项目配置了参考图且用户要求强一致时才传 ref_image_path；默认不传
 5. **带风格描述**：在 prompt 中加入风格描述（如"手绘感，暖色调，小清新"）
 
@@ -231,7 +231,7 @@ generate_image(project_id=$PROJECT_ID, task_id=$TASK_ID, prompt=<封面提示词
 
 内容图、尾图同理，逐张调用时只替换 `image_type` 与 `output_path`（如 `$DIR/image_01.png`、`$DIR/tail.png`），`task_id=$TASK_ID` 每张都必须带。`$DIR` 由 `prepare_workspace(task_id=$TASK_ID)` 返回，任务模式下为相对路径 `output`，故 output_path 形如 `output/cover.png`，服务端可直接登记为 task_file。
 
-**关键规则**：内容图逐张调用 `generate_image` 生成，每张使用 image-plan.md 中对应的信息点构造独立 prompt（output_path 设为 `image_01.png`、`image_02.png` ...），通过共享「风格延续：{style}」块保持调性统一，每张使用独立场景/视觉主体（禁止与其他内容图复用同一场景，避免雷同）；不使用封面作为参考图。尾图单独生成（`tail.png`，仅当「图片构成要求」指令含尾图时），封面单独生成（`cover.png`）。
+**关键规则**：内容图逐张调用 `generate_image` 生成，每张使用 image-plan.md 中对应的信息点构造独立 prompt（output_path 设为 `image_01.png`、`image_02.png` ...），通过共享「风格延续：{style}」块保持调性统一，每张使用独立场景/视觉主体（禁止与其他内容图复用同一场景，避免雷同）；不使用封面作为参考图。尾图单独生成（`tail.png`，仅含尾图的模式），封面单独生成（`cover.png`）。
 
 ### 春季花茶/白茶回归示例
 

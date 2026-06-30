@@ -5,25 +5,47 @@ description: Manages images for WeChat article (公众号图文) content includi
 
 # 公众号图文图片管理（模板化 + 视觉校验）
 
-## 图片开关与跳过条件（用户 prompt 驱动）
+## 图片模式与跳过条件（运行控制驱动）
 
-公众号文章的**封面**与**正文配图**可由用户在创建任务/计划时独立开关，经用户 prompt 末尾的「图片生成要求（必须严格遵守，覆盖 skill 默认数量规则）」指令段传达。默认两开→该段不存在，按既有全流程执行。读到该段时：
+公众号文章的**封面**与**正文配图**由 user message 的结构化运行控制 `article_image_mode` 决定。缺失时按 `cover_and_content`。本 skill 不解析自然语言禁令：
 
-| prompt 禁令 | 受影响阶段 |
-|-------------|-----------|
-| 含「禁止生成封面」**或**「禁止生成任何图片」 | **Phase 2（封面生成）跳过**——封面已委托 `article-cover-design` skill，见其「跳过条件」；不生成 `$DIR/cover.png`，不取 `media_id`/`$COVER_PATH` |
-| 含「禁止生成任何正文配图」**或**「禁止生成任何图片」 | **Phase 3（配图规划）+ Phase 4（配图生成）跳过**——不写 `image-plan.md`/`images.json`；正文不内联 `<img>`；模板 `image_count.min` **不再生效**，不得据此强制生成配图 |
-| 两条都命中（纯文字） | Phase 2/3/4 全跳过 |
+| `article_image_mode` | 受影响阶段 |
+|----------------------|-----------|
+| `cover_and_content` | Phase 2/3/4 全部执行 |
+| `cover_only` | **Phase 3（配图规划）+ Phase 4（配图生成）跳过**——不写 `image-plan.md`/`images.json`；正文不内联 `<img>`；模板 `image_count.min` **不再生效**，不得据此强制生成配图 |
+| `content_only` | **Phase 2（封面生成）跳过**——封面已委托 `article-cover-design` skill，见其「跳过条件」；不生成 `$DIR/cover.png`，不取 `media_id`/`$COVER_PATH` |
+| `text_only` | Phase 2/3/4 全跳过 |
 
 **封面关·配图开**时，Phase 4 正文图因无封面作 `ref_image_path` 风格锚点，改为各自独立生成（不传 `ref_image_path`，或链到首张已生成图），**严禁**指向不存在的 `$DIR/cover.png`。Phase 0/1（模板选择、节奏规划、三维风格分析）不受开关影响，始终执行。
 
 下方各 Phase 顶部再次标注其跳过条件；质量验证的图片相关项在配图开关关闭时跳过。
 
+## 公众号图片尺寸与展示规则
+
+公众号图片的比例和大小由本 skill 固定，并在 MCP `generate_image` 参数中显式传入；**不依赖项目级/任务级 image ratio 自动推断**。项目/任务的 image ratio 可服务其他平台，但公众号文章优先使用下列固定规则：
+
+| 图片类型 / slot | MCP `size` | HTML `image_size` | 用途 |
+|-----------------|--------------|---------------------|------|
+| 封面 / hero | `size="21:9"` | `full-bleed` | 服务端裁剪到 900×383，用作 `thumb_media_id` |
+| `section_opener` / 普通正文配图 | `size="4:3"` | `full-width` | 段落之间的章节图，适合公众号阅读流 |
+| `inline_detail` / 段内细节图 | `size="1:1"` | `inline` | 局部特写、操作细节、补充说明 |
+| 信息图 / 流程图 / 对比图 / 清单总结图 | 默认 `size="4:3"`，仅当内容更适合方形时用 `size="1:1"` | `full-width` 或 `inline` | 信息密度高但不能撑满正文 |
+
+`visual-rhythm-plan.md` 中正文图 slot 默认不要滥用 `full-bleed`；正文阅读流优先 `full-width` 或 `inline`。`render_template` 会按 `image_size` 控制展示宽度：`full-bleed=100%`、`full-width=86%`、`inline=68%`。
+
+## 受控文字策略
+
+图片上是否需要文字由场景决定，不再一律纯图：
+
+- 封面：当标题利益点强、系列感明显、教程/清单/杂志编辑风、或用户/项目视觉风格明确需要时，可生成 2-8 个字的短标题/关键词；普通氛围图、真实场景摄影、情绪意象封面默认无字。
+- 正文图：真实场景/氛围图默认无字；信息图、流程图、对比图、清单总结图可带少量中文标签或短句。
+- 所有文字必须写入 prompt 与 verification_prompt，vision 校验必须检查文字是否短、清晰、无乱码、无水印、无 logo、无密集排版；文字失败时优先改为无字图或重试。
+
 ## MCP 工具
 
 | MCP 工具 | 说明 |
 |----------|------|
-| `generate_image` (project_id, prompt, image_type, output_path, task_id, ref_image_path, verify_with_vision?, verification_prompt?, upload_to_cdn?) | 生成单张图片。`upload_to_cdn=true`（**生成与上传原子化**）时在同一调用内完成"生成→保存→视觉校验→压缩→上传微信 CDN"，直接返回 `wechat_url` + `media_id`；校验未通过则**不上传**；上传失败返回 `upload_error`（生成不浪费，仅重试上传）。返回 download_url（始终为可 HTTP fetch 的存储 URL，不再返回 base64 data URL）、file_path、wechat_url、media_id、verification（可选） |
+| `generate_image` (project_id, prompt, image_type, output_path, task_id, size, ref_image_path, verify_with_vision?, verification_prompt?, upload_to_cdn?) | 生成单张图片。`upload_to_cdn=true`（**生成与上传原子化**）时在同一调用内完成"生成→保存→视觉校验→压缩→上传微信 CDN"，直接返回 `wechat_url` + `media_id`；校验未通过则**不上传**；上传失败返回 `upload_error`（生成不浪费，仅重试上传）。返回 download_url（始终为可 HTTP fetch 的存储 URL，不再返回 base64 data URL）、file_path、wechat_url、media_id、verification（可选） |
 | `analyze_image` (project_id, image_url 或 file_path, prompt) | 用 vision 模型分析图片，用于人工二次校验或失败诊断 |
 | `upload_image` (project_id, file_path) | 上传**外部/下载来的**图片到微信 CDN，返回 CDN URL。**已生成的图不再用此工具**——生成时直接用 `generate_image(upload_to_cdn=true)` 原子上传 |
 | `download_image` (project_id, url) | 下载在线图片 |
@@ -74,7 +96,7 @@ Phase 4: 配图生成（带 vision 校验）
 每个 slot 必须包含：
 - `slot_id`：hero / section_opener / inline_detail / footer
 - `section_index`：对应 `##` 章节的 0-based 序号（footer 用 -1）
-- `image_size`：full-bleed / full-width / inline
+- `image_size`：full-bleed / full-width / inline（正文阅读流优先 full-width / inline，避免正文图撑满）
 - `module`：从模板的 `modules.preferred` 中选，可为 null
 - `composition_type`：从 8 种构图类型中选（参见 references/content.md）
 - `chapter_anchor`：对应章节的标题或核心论点（1 句话）
@@ -109,11 +131,11 @@ Phase 4: 配图生成（带 vision 校验）
 
 ## Phase 2：封面生成（委托 article-cover-design skill）
 
-> **封面开关守卫**：用户 prompt 含「禁止生成封面」/「禁止生成任何图片」时，**Phase 2 整体跳过**——不调 `generate_image`、不生成 `$DIR/cover.png`、不取 `media_id`/`$COVER_PATH`。`article-cover-design` skill 同步跳过（见其「跳过条件」）。封面关·配图开时，Phase 4 正文图改用无锚点独立生成。
+> **封面开关守卫**：当 `article_image_mode` 为 `content_only` 或 `text_only` 时，**Phase 2 整体跳过**——不调 `generate_image`、不生成 `$DIR/cover.png`、不取 `media_id`/`$COVER_PATH`。`article-cover-design` skill 同步跳过（见其「跳过条件」）。封面关·配图开时，Phase 4 正文图改用无锚点独立生成。
 
-封面是全篇风格锚点（产物 `$DIR/cover.png` 供 Phase 4 内容图 `ref_image_path` 继承）。**封面设计已独立成稿**——using the `article-cover-design` skill，它硬编码官方比例（900×383 / 2.35:1）、中心安全区构图（转发卡 1:1 兼容）、纯图无文字、从文章核心隐喻推导视觉概念、vision 6 维评分卡把关。本阶段只交代与本 skill 的衔接：
+封面是全篇风格锚点（产物 `$DIR/cover.png` 供 Phase 4 内容图 `ref_image_path` 继承）。**封面设计已独立成稿**——using the `article-cover-design` skill，它硬编码官方比例（900×383 / 2.35:1）、中心安全区构图（转发卡 1:1 兼容）、受控文字策略、从文章核心隐喻推导视觉概念、vision 6 维评分卡把关。本阶段只交代与本 skill 的衔接：
 
-- **核心规格**：大图 2.35:1（900×383px，服务端强制精确裁剪），转发卡 1:1 由中心安全区自动覆盖，纯图无文字（微信自动叠加标题）。
+- **核心规格**：大图 2.35:1（900×383px，服务端强制精确裁剪），转发卡 1:1 由中心安全区自动覆盖，受控文字策略（按真实场景决定是否带短文字）。
 - **生成调用**：`generate_image(project_id=$PROJECT_ID, prompt=<封面提示词>, image_type="cover", output_path="$DIR/cover.png", task_id=$TASK_ID, size="21:9", upload_to_cdn=true, verify_with_vision=true, verification_prompt=<6 维评分卡>)`。
   - `size="21:9"` 是生成提示比（Volcengine 支持的最近比）；**服务端按 `platform=article + image_type=cover` 把成品精确裁到 900×383 并像素断言**——微信零裁剪，告别「需要手动裁剪的纯图」。
   - `upload_to_cdn=true`：vision 校验通过才上传，直接返回 `media_id`（封面 thumb）+ `wechat_url`；校验未通过不上传（不浪费素材位）。
@@ -126,7 +148,7 @@ Phase 4: 配图生成（带 vision 校验）
 
 ## Phase 3：配图内容规划（升级 schema）
 
-> **配图开关守卫**：用户 prompt 含「禁止生成任何正文配图」/「禁止生成任何图片」时，**Phase 3 整体跳过**——不创建 `image-plan.md`；模板 `image_count.min` **不再生效**，不得据此强制规划配图。节奏规划（Phase 0b）仍创建，所有非 hero slot 的 `image_url=null`。
+> **配图开关守卫**：当 `article_image_mode` 为 `cover_only` 或 `text_only` 时，**Phase 3 整体跳过**——不创建 `image-plan.md`；模板 `image_count.min` **不再生效**，不得据此强制规划配图。节奏规划（Phase 0b）仍创建，所有非 hero slot 的 `image_url=null`。
 
 ### 新 schema：visual_brief + required_entities + must_match_excerpts
 
@@ -146,7 +168,7 @@ Phase 4: 配图生成（带 vision 校验）
 
 ## Phase 4：配图生成（带 vision 校验循环）
 
-> **配图开关守卫**：用户 prompt 含「禁止生成任何正文配图」/「禁止生成任何图片」时，**Phase 4 整体跳过**——不生成任何正文图、不写 `images.json`、正文不内联 `<img>`。封面关·配图开时本 Phase 仍执行，但步骤 4c 的 `ref_image_path` 不得指向未生成的 `$DIR/cover.png`（改不传或链首图）。
+> **配图开关守卫**：当 `article_image_mode` 为 `cover_only` 或 `text_only` 时，**Phase 4 整体跳过**——不生成任何正文图、不写 `images.json`、正文不内联 `<img>`。封面关·配图开时本 Phase 仍执行，但步骤 4c 的 `ref_image_path` 不得指向未生成的 `$DIR/cover.png`（改不传或链首图）。
 
 按 `$DIR/visual-rhythm-plan.md` 中 slot 的顺序生成。每个 slot 执行：
 
@@ -188,14 +210,16 @@ generate_image(
   image_type="content",
   output_path="$DIR/img_N.png",
   task_id=$TASK_ID,
-  ref_image_path="$DIR/cover.png",
+  ref_image_path=<封面开关开启时 "$DIR/cover.png"；封面关时省略或链到首张已生成图>,
   verify_with_vision=true,
+  size=<按 slot 固定：section_opener 用 "4:3"；inline_detail 用 "1:1"；信息图/流程图/对比图默认 "4:3">,
   verification_prompt=<步骤 4b 构建的校验 prompt>,
   upload_to_cdn=true
 )
 ```
 
 **关键**：
+- `size`：必须显式传入，普通正文配图/信息图用 `size="4:3"`，段内细节图用 `size="1:1"`；不得依赖项目级/任务级 image ratio。
 - `ref_image_path`：**封面开关开启时**用 `$DIR/cover.png`（风格锚点）；**封面关·配图开时**不传（或链到首张已生成图），**严禁**指向不存在的 `$DIR/cover.png`。
 - `upload_to_cdn=true` 让**生成与上传原子化**：同一调用内完成生成→保存→校验→压缩→上传微信 CDN。校验通过才上传（不浪费素材位），返回值直接带 `wechat_url` + `media_id`；校验失败则不上传，结果无 `wechat_url`。**不再有独立的 `upload_image` 阶段**——每张图生成的瞬间即持久化到 CDN。
 
@@ -252,7 +276,7 @@ analyze_image(
       "attempt_count": 1,
       "sharper_prompt_history": []
     },
-    "ref_image_path": "$DIR/cover.png",
+    "ref_image_path": "$DIR/cover.png 或 null（封面关·配图开时）",
     "file_path": "$DIR/img_01.png",
     "url": "https://cdn.../img_01.png",
     "wechat_url": "https://cdn.../img_01.png",
@@ -280,7 +304,7 @@ analyze_image(
 - [ ] **节奏完整性**：`visual-rhythm-plan.md` 中每个 `##` 都映射到一个 slot
 - [ ] **模板一致性**：所选模板的 rhythm 规则被遵守（如 listicle 的 section_opener 必填、inline_detail forbidden）
 - [ ] **文件完整性**：所有图片文件存在且可访问
-- [ ] **风格一致性**：`images.json` 中所有内容图 `ref_image_path="$DIR/cover.png"`
+- [ ] **风格一致性**：封面+配图均开启时，`images.json` 中所有内容图 `ref_image_path="$DIR/cover.png"`；封面关·配图开时无 `ref_image_path` 或链首图，且不得指向不存在的 `$DIR/cover.png`
 - [ ] **视觉多样性**：3 张以上配图使用 3 种以上不同 `composition_type`（清单模板可豁免，因要求统一构图）
 - [ ] **Vision 校验通过率**：至少 80% 的内容图 `verification.passed=true`
 - [ ] **审计完整性**：`images.json` 每条含 `visual_brief` / `required_entities` / `must_match_excerpts` / `verification` / `slot_id` / `section_index` / `wechat_url` / `media_id`
@@ -309,8 +333,8 @@ analyze_image(
 
 **公众号常用比例**：
 - 封面图（公众号封面）：2.35:1（900x383px 标准）
-- 正文配图（section_opener）：16:9 横版
-- 章节内细节图（inline_detail）：4:3 或 1:1
+- 正文配图（section_opener）：4:3，MCP 显式传 `size="4:3"`
+- 章节内细节图（inline_detail）：1:1，MCP 显式传 `size="1:1"`
 - Hero slot：full-bleed 2.35:1
 
 ---
@@ -322,7 +346,7 @@ analyze_image(
 | Vision 校验持续失败 | prompt 过于抽象 | 锐化 visual_brief，明确每个 required_entity 的材质、颜色、方位 |
 | 配图与章节无关 | required_entities 与章节原文脱节 | 回到 Phase 3 重新提取，确保 must_match_excerpts 是章节原句 |
 | 所有配图构图雷同 | 未在 rhythm-plan 中分配不同 composition_type | 重新规划 rhythm-plan，强制 3+ 种构图（清单模板除外） |
-| 风格漂移 | 未使用封面作为参考图 | 确保所有内容图 `ref_image_path="$DIR/cover.png"` |
+| 风格漂移 | 封面开启时未使用封面作为参考图；或封面关闭时错误引用不存在的封面 | 封面+配图均开启时确保内容图 `ref_image_path="$DIR/cover.png"`；封面关·配图开时不传或链首图 |
 | 封面与文章脱节 | 封面 prompt 缺少内容隐喻 | 在封面 prompt 中加入文章核心论点的视觉隐喻 |
 | 节奏违反模板规则 | 未读模板 YAML 的 rhythm 字段 | 重新加载模板，按 rhythm 字段约束 slot 分配 |
 

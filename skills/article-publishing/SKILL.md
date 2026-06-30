@@ -67,14 +67,14 @@ author 为空                         → 省略 author 字段（切勿用 write
 
 ## thumb_media_id 来源（按图片开关，硬性）
 
-公众号文章的封面可由用户在创建任务/计划时关闭。`thumb_media_id`（封面 media_id）的填法**严格取决于封面开关**，由用户 prompt 末尾的「图片生成要求」指令段传达：
+公众号文章的封面可由用户在创建任务/计划时关闭。`thumb_media_id`（封面 media_id）的填法**严格取决于结构化运行控制 `article_image_mode`**：
 
-| prompt 禁令 | 封面开关 | `thumb_media_id` 填法 |
-|-------------|----------|------------------------|
-| 无「图片生成要求」段（默认） | 开 | 填步骤 6 封面的 `media_id`（现有行为） |
-| 含「禁止生成任何正文配图」（仅封面） | 开 | 填步骤 6 封面的 `media_id` |
-| 含「禁止生成封面」（仅配图） | 关 | **省略 `thumb_media_id` 字段**（即使有正文配图也**不复用**作封面） |
-| 含「禁止生成任何图片」（纯文字） | 关 | **省略 `thumb_media_id` 字段**；在 `final-review.md` 记录「未生成封面，公众号后台可能不显示封面/需手动设置」 |
+| `article_image_mode` | 封面开关 | `thumb_media_id` 填法 |
+|----------------------|----------|------------------------|
+| `cover_and_content`（缺失时也按此处理） | 开 | 填步骤 6 封面的 `media_id` |
+| `cover_only` | 开 | 填步骤 6 封面的 `media_id` |
+| `content_only` | 关 | **省略 `thumb_media_id` 字段**（即使有正文配图也**不复用**作封面） |
+| `text_only` | 关 | **省略 `thumb_media_id` 字段**；在 `final-review.md` 记录「未生成封面，公众号后台可能不显示封面/需手动设置」 |
 
 **关键约束**：封面开关关闭 → 一律不设 `thumb_media_id`，**绝不**用任何正文配图的 `media_id` 顶替。服务端 `publish_draft` 对 `thumb_media_id` 是可选的，省略它不会导致发布失败——公众号后台只是不显示封面（用户已知情选择）。封面开关开启但封面 `media_id` 缺失（生成失败）才是真正的发布阻塞，需回到 `article-cover-design` skill 重新生成。
 

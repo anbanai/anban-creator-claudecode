@@ -50,7 +50,7 @@ maxTurns: 20
 
 ## 创作流程
 
-> **图片构成以 user prompt 的「图片构成要求」为准（覆盖本 agent 与 seednote-visual-design skill 的默认数量规则）**：指令列出尾图 → 生成 `$DIR/tail.png`；指令未列出尾图或写明「禁止生成尾图」→ **禁止生成 `tail.png`**、`image-plan.md` 不得含 `## tail` 节、最终报告图片数量不含尾图。内容图张数同样以指令为准（默认 1~3 张）。
+> **图片构成以结构化运行控制 `seednote_image_mode` 为准（覆盖本 agent 与 seednote-visual-design skill 的默认数量规则）**。缺失时按 `cover_content`。四种模式：`cover_only`（仅封面）、`cover_content`（封面 + 1~3 张内容图）、`cover_tail`（封面 + 尾图）、`full`（封面 + 1~3 张内容图 + 尾图）。未包含尾图的模式禁止生成 `tail.png`，`image-plan.md` 不得含 `## tail` 节；未包含内容图的模式禁止生成 `image_0N.png`。内容图张数由信息点分组决定（1~3 张）。
 
 ### 公共前置流程
 
@@ -98,9 +98,9 @@ maxTurns: 20
 
 #### 步骤 7：生成图片
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="image_generation", title="图片生成", description="规划并生成封面、内容图和尾图")`。using the `seednote-visual-design` skill，传入 `$DIR/content.md`。账号画像有可用参考图时优先使用参考图；否则动态设计 `$STYLE`，以封面确立基准风格。技能内部完成图片内容规划（`$DIR/image-plan.md`）和全部图片生成：封面 `$DIR/cover.png`、内容图 `$DIR/image_01.png` ... `$DIR/image_03.png`、（尾图 `$DIR/tail.png`，仅当「图片构成要求」指令含尾图时；指令不含尾图则禁止生成）。单张内容图失败时重试一次，仍失败则跳过并在最终报告标注；封面失败时重试两次，仍失败则请求用户协助。图片质量和风格一致性由 `seednote-visual-design` skill 内部验证流程保证。
+调用 `update_task_progress(task_id=$TASK_ID, stage="image_generation", title="图片生成", description="规划并生成封面、内容图和尾图")`。using the `seednote-visual-design` skill，传入 `$DIR/content.md`。账号画像有可用参考图时优先使用参考图；否则动态设计 `$STYLE`，以封面确立基准风格。技能内部按 `seednote_image_mode` 完成图片内容规划（`$DIR/image-plan.md`）和全部图片生成：封面 `$DIR/cover.png`、内容图 `$DIR/image_01.png` ... `$DIR/image_03.png`（仅含内容图的模式）、尾图 `$DIR/tail.png`（仅含尾图的模式）。单张内容图失败时重试一次，仍失败则跳过并在最终报告标注；封面失败时重试两次，仍失败则请求用户协助。图片质量和风格一致性由 `seednote-visual-design` skill 内部验证流程保证。
 
-**产出**：`$DIR/image-plan.md`、`$DIR/cover.png`、内容图、（`$DIR/tail.png`，仅当「图片构成要求」指令含尾图时）
+**产出**：`$DIR/image-plan.md`、`$DIR/cover.png`、内容图（按 `seednote_image_mode`）、尾图（按 `seednote_image_mode`）
 
 ---
 
@@ -128,9 +128,9 @@ maxTurns: 20
 
 #### 步骤 8：生成图片
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="image_generation", title="图片生成", description="基于爆款模板规划并生成封面、内容图和尾图")`。using the `seednote-visual-design` skill，传入 `$DIR/content.md`、改写模式和 `$DIR/viral-template.json` 中的 `cover_template` / `do_not_copy` / `recommended_clone_depth`。根据模板自动适配图片数量和每页主题；若已降级为 `medium`，按常规流程规划图片。复刻模式下不得照搬源图构图到不可区分。生成 `$DIR/image-plan.md`、`$DIR/cover.png`、内容图和（`$DIR/tail.png`，仅当「图片构成要求」指令含尾图时；不含则禁止生成）。
+调用 `update_task_progress(task_id=$TASK_ID, stage="image_generation", title="图片生成", description="基于爆款模板规划并生成封面、内容图和尾图")`。using the `seednote-visual-design` skill，传入 `$DIR/content.md`、改写模式和 `$DIR/viral-template.json` 中的 `cover_template` / `do_not_copy` / `recommended_clone_depth`。根据模板自动适配每页主题，但图片数量必须受 `seednote_image_mode` 限制；若已降级为 `medium`，按常规流程规划图片。复刻模式下不得照搬源图构图到不可区分。生成 `$DIR/image-plan.md`、`$DIR/cover.png`、内容图和尾图（均按 `seednote_image_mode`）。
 
-**产出**：`$DIR/image-plan.md`、`$DIR/cover.png`、内容图、（`$DIR/tail.png`，仅当「图片构成要求」指令含尾图时）
+**产出**：`$DIR/image-plan.md`、`$DIR/cover.png`、内容图（按 `seednote_image_mode`）、尾图（按 `seednote_image_mode`）
 
 #### 步骤 9：合规检查
 
@@ -154,14 +154,14 @@ maxTurns: 20
 
 #### 步骤 12：最终报告
 
-向用户交付可复核的结果摘要，包含：模式（原创/复刻）、标题、成果目录（`$ARCHIVE_DIR`）、图片数量（封面/内容图/尾图分别统计；尾图按「图片构成要求」指令，未含则 0）、合规状态（复刻模式报告 `compliance-report.md`；原创模式说明已按写作规则规避诱导互动）、失败或降级项。进度报告格式：`[N/M] description → $DIR/ (detail)`。
+向用户交付可复核的结果摘要，包含：模式（原创/复刻）、标题、成果目录（`$ARCHIVE_DIR`）、图片数量（封面/内容图/尾图分别统计；尾图按 `seednote_image_mode`，未包含则 0）、合规状态（复刻模式报告 `compliance-report.md`；原创模式说明已按写作规则规避诱导互动）、失败或降级项。进度报告格式：`[N/M] description → $DIR/ (detail)`。
 
 ---
 
 ## 质量标准
 
 - `content.md` 包含标题、正文、话题标签三部分
-- `image-plan.md` 包含封面、内容页规划（尾图规划仅当「图片构成要求」指令含尾图时）
+- `image-plan.md` 包含封面、内容页规划（仅含内容图的模式）和尾图规划（仅含尾图的模式）
 - 图片总数符合 image-plan.md「计划图片数量」声明值（封面 1 + 内容图 1~3 + 尾图 0~1），且所有图片文件存在、可访问
 - 图片视觉风格一致：同一色系、字体、布局语言和信息密度
 - 正文不包含诱导互动表述，格式规范以 `seednote-writing` skill 为准
@@ -195,7 +195,7 @@ maxTurns: 20
 - [ ] `image-plan.md` 包含封面 + 内容页规划
 - [ ] 封面图 `$DIR/cover.png` 存在且可访问
 - [ ] 所有内容图 `$DIR/image_01.png` ... `$DIR/image_03.png` 存在且可访问
-- [ ] 尾图按「图片构成要求」指令：指令含尾图时 `$DIR/tail.png` 存在且可访问；指令不含尾图时**不得存在 `tail.png`**
+- [ ] 尾图按 `seednote_image_mode`：含尾图的模式 `$DIR/tail.png` 存在且可访问；不含尾图的模式**不得存在 `tail.png`**
 - [ ] 图片总数符合 image-plan.md「计划图片数量」声明值（封面 1 + 内容图 1~3 + 尾图 0~1）
 - [ ] 所有图片视觉风格一致
 - [ ] 复刻模式下 `source-note.md`、`source-analysis.md`、`viral-template.json`、`template-meta.json` 均存在
@@ -223,7 +223,7 @@ maxTurns: 20
 ### 文件组织
 
 - 当前运行使用任务工作目录（步骤 4，变量 `$DIR`），完成后按笔记标题归档为 `output/seednote/{标题}/`
-- 图片命名：`$DIR/cover.png`（封面）, `$DIR/image_01.png` ... `$DIR/image_03.png`（内容图）, `$DIR/tail.png`（尾图，仅当「图片构成要求」指令含尾图时）（N 由 `image-plan.md` 决定）
+- 图片命名：`$DIR/cover.png`（封面）, `$DIR/image_01.png` ... `$DIR/image_03.png`（内容图，仅含内容图的模式）, `$DIR/tail.png`（尾图，仅含尾图的模式）（N 由 `image-plan.md` 决定）
 - 内容草稿：`$DIR/content.md`（含标题/正文/话题标签）
 - 图片规划：`$DIR/image-plan.md`（`seednote-visual-design` skill 内部产物）
 - 决策记录：`$DIR/topic-analysis.md`（原创模式）或 `$DIR/source-analysis.md`（复刻模式）
@@ -270,7 +270,7 @@ maxTurns: 20
 - 图片规划：`$DIR/image-plan.md`
 - 封面图：`$DIR/cover.png`
 - 内容图：`$DIR/image_01.png` ... `$DIR/image_03.png`
-- 尾图：`$DIR/tail.png`（仅当「图片构成要求」指令含尾图时）
+- 尾图：`$DIR/tail.png`（仅含尾图的模式）
 - 最终归档：`output/seednote/{标题}/` 对应的 `$ARCHIVE_DIR`
 
 标题规范、正文格式、视觉设计、违禁词细则以各 seednote skill 文档为准。本 agent 只负责编排流程、约束工具使用、保证产物完整和报告清晰。

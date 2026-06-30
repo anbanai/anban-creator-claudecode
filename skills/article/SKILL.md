@@ -15,6 +15,16 @@ description: 微信公众号图文文章全自动创作。用户提到"写文章
 
 ---
 
+## 图片运行控制前置（硬性）
+
+公众号文章的封面图与正文配图由 user message 的结构化运行控制 `article_image_mode` 决定。若该键缺失，按 `cover_and_content` 兼容旧任务；不要扫描自然语言禁令来推断开关。所有质量标准、成功标准、发布前验证和失败判定都必须先判断图片模式：
+
+- `cover_and_content`：封面和正文配图都开启，按完整视觉流程执行。
+- `cover_only`：不得生成 `image-plan.md` / `images.json` / 正文 `<img>`；模板 `image_count.min` 不生效；不得把章节缺图、缺 `image-plan.md`、缺 `images.json` 判为失败。
+- `content_only`：不得生成 `cover.png` / `cover-prompt.md`；草稿不带 `thumb_media_id`；不得把缺封面或缺 `media_id` 判为失败；正文图不得把 `ref_image_path` 指向不存在的 `$DIR/cover.png`。
+- `text_only`：纯文字文章，不生成任何图片，`visual-rhythm-plan.md` 可存在但所有 `image_url=null`，草稿不带 `thumb_media_id`，`final-review.md` 记录「未生成封面，公众号后台可能不显示封面/需手动设置」。
+
+**仅在对应图片模式开启该产物时**，封面、正文配图、vision 校验、正文图片互不相同等图片相关要求才是硬性项；关闭时跳过且不计为失败。
 ## 必须执行的步骤
 
 按顺序执行以下步骤。每一步都必须调用对应的工具，不能跳过。
@@ -76,7 +86,7 @@ description: 微信公众号图文文章全自动创作。用户提到"写文章
 
 使用 `article-visual-design` skill：
 - **6a: 三维风格分析** — 基于账号定位 + 内容主题 + 受众确定视觉风格（不使用 writer YAML 的 `cover_style`/`cover_prompt`）
-- **6b: 生成封面** — using the `article-cover-design` skill（封面已独立成稿：硬编码 900×383/2.35:1、中心安全区构图保证转发卡 1:1 完整、纯图无文字、从文章核心隐喻推导视觉概念、vision 6 维评分卡把关）。生成调用 `generate_image(project_id="$PROJECT_ID", prompt=封面提示词, image_type="cover", output_path="$DIR/cover.png", task_id="$TASK_ID", size="21:9", upload_to_cdn=true, verify_with_vision=true, verification_prompt=<6 维评分卡>)`——`size="21:9"` 是生成提示比，**服务端按 platform=article+cover 精确裁到 900×383**（微信零裁剪，告别需手动裁剪的图），`upload_to_cdn=true` 原子上传返回 `media_id`（发布草稿的 thumb）+ `wechat_url`。**不再单独调用 `upload_image`**；若返回 `upload_error`（生成成功但上传失败），用 `upload_image(file_path="$DIR/cover.png")` 单独重传即可。
+- **6b: 生成封面** — using the `article-cover-design` skill（封面已独立成稿：硬编码 900×383/2.35:1、中心安全区构图保证转发卡 1:1 完整、受控文字策略、从文章核心隐喻推导视觉概念、vision 6 维评分卡把关）。生成调用 `generate_image(project_id="$PROJECT_ID", prompt=封面提示词, image_type="cover", output_path="$DIR/cover.png", task_id="$TASK_ID", size="21:9", upload_to_cdn=true, verify_with_vision=true, verification_prompt=<6 维评分卡>)`——`size="21:9"` 是生成提示比，**服务端按 platform=article+cover 精确裁到 900×383**（微信零裁剪，告别需手动裁剪的图），`upload_to_cdn=true` 原子上传返回 `media_id`（发布草稿的 thumb）+ `wechat_url`。**不再单独调用 `upload_image`**；若返回 `upload_error`（生成成功但上传失败），用 `upload_image(file_path="$DIR/cover.png")` 单独重传即可。
 - **6c: 创建配图规划** — 逐章分析文章，创建 `$DIR/image-plan.md`；每张图必须包含 `chapter_title`、`core_point`、`source_excerpt`、`visual_subject`、`composition_type`、`prompt_strategy`
 - 记录 `$VISUAL_STYLE`、`$COLOR_PALETTE`、`$COVER_PATH`、封面 `media_id`
 
@@ -102,7 +112,7 @@ description: 微信公众号图文文章全自动创作。用户提到"写文章
 
 创建 `$DIR/final-review.md`，检查内容质量、视觉质量、SEO、合规、HTML、草稿字段。
 
-任一硬性项失败时停止发布：内容不贴题、缺少封面 `media_id`、章节缺图、未使用 `ref_image_path`、SEO 标题/摘要缺失、HTML 转换失败。
+任一硬性项失败时停止发布：内容不贴题、SEO 标题/摘要缺失、HTML 转换失败；封面 `media_id`、章节缺图、`ref_image_path` 等图片项仅在对应图片开关开启时才判定。
 
 ### 步骤 10：草稿发布
 
@@ -118,12 +128,12 @@ description: 微信公众号图文文章全自动创作。用户提到"写文章
 - 文章至少 3 个二级标题，结构清晰
 - **上下文锚定**：`context-brief.md` 存在，每个 `##` 章节至少绑定 1 个上下文锚点
 - **内容质量闸门**：`content-quality-report.md` 全部通过后才能进入 SEO 与视觉阶段
-- 封面图必须成功生成并上传，视觉风格与账号定位匹配
-- **配图规划**：`image-plan.md` 在生成配图前创建
+- 封面图必须成功生成并上传，视觉风格与账号定位匹配（仅在封面开关开启时）
+- **配图规划**：`image-plan.md` 在生成配图前创建（仅在正文配图开关开启时）
 - **配图与内容关联**：每个配图提示词必须包含对应章节的具体概念
-- **参考链一致**：所有内容配图使用 `ref_image_path="$DIR/cover.png"`
+- **参考链一致**：所有内容配图使用 `ref_image_path="$DIR/cover.png"`（仅封面+配图均开启时；封面关·配图开时不得指向不存在的 cover.png）
 - **视觉审计完整**：`images.json` 记录 ref_image_path、composition_type、chapter_title 等审计字段
-- **图文并茂**：每个 `##` 章节至少一张配图
+- **正文配图开启时的图文并茂**：正文配图开启时，每个 `##` 章节至少一张配图（按模板 rhythm 规则）；正文配图关闭时不得判失败
 - **视觉多样性**：3 张以上配图使用 3 种以上不同构图类型
 - 无明显 AI 痕迹，无违禁词
 - **发布前总验收**：`final-review.md` 全部通过后才能创建草稿
