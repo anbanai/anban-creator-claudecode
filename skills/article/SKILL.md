@@ -90,23 +90,29 @@ description: 微信公众号图文文章全自动创作。用户提到"写文章
 - **6c: 创建配图规划** — 逐章分析文章，创建 `$DIR/image-plan.md`；每张图必须包含 `chapter_title`、`core_point`、`source_excerpt`、`visual_subject`、`composition_type`、`prompt_strategy`
 - 记录 `$VISUAL_STYLE`、`$COLOR_PALETTE`、`$COVER_PATH`、封面 `media_id`
 
+> **图片模式守卫**：当 `article_image_mode=content_only` 或 `text_only` 时跳过 6b，不生成 `cover.png` / `cover-prompt.md` / `media_id`；当 `article_image_mode=cover_only` 或 `text_only` 时跳过 6c，不创建 `image-plan.md`，模板 `image_count.min` 不再强制正文配图。
+
 ### 步骤 7：配图设计与生成
 
 使用 `article-visual-design` skill：
 
-- **7a: 生成内容配图（生成与上传原子化）** — 按 `$DIR/image-plan.md` 逐章生成，所有配图使用 `ref_image_path="$DIR/cover.png"` 保持风格一致。每次 `generate_image` 都带 `upload_to_cdn=true, verify_with_vision=true`，返回值直接含 `wechat_url`/`media_id`；**不再有独立的批量 `upload_image` 阶段**。**每张图返回后立即原子写 `images.json`**（临时文件 + rename），再处理下一张——使中断最多丢失"正在生成的那一张"，已上 CDN 的全部安全
+- **7a: 生成内容配图（生成与上传原子化）** — 当正文配图开启时，按 `$DIR/image-plan.md` 逐 slot 生成；每次 `generate_image` 必须显式传 `size`（`section_opener` / 信息图用 `size="4:3"`，`inline_detail` 用 `size="1:1"`），并带 `upload_to_cdn=true, verify_with_vision=true`。封面+配图均开启时用 `ref_image_path="$DIR/cover.png"` 保持风格一致；封面关·配图开时不传 `ref_image_path` 或链到首张已生成图，严禁指向不存在的 `$DIR/cover.png`。返回值直接含 `wechat_url`/`media_id`；**不再有独立的批量 `upload_image` 阶段**。**每张图返回后立即原子写 `images.json`**（临时文件 + rename），再处理下一张——使中断最多丢失"正在生成的那一张"，已上 CDN 的全部安全
 - **7b: 质量验证** — 对照 `image-plan.md` 和 `images.json` 检查文件完整性、风格一致性、视觉多样性、内容关联性、审计字段完整性
 - **7c: 保存结果** — 覆盖写回 `$DIR/04-article-final.md`，保存 `$DIR/images.json`；每条记录包含 `chapter_title`、`composition_type`、`visual_subject`、`prompt_source_excerpt`、`ref_image_path`、`image_type`、`quality_status`、`wechat_url`、`media_id`
+
+> **配图模式守卫**：当 `article_image_mode=cover_only` 或 `text_only` 时整个步骤 7 跳过，不生成正文图、不写 `images.json`、不在正文内联 `<img>`，且不得把缺 `image-plan.md` / `images.json` / 章节配图判为失败。
 
 ### Phase 4: 组装发布
 
 ### 步骤 8：HTML 转换
 
-使用 `content-writing` skill：
-- 读取已插入 CDN 图片链接的 `$DIR/04-article-final.md`
-- 将文件内容作为 `markdown` 参数传给 `convert_markdown(project_id="$PROJECT_ID", markdown=文章全文, theme=可选主题)`
-- `$DIR/images.json` 仅作为审计记录，`convert_markdown` 不会读取该文件
-- 保存为 `$DIR/05-article.html`
+使用 `render_template` MCP 工具确定性渲染（`content-writing` skill 仅负责内容输入，不再用 `convert_markdown` 自由发挥）：
+- 读取 `$DIR/04-article-final.md`
+- 从 `$DIR/visual-rhythm-plan.md` 读取 `layout_plan` JSON 块；正文配图关闭时，对应 slot 的 `image_url=null`
+- 调用 `render_template(project_id="$PROJECT_ID", markdown=文章全文, layout_plan=<layout_plan>, theme=可选主题)`
+- 保存返回的 `html` 为 `$DIR/05-article.html`，把 `slots_rendered` / `render_audit` 写入 `$DIR/final-review.md`
+
+`render_template` 会按 `layout_plan.slots[].image_size` 控制图片展示宽度：`full-bleed=100%`、`full-width=86%`、`inline=68%`。`convert_markdown` 只作为旧版 server 兼容降级路径，新流水线主路径必须用 `render_template`。
 
 ### 步骤 9：发布前总验收
 
@@ -156,8 +162,8 @@ description: 微信公众号图文文章全自动创作。用户提到"写文章
 | 3 | `content-writing` | `03-article.md` |
 | 4 | `content-writing` | `04-article-final.md`, `content-quality-report.md` |
 | 5 | `seo-optimization` | `seo-result.md` |
-| 6 | `article-visual-design` | `cover.png`, `image-plan.md` |
-| 7 | `article-visual-design` | `images.json`, 更新 `04-article-final.md` |
-| 8 | `content-writing` | `05-article.html` |
+| 6 | `article-visual-design` | `cover.png`（封面开启时）, `image-plan.md`（正文配图开启时） |
+| 7 | `article-visual-design` | `images.json`（正文配图开启时）, 更新 `04-article-final.md` |
+| 8 | `render_template` | `05-article.html`, render audit |
 | 9 | 直接检查 | `final-review.md` |
 | 10 | `article-publishing` | 微信草稿箱 |
