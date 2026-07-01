@@ -94,11 +94,13 @@ Use this minimal shape unless the edit needs more:
 
 ## Animation Overlays
 
-Create each overlay under `edit/animations/slot_<id>/`. Use the simplest suitable engine:
+Create each overlay under `edit/animations/slot_<id>/` and hand off to the most specific overlay skill:
 
-- HTML/CSS/GSAP or HyperFrames for UI motion and kinetic typography.
-- Remotion when React composition is already useful.
-- Manim for formal diagrams.
-- PIL + PNG sequence + ffmpeg for simple cards, counters, and reveals.
+- Use `hyperframes-video-overlays` skill for HTML/CSS/JS motion, UI motion, product callouts, and kinetic typography.
+- Use `remotion-video-overlays` skill when React composition, props, or reusable branded templates are useful.
+- Use `manim-video-overlays` skill for diagrams, formulas, charts, arrows, timelines, and precise educational motion.
+- Use `pil-video-overlays` skill for simple deterministic cards, counters, progress bars, badges, and fallback PNG sequences.
 
-Render overlays before final composition. Verify duration, dimensions, alpha channel if needed, and timing against narration.
+Overlay skills must return `edit/animations/slot_<id>/render.webm` with alpha when possible and an `overlays[]` item for `edl.json` containing `file`, `start`, `end`, `x`, and `y`. For example: `{"file":"animations/slot_01/render.webm","start":2.0,"end":5.0,"x":0,"y":0}`.
+
+Render overlays before final composition. Verify duration, dimensions, alpha channel, safe zones, and timing against narration. Keep subtitles applied LAST; subtitles are applied LAST so overlays never hide captions.

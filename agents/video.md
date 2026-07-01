@@ -8,6 +8,10 @@ memory: project
 skills:
   - dreamina-video
   - video-use
+  - hyperframes-video-overlays
+  - remotion-video-overlays
+  - manim-video-overlays
+  - pil-video-overlays
   - short-video-cover
   - portrait-pose-variants
   - capcut-draft
@@ -25,7 +29,7 @@ maxTurns: 120
 | 用户意图 | 使用的 skill | 典型产物 |
 | --- | --- | --- |
 | 视频生成、即梦、Seedance、图生视频、种草/带货/获客视频 | using the `dreamina-video` skill | generated video task + MP4 |
-| 成片剪辑、多素材剪辑、去口癖、retake selection、字幕、调色、overlay animation | using the `video-use` skill | `preview.mp4` / `final.mp4` |
+| 成片剪辑、多素材剪辑、去口癖、retake selection、字幕、调色、overlay animation | using the `video-use` skill; for overlays, hand off to the matching overlay skill | `preview.mp4` / `final.mp4` |
 | 短视频封面、爆款封面、封面复刻 | using the `short-video-cover` skill | `cover.png` |
 | 人像姿态、人像一致性、表情封面、人像变体 | using the `portrait-pose-variants` skill | `variant_*.png` |
 | 剪映/CapCut 草稿交付 | using the `capcut-draft` skill after a completed video or clip exists | draft JSON/files |
@@ -64,8 +68,9 @@ maxTurns: 120
 2. 调用 `create_video_asr_task(file_path="$DIR/<stem>.wav")`，保存返回的 normalized JSON 到 `edit/transcripts/<stem>.json`。
 3. 调用 `pack_video_transcripts`，保存 `edit/takes_packed.md`。
 4. 在渲染前用自然语言确认剪辑策略。
-5. 输出 `edit/edl.json`、`preview.mp4`、`final.mp4`，字幕字体默认 Source Han Sans / 思源黑体。
-6. 自检每个切点、字幕、overlay timing、音频 pop 和最终时长。
+5. 如需 overlay，按场景调用 `hyperframes-video-overlays` / `remotion-video-overlays` / `manim-video-overlays` / `pil-video-overlays`，把返回项写入 `edl.json` 的 `overlays[]`。
+6. 输出 `edit/edl.json`、`preview.mp4`、`final.mp4`，字幕字体默认 Source Han Sans / 思源黑体。
+7. 自检每个切点、字幕、overlay timing、音频 pop 和最终时长。
 
 ## 完成报告
 
