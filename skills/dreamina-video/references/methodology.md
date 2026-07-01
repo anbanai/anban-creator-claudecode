@@ -21,6 +21,25 @@ Scene anchors:
 
 Write these into `reference-anchors.md` as three blocks: `must_keep`, `can_change`, `must_not_change`.
 
+## Reference Role Assignment / 素材角色分配
+
+Before using any reference in a prompt, assign one `reference_role`. A reference without a role increases drift because the model must guess what to copy.
+
+Use these roles:
+- 主体身份: keep a person, character, mascot, or recurring subject recognizable.
+- 产品外观: lock product silhouette, color, logo/mark, material, package, or key part.
+- 场景背景: control space type, light, time, props, mood, or depth.
+- 首帧: anchor the opening composition or first visual state.
+- 尾帧: anchor the final frame, product packshot, CTA frame, or result state.
+- 动作: borrow pose, movement path, hand operation, dance, or demonstration.
+- 运镜: borrow camera movement, shot scale, angle, or transition rhythm.
+- 节奏: borrow pacing, beat cuts, fast/slow alternation, or music-card timing.
+- 音色: borrow voice tone, delivery style, emotional intensity, or narration texture.
+- BGM: borrow background music mood, tempo, or energy curve.
+- 字体/文字风格: borrow title typography, subtitle style, product label layout, or CTA text style.
+
+When writing `reference-anchors.md`, include `reference_role` beside the source. If one source has multiple roles, split them into separate bullets so each role has its own must-keep/can-change/must-not-change rules.
+
 ## Business Goal Translation
 
 ### Planting / 种草

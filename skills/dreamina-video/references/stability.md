@@ -65,6 +65,34 @@ Commercial mismatch:
 - Lead gen too vague: name audience and problem, show process proof.
 - Promotion too crowded: return to one memory point.
 
+## Lens Vocabulary
+
+Choose one primary camera move per shot:
+- 推镜头: move closer to product, face, proof, or result.
+- 拉镜头: reveal scene, scale, before/after, or context.
+- 摇镜: pan or tilt across one stable environment.
+- 跟拍: follow one subject or hand action.
+- 环绕: rotate around one product or subject when shape matters.
+- 俯拍: show layout, components, workflow, or table-top use.
+- 仰拍: add scale, confidence, launch energy, or hero feeling.
+
+Choose one primary shot scale per shot:
+- 特写: material, texture, face, hand, button, label, or result detail.
+- 中景: person using product, service process, or demonstration.
+- 全景: scene identity, before/after context, event atmosphere.
+
+Do not combine conflicting camera instructions in one shot. For example, avoid asking for fixed camera and 环绕 in the same shot unless one is clearly the start or end state.
+
+## Prompt Pitfalls
+
+Check these before submission:
+- 引用模糊: every reference needs a `reference_role`; never say only "use the reference".
+- 镜头指令冲突: one shot should not mix fixed camera, fast pan, and orbit.
+- 短时长内容过载: 4-5s supports one action; 15s supports 4-5 shots, not a full story world.
+- 素材无归属: every uploaded image/audio/video must control a named subject, product, scene, motion, rhythm, or sound.
+- 忽视音频: add `audio_cue` for BGM mood, sound effects, voice tone, or beat timing when it affects the result.
+- 复杂度与时长不匹配: reduce roles, shots, and effects before increasing prompt length.
+
 ## Quality Review
 
 Write `quality-review.md` after every terminal result:

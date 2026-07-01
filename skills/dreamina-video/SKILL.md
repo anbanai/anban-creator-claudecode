@@ -17,7 +17,7 @@ Use this skill to turn references and a business goal into a stable short-video 
 | `query_video_generation_task` | Poll task status and retrieve generated URLs/metadata. |
 | `download_video_generation_result` | Download the completed video and register it as a task file. |
 
-Never call Volcengine/Dreamina HTTP APIs directly, never handle API keys, and never use the 即梦 CLI as the main execution path. Agents must use MCP tools.
+Never call Volcengine/Dreamina HTTP APIs directly, never handle API keys, and never use the 即梦 CLI as the main execution path. Agents must use MCP tools. Do not treat external @-style labels as the server execution protocol; translate them into `reference_role` plus MCP `references`.
 
 ## Workflow
 
@@ -28,7 +28,7 @@ Never call Volcengine/Dreamina HTTP APIs directly, never handle API keys, and ne
    - Artifact and prompt templates: `references/prompt-templates.md`
    - MCP contract details: `references/mcp-contract.md`
 3. Collect inputs: references for people/objects/scenes, business purpose (`planting`, `ecommerce`, `lead_gen`, `promotion`), duration, ratio, resolution, model, seed/camera preferences.
-4. Write `reference-anchors.md`: separate each reference into must-keep, can-change, and must-not-change anchors.
+4. Write `reference-anchors.md`: first declare `reference_role` for every reference, then separate each reference into must-keep, can-change, and must-not-change anchors.
 5. Write `script.md`: use the 0-3s / 3-10s / 10-13s / 13-15s commercial structure. Do not submit raw marketing copy as a video prompt.
 6. Write `shot-plan.md`: 4-5 shots for 15s by default. Each shot needs subject, action, scene, camera movement, visual focus, and negative constraints.
 7. Build the final prompt using global anchors + shot instructions + negative constraints. Keep one intent per shot.
