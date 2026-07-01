@@ -1,6 +1,6 @@
 ---
 name: video-use
-description: Use when editing source footage into finished videos by conversation: 多素材成片剪辑, talking-head cleanup, 去口癖, retake selection, subtitles, color grade, animation overlays, social-ready exports, or transcript-backed video editing with OpenAI-compatible FunASR MCP tools.
+description: "Use when editing source footage into finished videos by conversation: 多素材成片剪辑, talking-head cleanup, 去口癖, retake selection, subtitles, color grade, animation overlays, social-ready exports, or transcript-backed video editing with OpenAI-compatible FunASR MCP tools."
 ---
 
 # Video Use
