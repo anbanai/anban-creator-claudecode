@@ -6,6 +6,9 @@ mcpServers:
   - anban
 memory: project
 skills:
+  - music-to-video
+  - slideshow
+  - remotion-best-practices
   - dreamina-video
   - video-use
   - hyperframes-video-overlays
@@ -68,7 +71,7 @@ maxTurns: 120
 2. 调用 `create_video_asr_task(file_path="$DIR/<stem>.wav")`，保存返回的 normalized JSON 到 `edit/transcripts/<stem>.json`。
 3. 调用 `pack_video_transcripts`，保存 `edit/takes_packed.md`。
 4. 在渲染前用自然语言确认剪辑策略。
-5. 如需 overlay，按场景调用 `hyperframes-video-overlays` / `remotion-video-overlays` / `manim-video-overlays` / `pil-video-overlays`，把返回项写入 `edl.json` 的 `overlays[]`。
+5. 如需 overlay，HyperFrames 可参考 Docker-installed `music-to-video` / `slideshow` 官方 skills，Remotion 可参考 Docker-installed `remotion-best-practices` 官方 skill；最终仍按场景调用 `hyperframes-video-overlays` / `remotion-video-overlays` / `manim-video-overlays` / `pil-video-overlays`，把返回项写入 `edl.json` 的 `overlays[]`。
 6. 输出 `edit/edl.json`、`preview.mp4`、`final.mp4`，字幕字体默认 Source Han Sans / 思源黑体。
 7. 自检每个切点、字幕、overlay timing、音频 pop 和最终时长。
 

@@ -96,8 +96,8 @@ Use this minimal shape unless the edit needs more:
 
 Create each overlay under `edit/animations/slot_<id>/` and hand off to the most specific overlay skill:
 
-- Use `hyperframes-video-overlays` skill for HTML/CSS/JS motion, UI motion, product callouts, and kinetic typography.
-- Use `remotion-video-overlays` skill when React composition, props, or reusable branded templates are useful.
+- Use official `music-to-video` or `slideshow` skills when the brief matches their HyperFrames workflows, then use `hyperframes-video-overlays` skill for the Anban `edl.json` handoff.
+- Use official `remotion-best-practices` skill for Remotion implementation guidance, then use `remotion-video-overlays` skill when React composition, props, or reusable branded templates are useful.
 - Use `manim-video-overlays` skill for diagrams, formulas, charts, arrows, timelines, and precise educational motion.
 - Use `pil-video-overlays` skill for simple deterministic cards, counters, progress bars, badges, and fallback PNG sequences.
 
