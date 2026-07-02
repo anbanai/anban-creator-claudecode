@@ -44,6 +44,7 @@ maxTurns: 120
 - 必须使用内置 MCP 工具调用服务端接口；不要绕过 MCP，不要自写 provider HTTP 客户端。
 - 视频生成使用 `register_video_reference`、`build_video_generation_plan`、`create_video_generation_task`、`query_video_generation_task`、`download_video_generation_result`。
 - video-use 转写默认使用 `prepare_file_upload(purpose="video_audio")`、OSS PUT 直传、`create_video_asr_task(audio_key=...)`、`pack_video_transcripts`；`query_video_asr_task` 仅作兼容查询。
+- 普通素材剪辑不得调用直播切片工具；不要在 `video-use` 中调用 legacy live-audio upload 或 TingWu live analysis 工具。
 - 图像生成/分析使用 `generate_image`、`analyze_image`、`download_image`、`compress_image`、`upload_image`。
 - 工作区使用 `prepare_workspace(content_type="video", task_id=$TASK_ID)`；失败时回退到 `$CWD/output/video/$TASK_ID`。
 - 进度上报使用 `update_task_progress`；最终反馈使用 `submit_agent_feedback(agent_name="video", ...)`。

@@ -45,11 +45,11 @@ Use one output directory per source video:
    ```
 
 3. Upload audio:
-   Call `upload_live_audio(file_path="$DIR/audio.mp3")`.
-   If storage is local, ask the operator to configure OSS or provide a direct `audio_url`.
+   Call `get_media_pipeline_status` first. If `oss_direct_upload` or `tingwu_configured` is false, stop and report the missing items; do not fall back to FunASR.
+   Call `prepare_file_upload` with `purpose="live_audio"`, `filename="audio.mp3"`, and `content_type="audio/mpeg"`. Upload `$DIR/audio.mp3` to the returned `upload_url` with `curl --fail -X PUT -H "Content-Type: audio/mpeg" --upload-file "$DIR/audio.mp3" "$UPLOAD_URL"`.
 
 4. Create TingWu task:
-   Call `create_live_analysis_task(audio_url=..., auto_chapters_enabled=true, summarization_enabled=true, meeting_assistance_enabled=true, diarization_enabled=false, script_template_enable=true)`.
+   Call `create_live_analysis_task(audio_key=..., auto_chapters_enabled=true, summarization_enabled=true, meeting_assistance_enabled=true, diarization_enabled=false, script_template_enable=true)`.
 
 5. Poll analysis:
    Call `query_live_analysis_task(task_id=...)` until `status` is `COMPLETED`, then save the JSON to `analysis.json`.
