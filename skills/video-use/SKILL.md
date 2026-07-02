@@ -5,7 +5,7 @@ description: "Use when editing source footage into finished videos by conversati
 
 # Video Use
 
-Use this skill to edit local footage into a polished video. The agent reasons from local word-level transcript files, compact manifests, and on-demand visual drill-downs, then renders through `anban-creator-agent video` local media commands.
+Use this skill to edit local footage into a polished video. The agent reasons from local word-level transcript files, compact manifests, and on-demand visual drill-downs, then renders through `anban video` local media commands.
 
 ## Required MCP Tools
 
@@ -13,9 +13,9 @@ Use this skill to edit local footage into a polished video. The agent reasons fr
 | --- | --- |
 | `prepare_file_upload` | Prepare a policy-controlled OSS direct upload. Use `purpose="video_audio"`, then upload the local wav to `upload_url` with HTTP PUT. |
 | `create_video_asr_task` | Transcribe an OSS-backed `audio_key` or HTTPS `audio_url` through server-side Aliyun FunASR HTTP and return a compact transcript receipt. |
-| `prepare_video_transcript_download` | Return a signed download URL for the normalized transcript JSON; save it locally with `anban-creator-agent video save-asr-result`. |
+| `prepare_video_transcript_download` | Return a signed download URL for the normalized transcript JSON; save it locally with `anban video save-asr-result`. |
 | `query_video_asr_task` | Optional compatibility lookup for an already completed ASR result by `task_id`; returns a compact receipt. |
-| `pack_video_transcripts` | Legacy inline packer only; prefer file-based transcript packing through `anban-creator-agent video pack-transcripts`. |
+| `pack_video_transcripts` | Legacy inline packer only; prefer file-based transcript packing through `anban video pack-transcripts`. |
 
 Never call ASR provider HTTP APIs directly and never handle provider API keys. Do not use SRT-only or phrase-only transcription as the editing source; cuts need word boundaries.
 
@@ -54,20 +54,20 @@ Never call ASR provider HTTP APIs directly and never handle provider API keys. D
 
 ## Workflow
 
-1. Create `<videos_dir>/edit/` and run `anban-creator-agent video probe --source "$VIDEO" --out "$DIR/edit/media-manifest.json"` before any orientation, overlay, or render decision. The manifest is display rotation aware; use `display_width` and `display_height`, not encoded width/height.
-2. For each source, run `anban-creator-agent video extract-audio --source "$VIDEO" --out "$DIR/edit/audio/<stem>.wav"`.
+1. Create `<videos_dir>/edit/` and run `anban video probe --source "$VIDEO" --out "$DIR/edit/media-manifest.json"` before any orientation, overlay, or render decision. The manifest is display rotation aware; use `display_width` and `display_height`, not encoded width/height.
+2. For each source, run `anban video extract-audio --source "$VIDEO" --out "$DIR/edit/audio/<stem>.wav"`.
 3. Call `prepare_file_upload` with `purpose="video_audio"`, `filename="<stem>.wav"`, and `content_type="audio/wav"`; upload the WAV to `upload_url`; call `create_video_asr_task(audio_key=<returned key>)`; then call `prepare_video_transcript_download` if a fresh signed URL is needed.
-4. Save transcript JSON locally with `anban-creator-agent video save-asr-result --transcript-url "$DOWNLOAD_URL" --out "$DIR/edit/transcripts/<stem>.json"`. This is the file-based transcript flow; do not pass large transcript JSON through tool arguments.
-5. Run `anban-creator-agent video pack-transcripts --transcripts-dir "$DIR/edit/transcripts" --out "$DIR/edit/takes_packed.md"`.
-6. If the user provided a script/copy, run `anban-creator-agent video match-script --script "$SCRIPT" --transcripts-dir "$DIR/edit/transcripts" --out "$DIR/edit/edit-candidates.json"` and use matched word ranges; flag unmatched lines instead of inventing source.
+4. Save transcript JSON locally with `anban video save-asr-result --transcript-url "$DOWNLOAD_URL" --out "$DIR/edit/transcripts/<stem>.json"`. This is the file-based transcript flow; do not pass large transcript JSON through tool arguments.
+5. Run `anban video pack-transcripts --transcripts-dir "$DIR/edit/transcripts" --out "$DIR/edit/takes_packed.md"`.
+6. If the user provided a script/copy, run `anban video match-script --script "$SCRIPT" --transcripts-dir "$DIR/edit/transcripts" --out "$DIR/edit/edit-candidates.json"` and use matched word ranges; flag unmatched lines instead of inventing source.
 7. Read `takes_packed.md` and `edit-candidates.json`, note verbal slips, retakes, strong beats, invalid content, and likely cuts.
 8. Ask for or infer target length, aspect, pacing, subtitle style, grade, and overlay needs; write a short strategy and wait for confirmation. If a creative or corrective grade is needed, pre-grade sources with `grade.py` and point the EDL at the graded files; Go render currently rejects non-`none` `grade` values rather than silently ignoring them.
-9. Write `edl.json` using transcript word boundaries. Include `output_width`, `output_height`, sources, ranges, optional overlays, and subtitle settings. Run `anban-creator-agent video verify --edl "$DIR/edit/edl.json"` before rendering; it must reject overlay dimensions that do not match the EDL output size.
-10. Render in stages: `anban-creator-agent video render --edl "$DIR/edit/edl.json" --mode draft --out "$DIR/edit/draft.mp4"` for fast fixed-frame cut checks; `--mode preview` for evaluable review with overlays/subtitle file when present; `--mode final` for delivery with final loudness normalization.
+9. Write `edl.json` using transcript word boundaries. Include `output_width`, `output_height`, sources, ranges, optional overlays, and subtitle settings. Run `anban video verify --edl "$DIR/edit/edl.json"` before rendering; it must reject overlay dimensions that do not match the EDL output size.
+10. Render in stages: `anban video render --edl "$DIR/edit/edl.json" --mode draft --out "$DIR/edit/draft.mp4"` for fast fixed-frame cut checks; `--mode preview` for evaluable review with overlays/subtitle file when present; `--mode final` for delivery with final loudness normalization.
 11. Self-evaluate rendered output around every cut boundary and at start/middle/end. Check visual jumps, audio pops, subtitle readability, overlay timing, display rotation, and duration.
 12. Iterate from user feedback without re-transcribing. Append decisions and final paths to `project.md`.
 
-Compatibility helpers in `scripts/` (`timeline_view.py`, `grade.py`, `render.py`) remain available for visual drill-downs and migration reference, but the primary media IO path is `anban-creator-agent video`.
+Compatibility helpers in `scripts/` (`timeline_view.py`, `grade.py`, `render.py`) remain available for visual drill-downs and migration reference, but the primary media IO path is `anban video`.
 
 ## Subtitle Defaults
 

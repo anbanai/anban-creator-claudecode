@@ -43,8 +43,8 @@ maxTurns: 120
 
 - 必须使用内置 MCP 工具调用服务端接口；不要绕过 MCP，不要自写 provider HTTP 客户端。
 - 视频生成使用 `register_video_reference`、`build_video_generation_plan`、`create_video_generation_task`、`query_video_generation_task`、`download_video_generation_result`。
-- video-use 本地媒体处理必须优先使用 `anban-creator-agent video` 子命令：`probe`、`extract-audio`、`save-asr-result`、`pack-transcripts`、`match-script`、`verify`、`render`。
-- video-use 转写默认使用 `prepare_file_upload(purpose="video_audio")`、OSS PUT 直传、`create_video_asr_task(audio_key=...)`、`prepare_video_transcript_download`、`anban-creator-agent video save-asr-result`、`anban-creator-agent video pack-transcripts`；`query_video_asr_task` 和 `pack_video_transcripts` 仅作兼容查询/旧 inline fallback。
+- video-use 本地媒体处理必须优先使用 `anban video` 子命令：`probe`、`extract-audio`、`save-asr-result`、`pack-transcripts`、`match-script`、`verify`、`render`。
+- video-use 转写默认使用 `prepare_file_upload(purpose="video_audio")`、OSS PUT 直传、`create_video_asr_task(audio_key=...)`、`prepare_video_transcript_download`、`anban video save-asr-result`、`anban video pack-transcripts`；`query_video_asr_task` 和 `pack_video_transcripts` 仅作兼容查询/旧 inline fallback。
 - 普通素材剪辑不得调用直播切片工具；不要在 `video-use` 中调用 legacy live-audio upload 或 TingWu live analysis 工具。
 - 图像生成/分析使用 `generate_image`、`analyze_image`、`download_image`、`compress_image`、`upload_image`。
 - 工作区使用 `prepare_workspace(content_type="video", task_id=$TASK_ID)`；失败时回退到 `$CWD/output/video/$TASK_ID`。
@@ -69,14 +69,14 @@ maxTurns: 120
 
 当路由到 `video-use`：
 
-1. 先运行 `anban-creator-agent video probe --source "$VIDEO" --out "$DIR/edit/media-manifest.json"`，使用 display rotation 后的 `display_width/display_height` 决定画幅，并把 `output_width/output_height` 写入 EDL。
-2. 用 `anban-creator-agent video extract-audio --source "$VIDEO" --out "$DIR/edit/audio/<stem>.wav"` 提取 16k mono 音频。
+1. 先运行 `anban video probe --source "$VIDEO" --out "$DIR/edit/media-manifest.json"`，使用 display rotation 后的 `display_width/display_height` 决定画幅，并把 `output_width/output_height` 写入 EDL。
+2. 用 `anban video extract-audio --source "$VIDEO" --out "$DIR/edit/audio/<stem>.wav"` 提取 16k mono 音频。
 3. 调用 `prepare_file_upload(purpose="video_audio", filename="<stem>.wav", content_type="audio/wav")`，用返回的 `upload_url` 执行 OSS PUT 上传 WAV，再调用 `create_video_asr_task(audio_key=<returned key>)` 获取 compact receipt。
-4. 用 receipt 的 `download_url`，或调用 `prepare_video_transcript_download(transcript_object_key=...)`，再运行 `anban-creator-agent video save-asr-result --transcript-url "$DOWNLOAD_URL" --out "$DIR/edit/transcripts/<stem>.json"`。
-5. 运行 `anban-creator-agent video pack-transcripts --transcripts-dir "$DIR/edit/transcripts" --out "$DIR/edit/takes_packed.md"`；如用户给文案脚本，再运行 `anban-creator-agent video match-script --script "$SCRIPT" --transcripts-dir "$DIR/edit/transcripts" --out "$DIR/edit/edit-candidates.json"`。
+4. 用 receipt 的 `download_url`，或调用 `prepare_video_transcript_download(transcript_object_key=...)`，再运行 `anban video save-asr-result --transcript-url "$DOWNLOAD_URL" --out "$DIR/edit/transcripts/<stem>.json"`。
+5. 运行 `anban video pack-transcripts --transcripts-dir "$DIR/edit/transcripts" --out "$DIR/edit/takes_packed.md"`；如用户给文案脚本，再运行 `anban video match-script --script "$SCRIPT" --transcripts-dir "$DIR/edit/transcripts" --out "$DIR/edit/edit-candidates.json"`。
 6. 在渲染前用自然语言确认剪辑策略。
 7. 如需 overlay，HyperFrames 可参考 Docker-installed `music-to-video` / `slideshow` 官方 skills，Remotion 可参考 Docker-installed `remotion-best-practices` 官方 skill；最终仍按场景调用 `hyperframes-video-overlays` / `remotion-video-overlays` / `manim-video-overlays` / `pil-video-overlays` / `capcut-draft`，把包含 `file/start/end/x/y/width/height` 的返回项写入 `edl.json` 的 `overlays[]`。
-8. 运行 `anban-creator-agent video verify --edl "$DIR/edit/edl.json"`，再按 `draft` → `preview` → `final` 阶段运行 `anban-creator-agent video render`；字幕字体默认 Source Han Sans / 思源黑体。
+8. 运行 `anban video verify --edl "$DIR/edit/edl.json"`，再按 `draft` → `preview` → `final` 阶段运行 `anban video render`；字幕字体默认 Source Han Sans / 思源黑体。
 9. 自检每个切点、字幕、overlay timing、音频 pop、display rotation 和最终时长。
 
 ## 完成报告
