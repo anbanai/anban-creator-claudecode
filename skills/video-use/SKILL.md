@@ -11,9 +11,9 @@ Use this skill to edit local footage into a polished video. The agent reasons fr
 
 | Tool | Use |
 | --- | --- |
-| `upload_video_audio` | Optional: upload extracted audio to OSS/CDN when another workflow needs a URL. |
-| `create_video_asr_task` | Transcribe a local audio `file_path` through server-side OpenAI-compatible FunASR and return normalized word-level JSON. |
-| `query_video_asr_task` | Optional compatibility lookup for an already completed local ASR result by `task_id`. |
+| `prepare_file_upload` | Prepare a policy-controlled OSS direct upload. Use `purpose="video_audio"`, then upload the local wav to `upload_url` with HTTP PUT. |
+| `create_video_asr_task` | Transcribe an OSS-backed `audio_key` or HTTPS `audio_url` through server-side OpenAI-compatible FunASR and return normalized word-level JSON. |
+| `query_video_asr_task` | Optional compatibility lookup for an already completed ASR result by `task_id`. |
 | `pack_video_transcripts` | Convert normalized transcripts into `takes_packed.md` markdown. |
 
 Never call ASR provider HTTP APIs directly and never handle provider API keys. Do not use SRT-only or phrase-only transcription as the editing source; cuts need word boundaries.
@@ -52,7 +52,7 @@ Never call ASR provider HTTP APIs directly and never handle provider API keys. D
 1. Inventory sources with `ffprobe`; create `<videos_dir>/edit/`.
 2. For each source, extract audio:
    `ffmpeg -y -i "$VIDEO" -vn -ac 1 -ar 16000 -codec:a pcm_s16le "$DIR/<stem>.wav"`.
-3. Call `create_video_asr_task` with `file_path="$DIR/<stem>.wav"` and save the returned normalized transcript JSON to `edit/transcripts/<stem>.json`. Do not call provider HTTP APIs directly; `upload_video_audio` is optional and not part of the default local FunASR path.
+3. Call `prepare_file_upload` with `purpose="video_audio"`, `filename="<stem>.wav"`, and `content_type="audio/wav"`; upload `$DIR/<stem>.wav` to the returned `upload_url` with `curl --fail -X PUT -H "Content-Type: audio/wav" --upload-file "$DIR/<stem>.wav" "$UPLOAD_URL"`; then call `create_video_asr_task` with the returned `audio_key` and save the returned normalized transcript JSON to `edit/transcripts/<stem>.json`. Do not call provider HTTP APIs directly.
 4. Call `pack_video_transcripts` with the transcript map and save the returned markdown to `takes_packed.md`.
 5. Read `takes_packed.md`, note verbal slips, retakes, strong beats, and likely cuts.
 6. Ask for or infer target length, aspect, pacing, subtitle style, grade, and overlay needs; write a short strategy and wait for confirmation.

@@ -56,7 +56,7 @@ Connects to the `anbanwriter` MCP server at `$ANBAN_API_URL` (default `https://a
 - `image upload`, `draft article`
 - `get_feed_detail` (SeedNote source note fetching)
 - `upload_live_audio`, `create_live_analysis_task`, `query_live_analysis_task`, `recognize_live_invalid_sentences`, `recognize_live_segments`, `build_live_clip_plan`, `build_live_subject_clip_plan`, `build_live_clip_manifest`, `recognize_live_subjects`, `complete_live_subject`
-- `upload_video_audio`, `create_video_asr_task`, `query_video_asr_task`, `pack_video_transcripts`
+- `prepare_file_upload`, `create_video_asr_task`, `query_video_asr_task`, `pack_video_transcripts`
 
 ### Themes (Server-managed)
 

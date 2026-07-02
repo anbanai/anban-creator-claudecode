@@ -43,7 +43,7 @@ maxTurns: 120
 
 - 必须使用内置 MCP 工具调用服务端接口；不要绕过 MCP，不要自写 provider HTTP 客户端。
 - 视频生成使用 `register_video_reference`、`build_video_generation_plan`、`create_video_generation_task`、`query_video_generation_task`、`download_video_generation_result`。
-- video-use 转写默认使用 `create_video_asr_task(file_path=...)`、`pack_video_transcripts`；`upload_video_audio`/`query_video_asr_task` 仅作兼容或 URL 交付辅助。
+- video-use 转写默认使用 `prepare_file_upload(purpose="video_audio")`、OSS PUT 直传、`create_video_asr_task(audio_key=...)`、`pack_video_transcripts`；`query_video_asr_task` 仅作兼容查询。
 - 图像生成/分析使用 `generate_image`、`analyze_image`、`download_image`、`compress_image`、`upload_image`。
 - 工作区使用 `prepare_workspace(content_type="video", task_id=$TASK_ID)`；失败时回退到 `$CWD/output/video/$TASK_ID`。
 - 进度上报使用 `update_task_progress`；最终反馈使用 `submit_agent_feedback(agent_name="video", ...)`。
@@ -68,7 +68,7 @@ maxTurns: 120
 当路由到 `video-use`：
 
 1. 用 ffmpeg 从每个视频提取 16k mono 音频。
-2. 调用 `create_video_asr_task(file_path="$DIR/<stem>.wav")`，保存返回的 normalized JSON 到 `edit/transcripts/<stem>.json`。
+2. 调用 `prepare_file_upload(purpose="video_audio", filename="<stem>.wav", content_type="audio/wav")`，用返回的 `upload_url` 执行 OSS PUT 上传 `$DIR/<stem>.wav`，再调用 `create_video_asr_task(audio_key=<returned key>)`，保存返回的 normalized JSON 到 `edit/transcripts/<stem>.json`。
 3. 调用 `pack_video_transcripts`，保存 `edit/takes_packed.md`。
 4. 在渲染前用自然语言确认剪辑策略。
 5. 如需 overlay，HyperFrames 可参考 Docker-installed `music-to-video` / `slideshow` 官方 skills，Remotion 可参考 Docker-installed `remotion-best-practices` 官方 skill；最终仍按场景调用 `hyperframes-video-overlays` / `remotion-video-overlays` / `manim-video-overlays` / `pil-video-overlays`，把返回项写入 `edl.json` 的 `overlays[]`。
