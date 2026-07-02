@@ -31,6 +31,33 @@ Never call ASR provider HTTP APIs directly and never handle provider API keys. D
 8. Store all session outputs under `<videos_dir>/edit/`, not inside the skill directory.
 9. Use absolute paths for source files, transcript files, EDL, overlays, previews, and final output.
 
+## Local CLI Resolution
+
+Before the first `anban video` command, resolve the plugin-local binary once and reuse it for all media commands:
+
+```bash
+ANBAN_BIN="${ANBAN_BIN:-}"
+if [ -z "$ANBAN_BIN" ] || ! command -v "$ANBAN_BIN" >/dev/null 2>&1; then
+  for root in "${ANBAN_PLUGIN_ROOT:-}" "${CLAUDE_PLUGIN_ROOT:-}" "${PLUGIN_ROOT:-}"; do
+    [ -z "$root" ] && continue
+    if [ -x "$root/scripts/bootstrap.sh" ]; then
+      ANBAN_PLUGIN_ROOT="$root" "$root/scripts/bootstrap.sh" >/dev/null 2>&1 || true
+    fi
+    if [ -x "$root/bin/anban" ]; then
+      ANBAN_BIN="$root/bin/anban"
+      break
+    fi
+    if [ -x "$root/bin/anban.exe" ]; then
+      ANBAN_BIN="$root/bin/anban.exe"
+      break
+    fi
+  done
+fi
+ANBAN_BIN="${ANBAN_BIN:-anban}"
+```
+
+Use `$ANBAN_BIN video ...` for every command below. If it still fails, report that plugin bootstrap did not install `bin/anban` and ask the user to rerun the plugin install/bootstrap step.
+
 ## Directory Layout
 
 ```text
@@ -54,16 +81,16 @@ Never call ASR provider HTTP APIs directly and never handle provider API keys. D
 
 ## Workflow
 
-1. Create `<videos_dir>/edit/` and run `anban video probe --source "$VIDEO" --out "$DIR/edit/media-manifest.json"` before any orientation, overlay, or render decision. The manifest is display rotation aware; use `display_width` and `display_height`, not encoded width/height.
-2. For each source, run `anban video extract-audio --source "$VIDEO" --out "$DIR/edit/audio/<stem>.wav"`.
+1. Create `<videos_dir>/edit/` and run `$ANBAN_BIN video probe --source "$VIDEO" --out "$DIR/edit/media-manifest.json"` before any orientation, overlay, or render decision. The manifest is display rotation aware; use `display_width` and `display_height`, not encoded width/height.
+2. For each source, run `$ANBAN_BIN video extract-audio --source "$VIDEO" --out "$DIR/edit/audio/<stem>.wav"`.
 3. Call `prepare_file_upload` with `purpose="video_audio"`, `filename="<stem>.wav"`, and `content_type="audio/wav"`; upload the WAV to `upload_url`; call `create_video_asr_task(audio_key=<returned key>)`; then call `prepare_video_transcript_download` if a fresh signed URL is needed.
-4. Save transcript JSON locally with `anban video save-asr-result --transcript-url "$DOWNLOAD_URL" --out "$DIR/edit/transcripts/<stem>.json"`. This is the file-based transcript flow; do not pass large transcript JSON through tool arguments.
-5. Run `anban video pack-transcripts --transcripts-dir "$DIR/edit/transcripts" --out "$DIR/edit/takes_packed.md"`.
-6. If the user provided a script/copy, run `anban video match-script --script "$SCRIPT" --transcripts-dir "$DIR/edit/transcripts" --out "$DIR/edit/edit-candidates.json"` and use matched word ranges; flag unmatched lines instead of inventing source.
+4. Save transcript JSON locally with `$ANBAN_BIN video save-asr-result --transcript-url "$DOWNLOAD_URL" --out "$DIR/edit/transcripts/<stem>.json"`. This is the file-based transcript flow; do not pass large transcript JSON through tool arguments.
+5. Run `$ANBAN_BIN video pack-transcripts --transcripts-dir "$DIR/edit/transcripts" --out "$DIR/edit/takes_packed.md"`.
+6. If the user provided a script/copy, run `$ANBAN_BIN video match-script --script "$SCRIPT" --transcripts-dir "$DIR/edit/transcripts" --out "$DIR/edit/edit-candidates.json"` and use matched word ranges; flag unmatched lines instead of inventing source.
 7. Read `takes_packed.md` and `edit-candidates.json`, note verbal slips, retakes, strong beats, invalid content, and likely cuts.
 8. Ask for or infer target length, aspect, pacing, subtitle style, grade, and overlay needs; write a short strategy and wait for confirmation. If a creative or corrective grade is needed, pre-grade sources with `grade.py` and point the EDL at the graded files; Go render currently rejects non-`none` `grade` values rather than silently ignoring them.
-9. Write `edl.json` using transcript word boundaries. Include `output_width`, `output_height`, sources, ranges, optional overlays, and subtitle settings. Run `anban video verify --edl "$DIR/edit/edl.json"` before rendering; it must reject overlay dimensions that do not match the EDL output size.
-10. Render in stages: `anban video render --edl "$DIR/edit/edl.json" --mode draft --out "$DIR/edit/draft.mp4"` for fast fixed-frame cut checks; `--mode preview` for evaluable review with overlays/subtitle file when present; `--mode final` for delivery with final loudness normalization.
+9. Write `edl.json` using transcript word boundaries. Include `output_width`, `output_height`, sources, ranges, optional overlays, and subtitle settings. Run `$ANBAN_BIN video verify --edl "$DIR/edit/edl.json"` before rendering; it must reject overlay dimensions that do not match the EDL output size.
+10. Render in stages: `$ANBAN_BIN video render --edl "$DIR/edit/edl.json" --mode draft --out "$DIR/edit/draft.mp4"` for fast fixed-frame cut checks; `--mode preview` for evaluable review with overlays/subtitle file when present; `--mode final` for delivery with final loudness normalization.
 11. Self-evaluate rendered output around every cut boundary and at start/middle/end. Check visual jumps, audio pops, subtitle readability, overlay timing, display rotation, and duration.
 12. Iterate from user feedback without re-transcribing. Append decisions and final paths to `project.md`.
 

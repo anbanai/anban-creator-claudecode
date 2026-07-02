@@ -69,15 +69,16 @@ maxTurns: 120
 
 当路由到 `video-use`：
 
-1. 先运行 `anban video probe --source "$VIDEO" --out "$DIR/edit/media-manifest.json"`，使用 display rotation 后的 `display_width/display_height` 决定画幅，并把 `output_width/output_height` 写入 EDL。
-2. 用 `anban video extract-audio --source "$VIDEO" --out "$DIR/edit/audio/<stem>.wav"` 提取 16k mono 音频。
-3. 调用 `prepare_file_upload(purpose="video_audio", filename="<stem>.wav", content_type="audio/wav")`，用返回的 `upload_url` 执行 OSS PUT 上传 WAV，再调用 `create_video_asr_task(audio_key=<returned key>)` 获取 compact receipt。
-4. 用 receipt 的 `download_url`，或调用 `prepare_video_transcript_download(transcript_object_key=...)`，再运行 `anban video save-asr-result --transcript-url "$DOWNLOAD_URL" --out "$DIR/edit/transcripts/<stem>.json"`。
-5. 运行 `anban video pack-transcripts --transcripts-dir "$DIR/edit/transcripts" --out "$DIR/edit/takes_packed.md"`；如用户给文案脚本，再运行 `anban video match-script --script "$SCRIPT" --transcripts-dir "$DIR/edit/transcripts" --out "$DIR/edit/edit-candidates.json"`。
-6. 在渲染前用自然语言确认剪辑策略。
-7. 如需 overlay，HyperFrames 可参考 Docker-installed `music-to-video` / `slideshow` 官方 skills，Remotion 可参考 Docker-installed `remotion-best-practices` 官方 skill；最终仍按场景调用 `hyperframes-video-overlays` / `remotion-video-overlays` / `manim-video-overlays` / `pil-video-overlays` / `capcut-draft`，把包含 `file/start/end/x/y/width/height` 的返回项写入 `edl.json` 的 `overlays[]`。
-8. 运行 `anban video verify --edl "$DIR/edit/edl.json"`，再按 `draft` → `preview` → `final` 阶段运行 `anban video render`；字幕字体默认 Source Han Sans / 思源黑体。
-9. 自检每个切点、字幕、overlay timing、音频 pop、display rotation 和最终时长。
+1. 先按 `video-use` skill 的 Local CLI Resolution 解析 `ANBAN_BIN`，优先使用插件内 `bin/anban`；后续所有本地媒体命令都用 `$ANBAN_BIN video ...`。
+2. 运行 `$ANBAN_BIN video probe --source "$VIDEO" --out "$DIR/edit/media-manifest.json"`，使用 display rotation 后的 `display_width/display_height` 决定画幅，并把 `output_width/output_height` 写入 EDL。
+3. 用 `$ANBAN_BIN video extract-audio --source "$VIDEO" --out "$DIR/edit/audio/<stem>.wav"` 提取 16k mono 音频。
+4. 调用 `prepare_file_upload(purpose="video_audio", filename="<stem>.wav", content_type="audio/wav")`，用返回的 `upload_url` 执行 OSS PUT 上传 WAV，再调用 `create_video_asr_task(audio_key=<returned key>)` 获取 compact receipt。
+5. 用 receipt 的 `download_url`，或调用 `prepare_video_transcript_download(transcript_object_key=...)`，再运行 `$ANBAN_BIN video save-asr-result --transcript-url "$DOWNLOAD_URL" --out "$DIR/edit/transcripts/<stem>.json"`。
+6. 运行 `$ANBAN_BIN video pack-transcripts --transcripts-dir "$DIR/edit/transcripts" --out "$DIR/edit/takes_packed.md"`；如用户给文案脚本，再运行 `$ANBAN_BIN video match-script --script "$SCRIPT" --transcripts-dir "$DIR/edit/transcripts" --out "$DIR/edit/edit-candidates.json"`。
+7. 在渲染前用自然语言确认剪辑策略。
+8. 如需 overlay，HyperFrames 可参考 Docker-installed `music-to-video` / `slideshow` 官方 skills，Remotion 可参考 Docker-installed `remotion-best-practices` 官方 skill；最终仍按场景调用 `hyperframes-video-overlays` / `remotion-video-overlays` / `manim-video-overlays` / `pil-video-overlays` / `capcut-draft`，把包含 `file/start/end/x/y/width/height` 的返回项写入 `edl.json` 的 `overlays[]`。
+9. 运行 `$ANBAN_BIN video verify --edl "$DIR/edit/edl.json"`，再按 `draft` → `preview` → `final` 阶段运行 `$ANBAN_BIN video render`；字幕字体默认 Source Han Sans / 思源黑体。
+10. 自检每个切点、字幕、overlay timing、音频 pop、display rotation 和最终时长。
 
 ## 完成报告
 

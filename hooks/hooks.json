@@ -1,6 +1,18 @@
 {
   "description": "Anban 智能创作助手 plugin lifecycle hooks for agent delivery summaries and quality verification",
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "nohup \"${CLAUDE_PLUGIN_ROOT}/scripts/bootstrap.sh\" >/dev/null 2>&1 &",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "SubagentStop": [
       {
         "matcher": "wechatarticle",
