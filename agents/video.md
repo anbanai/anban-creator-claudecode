@@ -61,7 +61,7 @@ maxTurns: 120
 
 - 方法论以对应 skill 为准；本 agent 只负责编排、落盘、进度、质量检查和交付。
 - 单次单主 skill。生成视频后如用户还要剪映草稿，可以串接 `capcut-draft`；其他复合需求拆成多次。
-- 不处理 provider API key。FunASR OpenAI-compatible endpoint、Seedance、图像模型等密钥只在 MCP/server 侧。
+- 不处理 provider API key。Aliyun FunASR HTTP endpoint、Seedance、图像模型等密钥只在 MCP/server 侧。
 - 所有决策、失败原因、重试理由、最终路径都写入 `$DIR/*.md`。
 
 ## video-use 特别规则

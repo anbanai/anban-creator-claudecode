@@ -1,6 +1,6 @@
 ---
 name: video-use
-description: "Use when editing source footage into finished videos by conversation: 多素材成片剪辑, talking-head cleanup, 去口癖, retake selection, subtitles, color grade, animation overlays, social-ready exports, or transcript-backed video editing with OpenAI-compatible FunASR MCP tools."
+description: "Use when editing source footage into finished videos by conversation: 多素材成片剪辑, talking-head cleanup, 去口癖, retake selection, subtitles, color grade, animation overlays, social-ready exports, or transcript-backed video editing with Aliyun FunASR HTTP MCP tools."
 ---
 
 # Video Use
@@ -12,7 +12,7 @@ Use this skill to edit local footage into a polished video. The agent reasons fr
 | Tool | Use |
 | --- | --- |
 | `prepare_file_upload` | Prepare a policy-controlled OSS direct upload. Use `purpose="video_audio"`, then upload the local wav to `upload_url` with HTTP PUT. |
-| `create_video_asr_task` | Transcribe an OSS-backed `audio_key` or HTTPS `audio_url` through server-side OpenAI-compatible FunASR and return normalized word-level JSON. |
+| `create_video_asr_task` | Transcribe an OSS-backed `audio_key` or HTTPS `audio_url` through server-side Aliyun FunASR HTTP and return normalized word-level JSON. |
 | `query_video_asr_task` | Optional compatibility lookup for an already completed ASR result by `task_id`. |
 | `pack_video_transcripts` | Convert normalized transcripts into `takes_packed.md` markdown. |
 
