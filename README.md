@@ -83,6 +83,7 @@ claude plugin install --scope user anban@anbanai
 
 `/anban-setup` 会帮你检查：
 
+- 本地视频工具是否已自动准备好
 - API Key 是否生效
 - MCP 服务是否连通
 - 当前账号下有哪些可用项目

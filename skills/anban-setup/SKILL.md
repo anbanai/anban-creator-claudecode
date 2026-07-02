@@ -5,6 +5,52 @@ description: Use when user mentions "初始化", "anban-setup", "第一次使用
 
 # /anban-setup Anban Creator 初始化
 
+## 本地 CLI 预检
+
+在调用 `list_projects` 之前，先确保插件内置的本地 `anban` CLI 可用。这个步骤用于视频剪辑等本地媒体能力，用户不需要手动安装二进制。
+
+用 Bash 执行以下检查和自动修复流程：
+
+```bash
+ANBAN_CLI=""
+for root in "${ANBAN_PLUGIN_ROOT:-}" "${CLAUDE_PLUGIN_ROOT:-}" "${PLUGIN_ROOT:-}"; do
+  [ -z "$root" ] && continue
+  if [ -x "$root/bin/anban" ]; then
+    ANBAN_CLI="$root/bin/anban"
+    break
+  fi
+  if [ -x "$root/bin/anban.exe" ]; then
+    ANBAN_CLI="$root/bin/anban.exe"
+    break
+  fi
+done
+
+if [ -z "$ANBAN_CLI" ]; then
+  for root in "${ANBAN_PLUGIN_ROOT:-}" "${CLAUDE_PLUGIN_ROOT:-}" "${PLUGIN_ROOT:-}"; do
+    [ -z "$root" ] && continue
+    if [ -x "$root/scripts/bootstrap.sh" ]; then
+      ANBAN_PLUGIN_ROOT="$root" "$root/scripts/bootstrap.sh" >/dev/null 2>&1 || true
+      if [ -x "$root/bin/anban" ]; then
+        ANBAN_CLI="$root/bin/anban"
+        break
+      fi
+      if [ -x "$root/bin/anban.exe" ]; then
+        ANBAN_CLI="$root/bin/anban.exe"
+        break
+      fi
+    fi
+  done
+fi
+
+if [ -z "$ANBAN_CLI" ] || ! "$ANBAN_CLI" --help >/dev/null 2>&1; then
+  echo "ANBAN_CLI_NOT_READY"
+else
+  echo "ANBAN_CLI_OK"
+fi
+```
+
+这里的验证等价于运行 `anban --help`。如果输出 `ANBAN_CLI_NOT_READY`，请用普通用户能理解的话说明：本地视频工具没有准备好，请重新安装 Anban 插件；如果重新安装后仍失败，请联系 Anban 支持。不要要求用户运行构建命令或手动复制文件。
+
 ## 预检
 
 尝试调用 `list_projects` MCP 工具：
