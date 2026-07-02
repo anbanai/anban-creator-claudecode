@@ -1,6 +1,6 @@
 # 自定义写作风格
 
-想模仿哪位作家或创作者的风格？可以轻松添加到 anbanwriter。
+想模仿哪位作家或创作者的风格？可以轻松添加到 anban-creator。
 
 ## 快速开始
 
@@ -124,11 +124,11 @@ writing_prompt: |
 
 ## 风格文件位置
 
-anbanwriter 会按以下顺序查找风格文件：
+Anban Creator 会按以下顺序查找风格文件：
 
 1. `./writers/` - 当前项目目录
-2. `~/.config/anbanwriter/writers/` - 用户配置目录
-3. `~/.anbanwriter/writers/` - 用户主目录
+2. `~/.config/anban-creator/writers/` - 用户配置目录
+3. `~/.anban-creator/writers/` - 用户主目录
 
 ---
 

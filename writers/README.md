@@ -127,12 +127,12 @@ writing_prompt: |
 
 ## 风格文件位置
 
-anbanwriter 会按以下顺序查找风格文件：
+Anban Creator 会按以下顺序查找风格文件：
 
 1. `plugin/writers/` - 项目内置风格
 2. `./writers/` - 当前项目目录
-3. `~/.config/anbanwriter/writers/` - 用户配置目录
-4. `~/.anbanwriter/` - 用户主目录
+3. `~/.config/anban-creator/writers/` - 用户配置目录
+4. `~/.anban-creator/` - 用户主目录
 
 ---
 

@@ -314,7 +314,7 @@ lineart_server = download_image(project_id="$PROJECT_ID",
 - **OpenAI gpt-image / Gemini**（`openai`/`gemini`/`google`）：`ref_image_paths = [lineart_server]`，有锚点上色图时追加（OpenAI gpt-image ≤16、Gemini ≤10；非 gpt-image 的 OpenAI 仅 1 张）
 - **禁止纯文生图**：线稿上色每张必带原线稿 ref；不要用前一张上色输出作下一张的主 ref（避免误差累积漂移）
 
-`output_path` 是 MCP 服务器端路径，不是客户端当前目录路径。固定使用 `/tmp/anbanwriter-line-art/$TASK_ID/colored_NN_a.png`，返回的 `file_path` 写入 `$DIR/server-paths.md`。`size` 从原始线稿推断最接近的支持比例（如 7:5 接近 `3:2` 或 `4:3`），传入 `size="3:2"`；返回后用文件尺寸或 `analyze_image` 检查是否被裁切、变形或转为竖图。
+`output_path` 是 MCP 服务器端路径，不是客户端当前目录路径。固定使用 `/tmp/anban-creator-line-art/$TASK_ID/colored_NN_a.png`，返回的 `file_path` 写入 `$DIR/server-paths.md`。`size` 从原始线稿推断最接近的支持比例（如 7:5 接近 `3:2` 或 `4:3`），传入 `size="3:2"`；返回后用文件尺寸或 `analyze_image` 检查是否被裁切、变形或转为竖图。
 
 生成候选 A：
 ```
@@ -322,7 +322,7 @@ result_a = generate_image(
   project_id="$PROJECT_ID",
   prompt="[主 prompt]",
   image_type="content",
-  output_path="/tmp/anbanwriter-line-art/$TASK_ID/colored_NN_a.png",
+  output_path="/tmp/anban-creator-line-art/$TASK_ID/colored_NN_a.png",
   size="[从原线稿推断的比例]",
   ref_image_path=lineart_server        # Seedream
   # 或 OpenAI/Gemini: ref_image_paths=[lineart_server, anchor_server]
@@ -525,7 +525,7 @@ COLOR RELATIONSHIPS:
 | **走纯文生图** | 漏传 ref | 线稿上色每张必带原线稿 ref；先 download_image 注册再作 ref |
 | CDN URL 过期 | Read 返回的 CDN URL 约 30 分钟后过期 | 获取后立即使用；需要重新分析时重新 Read 获取新 URL |
 | analyze_image 文件过大 | `file_path` 方式分析有 10MB 限制 | 先 `compress_image`，再失败则 `upload_image` 后用 `image_url` |
-| output_path 权限错误 | `output_path` 是 MCP 服务器端路径 | 使用 `/tmp/anbanwriter-line-art/$TASK_ID/...` |
+| output_path 权限错误 | `output_path` 是 MCP 服务器端路径 | 使用 `/tmp/anban-creator-line-art/$TASK_ID/...` |
 | 本地归档缺失 | 把 `download_image` 误当成本地保存工具 | 下载 `download_url` 到 `$DIR/colored_NN.png`，`download_image` 仅用于服务器端注册/中转 |
 | 长 prompt 504 Gateway Timeout | prompt 过长或约束过多 | Prompt 控制在 500 词以内，优先关键实体和关键颜色 |
 | ref_image_path 无法访问 | 远程 MCP Server 无法访问本地文件路径 | 使用 generate_image 返回的 file_path（服务器端路径），或通过 download_image 中转 |

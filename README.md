@@ -36,7 +36,8 @@
 推荐直接在 Claude Code 中安装：
 
 ```bash
-/install-plugin anbanai/anbanwriter-claudecode
+claude plugin marketplace add anbanai/anban-creator-claudecode
+claude plugin install --scope user anban@anbanai
 ```
 
 安装完成后，可以用 `/plugin` 或插件列表确认插件已经启用。
@@ -115,9 +116,9 @@
 如果你想明确指定流程，也可以直接运行：
 
 ```bash
-claude --dangerously-skip-permissions --verbose --agent anbanwriter:article AI Agent 入门指南
-claude --dangerously-skip-permissions --verbose --agent anbanwriter:seednote 降噪耳机种草笔记
-claude --dangerously-skip-permissions --verbose --agent anbanwriter:live-slicer ./live.mp4
+claude --dangerously-skip-permissions --verbose --agent anban:article AI Agent 入门指南
+claude --dangerously-skip-permissions --verbose --agent anban:seednote 降噪耳机种草笔记
+claude --dangerously-skip-permissions --verbose --agent anban:live-slicer ./live.mp4
 ```
 
 ## 常用命令
@@ -126,11 +127,11 @@ claude --dangerously-skip-permissions --verbose --agent anbanwriter:live-slicer 
   初始化配置并验证连接
 - `/plugin`
   查看插件是否已安装成功
-- `anbanwriter:article`
+- `anban:article`
   公众号图文创作
-- `anbanwriter:seednote`
+- `anban:seednote`
   种草笔记创作
-- `anbanwriter:live-slicer`
+- `anban:live-slicer`
   直播视频切片，需要本机可用 `ffmpeg` 和 `ffprobe`
 
 ## 遇到问题时先检查
@@ -160,7 +161,7 @@ claude --dangerously-skip-permissions --verbose --agent anbanwriter:live-slicer 
 
 ## 其他版本
 
-- [OpenClaw 插件](https://github.com/anbanai/anbanwriter-openclaw) — OpenClaw 平台原生插件版本
+- [OpenClaw 插件](https://github.com/anbanai/anban-creator-openclaw) — OpenClaw 平台原生插件版本
 - [Web 管理端](https://creator.anbanai.com) — 在线管理后台，支持任务管理、积分充值等
 
 ## 加入社群

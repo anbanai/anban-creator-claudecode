@@ -3,7 +3,7 @@ name: anban-setup
 description: Use when user mentions "初始化", "anban-setup", "第一次使用", "API Key", "密钥", or when MCP tools fail with auth/connection errors suggesting missing ANBAN_API_KEY.
 ---
 
-# /anban-setup anbanwriter 初始化
+# /anban-setup Anban Creator 初始化
 
 ## 预检
 
@@ -16,7 +16,7 @@ description: Use when user mentions "初始化", "anban-setup", "第一次使用
 
 向用户说明：
 
-> anbanwriter MCP 服务器需要 API Key 进行认证。请前往 https://creator.anbanai.com 注册账号并获取 API Key。
+> Anban Creator MCP 服务器需要 API Key 进行认证。请前往 https://creator.anbanai.com 注册账号并获取 API Key。
 
 通过 AskUserQuestion 向用户索取密钥值。
 
@@ -69,7 +69,7 @@ API Key 设置完成后，提示用户进行项目级配置（写入项目本地
 
 ## 完成
 
-**写作去 AI SKILL 可用性校验**：确认去 AI 味能力已随插件内置——用 Bash 执行 `test -f "${CLAUDE_PLUGIN_ROOT}/skills/humanizer/SKILL.md" && echo OK`（或 Glob 检查 `skills/humanizer/SKILL.md`）。该 SKILL 被 `content-writing`、`seednote-writing`、`ecommerce-copywriting` 写作流程调用，随插件安装即就绪，无需联网或 `git clone`。若缺失，提示用户重新安装 anbanwriter 插件。
+**写作去 AI SKILL 可用性校验**：确认去 AI 味能力已随插件内置——用 Bash 执行 `test -f "${CLAUDE_PLUGIN_ROOT}/skills/humanizer/SKILL.md" && echo OK`（或 Glob 检查 `skills/humanizer/SKILL.md`）。该 SKILL 被 `content-writing`、`seednote-writing`、`ecommerce-copywriting` 写作流程调用，随插件安装即就绪，无需联网或 `git clone`。若缺失，提示用户重新安装 Anban Creator 插件。
 
 告知用户：
 

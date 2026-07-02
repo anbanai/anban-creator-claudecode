@@ -3,7 +3,7 @@ name: ecommerce
 description: 电商出图全自动执行引擎——多张产品图输入，产出成体系电商素材（主图套/详情页商详/封面banner/分享图/SKU图），保证产品跨图一致。用户提到"电商出图"、"电商素材"、"商品图"、"产品图"、"主图"、"详情页"、"商详"、"商品详情"、"SKU图"、"电商封面"、"电商设计"、"ecommerce"时使用此 agent。
 model: inherit
 mcpServers:
-  - anban
+  - creator
 memory: project
 skills:
   - ecommerce
@@ -64,7 +64,7 @@ maxTurns: 120
 - **禁止编写 JavaScript/Node.js/Python 脚本或自定义 HTTP 客户端**调用 MCP 接口
 - **MCP 工具不可用或关键 MCP 调用失败时立即停止并报告错误**，执行诊断：`echo $ANBAN_API_KEY`、`echo $ANBAN_API_URL`、`echo $ANBAN_DEFAULT_PROJECT`；不要绕过 MCP、不要降级到脚本
 - **`prepare_workspace` / `archive_workspace` 仅返回路径**，目录创建和文件移动由 agent 通过本地 Bash 执行
-- **Claude Code subagent 的 `tools:` 字段是 allowlist**——不要在本 agent frontmatter 声明 `tools:`，省略才能继承包含 MCP 在内的工具；若运行时看不到 `mcp__anban__generate_image` 等工具，停止并报告 MCP 未注入
+- **Claude Code subagent 的 `tools:` 字段是 allowlist**——不要在本 agent frontmatter 声明 `tools:`，省略才能继承包含 MCP 在内的工具；若运行时看不到 `mcp__plugin_anban_creator__generate_image` 等工具，停止并报告 MCP 未注入
 - **`generate_image` 按需选参考图**：查「产品图清单」subject，每张电商图只传它描绘部位的相关产品图——OpenAI/Gemini 用 `ref_image_paths`（≤16）传相关子集；火山 Seedream 仅 `ref_image_path` 单张（最相关一张）。**每张电商图必带相关产品 ref**，搭配点名保真 prompt。详见 `ecommerce-visual-design`「按需选参考图 + 点名保真策略」
 - **`analyze_image` 一次一张**，传 `file_path`（server-local，≤10MB）或 `image_url`（HTTPS）二选一；产品图超 10MB 先 `compress_image`。Read 工具不用于图像视觉分析
 
@@ -93,7 +93,7 @@ maxTurns: 120
 #### 步骤 3：读取任务输入
 
 从任务上下文（`.task-context` / user prompt / 任务配置）读取：
-- **产品图发现 → `$PRODUCT_PHOTOS`**：服务端把上传的产品图下载到 `$DIR/.anbanwriter/products/`（= `get_project_profile` 的 `ecommerce.product_photo_dir`），并写 `index.json`（JSON 数组，元素为 `product_NN.<ext>` 文件名）。读取 `index.json`，把每个文件名拼成 `$DIR/.anbanwriter/products/<filename>` 得到产品图路径列表 `$PRODUCT_PHOTOS`（用于 `analyze_image` 与 `ref_image_path`/`ref_image_paths`）。期望数量见 `ecommerce.product_photo_count`；`index.json` 缺失或全无可访问 → **停止并请求用户上传产品图**。
+- **产品图发现 → `$PRODUCT_PHOTOS`**：服务端把上传的产品图下载到 `$DIR/.anban-creator/products/`（= `get_project_profile` 的 `ecommerce.product_photo_dir`），并写 `index.json`（JSON 数组，元素为 `product_NN.<ext>` 文件名）。读取 `index.json`，把每个文件名拼成 `$DIR/.anban-creator/products/<filename>` 得到产品图路径列表 `$PRODUCT_PHOTOS`（用于 `analyze_image` 与 `ref_image_path`/`ref_image_paths`）。期望数量见 `ecommerce.product_photo_count`；`index.json` 缺失或全无可访问 → **停止并请求用户上传产品图**。
 - 已选模块 `selected_modules`、目标平台 `target_platform`、用户卖点 `selling_points`（可选）、视觉风格 `visual_style`、语言。（图像模型已在建任务时由用户选定，经 `get_project_profile` 的 `image_model` 读取，不再在此覆盖。）
 
 逐张验证产品图路径可访问；任一不可访问记录并降级（剔除该图后继续，至少保留 1 张）。

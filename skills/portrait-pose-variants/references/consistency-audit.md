@@ -163,7 +163,7 @@ analyze_image(
 | 表情不够夸张 | 姿态段落用更具体的描述"eyes WIDE OPEN showing whites, eyebrows raised HIGH" |
 | 手势畸形 | 手势段落加更多细节"five fingers visible, palm facing camera, fingers naturally spread"；加强反面约束"DO NOT add extra fingers, DO NOT distort joints" |
 
-重试时 `output_path` 改为 `/tmp/anbanwriter-portrait-pose/$TASK_ID/variant_0N_v2.png`，重试结果走相同审计；若仍 FAIL 则接受当前最佳并标注 `needs_img2img` 或 `needs_manual_edit`。
+重试时 `output_path` 改为 `/tmp/anban-creator-portrait-pose/$TASK_ID/variant_0N_v2.png`，重试结果走相同审计；若仍 FAIL 则接受当前最佳并标注 `needs_img2img` 或 `needs_manual_edit`。
 
 ## 能力边界声明
 

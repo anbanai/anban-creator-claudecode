@@ -205,7 +205,7 @@ result_i = generate_image(
   project_id="$PROJECT_ID",
   prompt=<5a 构建的 prompt>,
   image_type="cover",
-  output_path="/tmp/anbanwriter-portrait-pose/$TASK_ID/variant_0i.png",
+  output_path="/tmp/anban-creator-portrait-pose/$TASK_ID/variant_0i.png",
   size="9:16",
   ref_image_path="$PORTRAIT_SERVER_PATH"  # 始终用原始人像，不用前一张变体
 )
@@ -235,7 +235,7 @@ analyze_image(
 
 关键维度（脸型 / 五官比例 / 发型发色）任一 FAIL：
 - 用更严格 prompt 重试 1 次（加强身份锁描述、加强反面约束）
-- `output_path` 改为 `/tmp/anbanwriter-portrait-pose/$TASK_ID/variant_0i_v2.png`
+- `output_path` 改为 `/tmp/anban-creator-portrait-pose/$TASK_ID/variant_0i_v2.png`
 - 重试结果走 5d 审计；仍 FAIL 则接受当前最佳并标记 `needs_img2img`
 - **不要无限重试**——最多 1 次
 
@@ -414,7 +414,7 @@ Background and clothing may vary slightly but the person MUST be identical.
 | 多张变体之间身份不一致 | 每张变体身份漂移方向不同 | 确保所有变体 ref_image_path 都指向同一原始人像；不要用变体作下一张参考 |
 | CDN URL 过期 | Read 返回的 CDN URL 约 30 分钟后过期 | 获取后立即使用；需要重新分析时重新 Read 获取新 URL |
 | analyze_image 文件过大 | `file_path` 方式分析有 10MB 限制 | 先 `compress_image`，再失败则 `upload_image` 后用 `image_url` |
-| output_path 权限错误 | `output_path` 是 MCP 服务器端路径 | 使用 `/tmp/anbanwriter-portrait-pose/$TASK_ID/...` |
+| output_path 权限错误 | `output_path` 是 MCP 服务器端路径 | 使用 `/tmp/anban-creator-portrait-pose/$TASK_ID/...` |
 | 长 prompt 504 Gateway Timeout | prompt 过长（12 维度身份锁 + 6 姿态模板容易超长） | Prompt 控制在 500 词以内；身份锁可压缩到 8-10 行核心维度；姿态段落保留核心动作和情绪 |
 | ref_image_path 无法访问 | 远程 MCP Server 无法访问本地文件路径 | 通过 Read + download_image 注册到服务器端 |
 

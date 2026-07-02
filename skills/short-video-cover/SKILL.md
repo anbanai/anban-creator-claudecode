@@ -205,7 +205,7 @@ result = generate_image(
   project_id="$PROJECT_ID",
   prompt=<5a 构建的 prompt>,
   image_type="cover",
-  output_path="/tmp/anbanwriter-short-video-cover/$TASK_ID/cover.png",
+  output_path="/tmp/anban-creator-short-video-cover/$TASK_ID/cover.png",
   size="9:16",
   ref_image_path="$REF_SERVER_PATH"
 )
@@ -249,7 +249,7 @@ analyze_image(
 
 任一关键项（标题清楚、主体突出）FAIL，或 3 项以上 MINOR：
 - 用更具体的 prompt 重试 1 次（明确指出问题项，加强反面约束）
-- `output_path` 改为 `/tmp/anbanwriter-short-video-cover/$TASK_ID/cover_v2.png`
+- `output_path` 改为 `/tmp/anban-creator-short-video-cover/$TASK_ID/cover_v2.png`
 - 重试结果同样走 6a 审计；若仍 FAIL 则接受当前最佳并在 cover-review.md 标注 `needs_manual_edit`（建议用户用 PS/Canva 二次加工具体文字）
 
 **不要无限重试**——最多 1 次重试，避免消耗。
@@ -338,7 +338,7 @@ DO NOT include:
 | 太不像参考图（视觉断裂） | reference_depth=light 但色彩和字体气质也未对齐 | 即使 light 模式，主色和字体气质也应参考；只重做构图 |
 | CDN URL 过期 | Read 返回的 CDN URL 约 30 分钟后过期 | 获取后立即使用；需要重新分析时重新 Read 获取新 URL |
 | analyze_image 文件过大 | `file_path` 方式分析有 10MB 限制 | 先 `compress_image`，再失败则 `upload_image` 后用 `image_url` |
-| output_path 权限错误 | `output_path` 是 MCP 服务器端路径 | 使用 `/tmp/anbanwriter-short-video-cover/$TASK_ID/...` |
+| output_path 权限错误 | `output_path` 是 MCP 服务器端路径 | 使用 `/tmp/anban-creator-short-video-cover/$TASK_ID/...` |
 | 长 prompt 504 Gateway Timeout | prompt 过长或约束过多 | Prompt 控制在 500 词以内，优先 8 要素和最关键反面约束 |
 | ref_image_path 无法访问 | 远程 MCP Server 无法访问本地文件路径 | 通过 Read + download_image 注册到服务器端 |
 

@@ -1,9 +1,9 @@
 ---
 name: config
-description: Configures anbanwriter project settings including writer style (写作风格), theme (排版主题), image provider (图片生成服务), and API keys. Use when user wants to initialize, view, or modify anbanwriter configuration. Also use when user mentions '配置项目', '设置风格', '修改配置', 'config', '项目设置', '查看配置', '写作风格', '排版主题', or when wanting to check or change project-level settings.
+description: Configures anban-creator project settings including writer style (写作风格), theme (排版主题), image provider (图片生成服务), and API keys. Use when user wants to initialize, view, or modify anban-creator configuration. Also use when user mentions '配置项目', '设置风格', '修改配置', 'config', '项目设置', '查看配置', '写作风格', '排版主题', or when wanting to check or change project-level settings.
 ---
 
-# anbanwriter 配置管理
+# Anban Creator 配置管理
 
 ## MCP 工具
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**anbanwriter-claudecode** is a Claude Code plugin for automated Chinese social media content creation. It targets these workflows:
+**anban-creator-claudecode** is a Claude Code plugin for automated Chinese social media content creation. It targets these workflows:
 
 - **WeChat Official Account articles** (微信公众号图文)
 - **SeedNote posts** (种草笔记)
@@ -19,7 +19,7 @@ The plugin follows an **Agent + Skill + MCP** architecture: Claude Code agents o
 
 ### Agents (`agents/`)
 
-Orchestration engines that run fully autonomous, zero-interaction pipelines. Each agent has a frontmatter block with `name`, `skills`, `mcpServers`, `maxTurns`, and `memory` config. The agent definition is the single source of truth for its pipeline's flow, quality standards, risk mitigation, and success criteria. Do not add a `tools` allowlist to agents that need MCP tools; Claude Code treats `tools` as an allowlist and can hide `mcp__anban__...` tools from subagents.
+Orchestration engines that run fully autonomous, zero-interaction pipelines. Each agent has a frontmatter block with `name`, `skills`, `mcpServers`, `maxTurns`, and `memory` config. The agent definition is the single source of truth for its pipeline's flow, quality standards, risk mitigation, and success criteria. Do not add a `tools` allowlist to agents that need MCP tools; Claude Code treats `tools` as an allowlist and can hide `mcp__plugin_anban_creator__...` tools from subagents.
 
 | Agent | Trigger | Pipeline |
 |-------|---------|----------|
@@ -48,7 +48,7 @@ Key skill groups:
 
 ### MCP Server (`.mcp.json`)
 
-Connects to the `anbanwriter` MCP server at `$ANBAN_API_URL` (default `https://api.creator.anbanai.com`). Key MCP tools:
+Connects to the `anban-creator` MCP server at `$ANBAN_API_URL` (default `https://api.creator.anbanai.com`). Key MCP tools:
 - `$ANBAN_DEFAULT_PROJECT`: Optional default project ID. When set, agents skip `list_projects` and use this directly.
 - `list_projects`, `get_project_profile`, `list_drafts`, `list_published_articles`, `list_project_titles`
 - `prepare_workspace`, `archive_workspace`

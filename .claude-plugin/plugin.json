@@ -1,14 +1,13 @@
 {
-  "name": "anbanwriter",
-  "description": "Professional WeChat and Seednote (种草笔记) content creation toolkit — MCP server with AI-powered writing, visual design, and multi-platform publishing",
-  "version": "2.10.2",
+  "name": "anban",
+  "description": "Anban Creator plugin for WeChat, Seednote, video, ecommerce, and agent-assisted publishing workflows",
+  "version": "2.10.3",
   "author": {
-    "name": "Rick",
-    "email": "medivhzhan@gmail.com",
-    "url": "https://github.com/royalrick"
+    "name": "anbanai",
+    "url": "https://github.com/anbanai"
   },
-  "homepage": "https://github.com/anbanai/anbanwriter-claudecode",
-  "repository": "https://github.com/anbanai/anbanwriter-claudecode",
+  "homepage": "https://github.com/anbanai/anban-creator-claudecode",
+  "repository": "https://github.com/anbanai/anban-creator-claudecode",
   "license": "MIT",
   "keywords": [
     "wechat",

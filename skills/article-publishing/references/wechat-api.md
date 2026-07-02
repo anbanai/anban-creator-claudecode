@@ -72,7 +72,7 @@
 
 ## 图片生成 API
 
-使用兼容 OpenAI 的图片生成接口，通过 `.anbanwriter/settings.json` 配置 API key 和 base URL。
+使用兼容 OpenAI 的图片生成接口，通过 `.anban-creator/settings.json` 配置 API key 和 base URL。
 
 | 错误 | 处理方式 |
 |------|----------|
@@ -83,7 +83,7 @@
 
 ## 认证配置
 
-WeChat AppID 和 AppSecret 通过 `.anbanwriter/settings.json` 配置文件管理。
+WeChat AppID 和 AppSecret 通过 `.anban-creator/settings.json` 配置文件管理。
 
 ## 速率限制
 

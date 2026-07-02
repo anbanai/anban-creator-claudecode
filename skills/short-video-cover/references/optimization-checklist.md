@@ -119,7 +119,7 @@ analyze_image(
 | 颜色不统一 | 重写色彩描述用更具体的实物类比；加强反面约束："DO NOT introduce colors outside the main + accent palette" |
 | 元素过多 | 删减 prompt 中的次要元素；加强反面约束："DO NOT include decorative elements that compete with the main subject" |
 
-重试时 `output_path` 改为 `/tmp/anbanwriter-short-video-cover/$TASK_ID/cover_v2.png`，重试结果走相同审计；若仍 FAIL 则接受当前最佳并标注 `needs_manual_edit`。
+重试时 `output_path` 改为 `/tmp/anban-creator-short-video-cover/$TASK_ID/cover_v2.png`，重试结果走相同审计；若仍 FAIL 则接受当前最佳并标注 `needs_manual_edit`。
 
 ## 能力边界声明
 
