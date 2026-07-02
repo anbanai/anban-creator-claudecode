@@ -1,7 +1,7 @@
 {
   "name": "anban",
   "description": "Anban Creator plugin for WeChat, Seednote, video, ecommerce, and agent-assisted publishing workflows",
-  "version": "2.10.7",
+  "version": "2.10.8",
   "author": {
     "name": "anbanai",
     "url": "https://github.com/anbanai"
