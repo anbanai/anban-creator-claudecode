@@ -40,6 +40,8 @@ claude plugin marketplace add anbanai/anban-creator-claudecode
 claude plugin install --scope user anban@anbanai
 ```
 
+`plugin@marketplace` 中的 `anban` 是插件 ID，`anbanai` 是发布方/市场源。插件内的 MCP server key 固定为 `creator`；Claude Code 会用 server name 标记该 server 的工具，所以插件工具名前缀会是 `mcp__plugin_anban_creator__...`。Agent 命名空间使用 `anban:<agent>`。
+
 安装完成后，可以用 `/plugin` 或插件列表确认插件已经启用。
 
 ## 4. 设置 API Key
