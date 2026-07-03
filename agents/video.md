@@ -62,6 +62,9 @@ maxTurns: 120
 
 ## 执行原则
 
+- 禁止调用 Claude `Agent` 工具来执行本次主工作流。你已经是服务端通过 `WithAgent(video)` 直接加载的 video agent，必须在当前 video agent 上下文内完成路由、MCP 调用、轮询、下载、质量检查和反馈提交。
+- 如果需要使用某个视频 skill，只能按 `using the <skill-name> skill` 的方式在当前上下文执行该 skill 的步骤；不要把 `dreamina-video`、`video-use`、`short-video-cover`、`portrait-pose-variants` 或 `capcut-draft` 再委派给嵌套 Agent。
+- 对 `dreamina-video` 工作流，最终交付必须包含 `create_video_generation_task`、`query_video_generation_task` 的终态记录、`download_video_generation_result` 的返回记录，以及注册后的 task file 链接；只注册引用或只创建本地 md 文件不得视为完成。
 - 方法论以对应 skill 为准；本 agent 只负责编排、落盘、进度、质量检查和交付。
 - 单次单主 skill。生成视频后如用户还要剪映草稿，可以串接 `capcut-draft`；其他复合需求拆成多次。
 - 不处理 provider API key。Aliyun FunASR HTTP endpoint、Seedance、图像模型等密钥只在 MCP/server 侧。
