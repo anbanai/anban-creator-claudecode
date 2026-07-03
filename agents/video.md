@@ -43,6 +43,8 @@ maxTurns: 120
 
 - 必须使用内置 MCP 工具调用服务端接口；不要绕过 MCP，不要自写 provider HTTP 客户端。
 - 视频生成使用 `register_video_reference`、`build_video_generation_plan`、`create_video_generation_task`、`query_video_generation_task`、`download_video_generation_result`。
+- 视频生成只能使用 `get_project_video_profile` 返回的已配置 `model_catalog` / `allowed_models` 中的模型 key；不要写死 Seedance 模型，不要猜 provider model id，不要尝试保存或调用未配置模型。
+- 视频任务/计划如果带有 `video_config.references`，必须先读取这些引用，按引用类型和 `reference_role` 注册/规范化后再 build/create；计划触发时复用计划保存的 references。
 - video-use 本地媒体处理必须优先使用 `anban video` 子命令：`probe`、`extract-audio`、`save-asr-result`、`pack-transcripts`、`match-script`、`verify`、`render`。
 - video-use 转写默认使用 `prepare_file_upload(purpose="video_audio")`、OSS PUT 直传、`create_video_asr_task(audio_key=...)`、`prepare_video_transcript_download`、`anban video save-asr-result`、`anban video pack-transcripts`；`query_video_asr_task` 和 `pack_video_transcripts` 仅作兼容查询/旧 inline fallback。
 - 普通素材剪辑不得调用直播切片工具；不要在 `video-use` 中调用 legacy live-audio upload 或 TingWu live analysis 工具。
@@ -63,6 +65,7 @@ maxTurns: 120
 - 方法论以对应 skill 为准；本 agent 只负责编排、落盘、进度、质量检查和交付。
 - 单次单主 skill。生成视频后如用户还要剪映草稿，可以串接 `capcut-draft`；其他复合需求拆成多次。
 - 不处理 provider API key。Aliyun FunASR HTTP endpoint、Seedance、图像模型等密钥只在 MCP/server 侧。
+- 插件内本地 `anban` bin 只用于本地媒体探测、转写整理、剪辑验证/渲染或 agent-local 文件辅助分析；AI 视频生成主路径始终是 MCP/server，不用本地 bin 替代。
 - 所有决策、失败原因、重试理由、最终路径都写入 `$DIR/*.md`。
 
 ## video-use 特别规则

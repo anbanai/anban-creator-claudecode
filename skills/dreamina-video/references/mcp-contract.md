@@ -12,10 +12,15 @@ Input:
 Returns:
 - `video_defaults`: project defaults for purpose, model key, resolution, ratio, duration, watermark, preflight
 - `video_model_policy`: allowed models, default model, auto-downgrade policy, max resolution and max duration
-- `model_catalog`: server-supported Seedance model keys and capabilities
+- `model_catalog`: server-configured video model keys and capabilities
 - `credit_multiplier`: default `1000`, meaning 1 RMB = 1000 credits unless server config changes it
 
 Do not hardcode a default model, resolution, duration, watermark, or fixed credit number in the skill. Project profile is the source of truth; plan/task overrides are snapshots and must not rewrite project defaults unless the user explicitly asks to save them.
+
+Model visibility is fail-closed:
+- Only keys present in `model_catalog` are configured and usable.
+- `video_model_policy.allowed_models`, `video_model_policy.default_model`, task `video_config.model_key`, and plan `video_config.model_key` are valid only if the key exists in `model_catalog`.
+- If historical data contains a missing key, report “模型未配置或不可用” and stop. Do not show, save, estimate, trigger, or call the missing model.
 
 ## register_video_reference
 
@@ -30,8 +35,11 @@ Input:
 - `file_path`: optional temporary agent/server-local media path; MCP uploads it to OSS/storage and returns `ark_url`
 - `text`: required for text references
 - `reference_role`: subject identity, product appearance, scene background, first frame, last frame, action, camera movement, rhythm, voice tone, BGM, or typography
+- optional metadata from task/plan `video_config.references`: `file_name`, `mime_type`, `file_size`, `input_duration_seconds`
 
 Media URLs must be OSS/CDN-backed public HTTPS URLs. Localhost, private IPs, relative storage URLs, and local filesystem paths are not Ark-accessible. If storage is local or has no public HTTPS CDN/OSS URL, the tool returns an explicit OSS/CDN hint instead of submitting an unusable reference. Claude workspace files are temporary; persistent platform files must be registered as task files.
+
+When a task or plan has `video_config.references`, consume those references first. Preserve `reference_role` and server-measured `input_duration_seconds`; for raw video references, never invent or overwrite duration client-side.
 
 ## validate_video_generation_params
 
@@ -44,7 +52,7 @@ Returns:
 - `pricing_breakdown`
 - validation errors for unsupported model/parameter/reference combinations
 
-The server estimates credits dynamically from official RMB price tables, `credit_multiplier`, model key, output resolution, ratio, duration, whether an input video is present, and server-measured input video duration. Do not trust agent-supplied input video duration.
+The server estimates credits dynamically from configured RMB price tables, `credit_multiplier`, model key, output resolution, ratio, duration, whether an input video is present, and server-measured input video duration. Do not trust agent-supplied input video duration. Video task/plan creation and plan trigger require at least `100000` credits balance; this is a balance gate, not the minimum charge.
 
 ## build_video_generation_plan
 
@@ -63,7 +71,7 @@ Important inputs:
 - `duration`: seconds
 - `ratio`: usually `9:16`
 - `resolution`: usually `1080p`
-- `model`: friendly model key from project profile/catalog, not a hardcoded provider fallback
+- `model`: configured model key from `get_project_video_profile.model_catalog`, not a hardcoded provider fallback
 - `seed`
 - `camera_fixed`
 - `watermark`
