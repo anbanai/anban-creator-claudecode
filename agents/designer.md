@@ -46,14 +46,14 @@ maxTurns: 120
 
 ## MCP 工具规则
 
-- **必须使用 Claude Code 内置 MCP 工具**调用服务端接口（`mcp__plugin_anban_creator__generate_image`、`mcp__plugin_anban_creator__upload_image`、`mcp__plugin_anban_creator__compress_image`、`mcp__plugin_anban_creator__download_image`、`mcp__plugin_anban_creator__analyze_image`、`mcp__plugin_anban_creator__prepare_workspace`、`mcp__plugin_anban_creator__update_task_progress` 等）
-- **Claude Code subagent 的 `tools:` 字段是 allowlist**。不要在本 agent frontmatter 中声明 `tools:`；省略 `tools:` 才能继承包含 MCP 在内的可用工具。如果运行时无法看到 `mcp__plugin_anban_creator__generate_image`，停止并报告 MCP 工具未注入。
+- **必须使用 Claude Code 内置 MCP 工具**调用服务端接口（`generate_image`、`upload_image`、`compress_image`、`download_image`、`analyze_image`、`prepare_workspace`、`update_task_progress` 等）
+- **Claude Code subagent 的 `tools:` 字段是 allowlist**。不要在本 agent frontmatter 中声明 `tools:`；省略 `tools:` 才能继承包含 MCP 在内的可用工具。如果运行时无法看到 `generate_image` 等 MCP 能力，停止并报告 MCP 工具未注入。
 - **`generate_image` 的 ref 按 provider 适配**（详见执行管线步骤 3 / `line-art-coloring` skill）：Seedream 用单张 `ref_image_path`，OpenAI(gpt-image) `ref_image_paths` ≤16、Gemini ≤10。返回值含 `provider`/`model`/`revised_prompt`——provider 以返回值为权威来源；确认实际使用模型并把每次调用的 `prompt/provider/model/size/output_path/ref_image_path/revised_prompt` 追加到 `$DIR/image-prompts.md`。
 - **图像视觉分析**使用 `analyze_image`（project_id, image_url/file_path, prompt），用于：实体识别、候选评估、一致性审计、线稿验证
 - **`analyze_image` 一次只分析一张图片**。调用时传 `image_url` 或 `file_path` 二选一；同时传 `file_path` 和 `image_url` 时服务端只会使用 `file_path`。线稿验证必须先为原始线稿生成线稿指纹，再分析上色图，将上色图审计结果与线稿指纹逐项比对。
 - **Read 工具不用于图像视觉分析**——在本环境中 Read 上传图像到 CDN，不提供视觉内容
 - **MCP 工具不可用时**执行以下诊断步骤：
-  1. 检查工具列表是否包含 `mcp__plugin_anban_creator__generate_image`、`mcp__plugin_anban_creator__analyze_image`、`mcp__plugin_anban_creator__download_image`、`mcp__plugin_anban_creator__prepare_workspace`、`mcp__plugin_anban_creator__update_task_progress`
+  1. 检查工具列表是否包含 `generate_image`、`analyze_image`、`download_image`、`prepare_workspace`、`update_task_progress`
   2. 通过 `echo $ANBAN_API_KEY`、`echo $ANBAN_API_URL`、`echo $ANBAN_DEFAULT_PROJECT` 检查环境变量；`ANBAN_API_URL` 为空时按 `.mcp.json` 默认值 `https://api.creator.anbanai.com` 理解
   3. 如果 `ANBAN_API_KEY` 为空，报告缺少变量并停止
   4. 如果 `ANBAN_DEFAULT_PROJECT` 为空，调用 `list_projects` 自动选择项目；无法唯一判断时报告可选项目并停止等待配置
@@ -66,7 +66,7 @@ maxTurns: 120
 
 ### 步骤 1：初始化
 
-Call `mcp__plugin_anban_creator__update_task_progress(task_id=$TASK_ID, stage="init", title="初始化", description="加载方法论、获取项目、工作目录和图像模型")`。
+Call `update_task_progress(task_id=$TASK_ID, stage="init", title="初始化", description="加载方法论、获取项目、工作目录和图像模型")`。
 
 1. **插件 skill 路径解析**：优先使用已注入的 `line-art-coloring` skill。若必须手动读取，按顺序查找：
    - 当前插件目录的 `skills/line-art-coloring/SKILL.md`
@@ -77,7 +77,7 @@ Call `mcp__plugin_anban_creator__update_task_progress(task_id=$TASK_ID, stage="i
    - 如果为空，调用 `list_projects`；只有一个可用项目时自动使用，多个项目且无法判断时停止并提示用户配置 `ANBAN_DEFAULT_PROJECT`
 3. 获取 `$TASK_ID`（从 `.task-context` 或 CWD 目录名）
 4. **确认图像模型 provider**：provider 的权威来源是 `generate_image` 返回的 `provider` 字段——首次调用后据此确认并补记。建任务的 `image_model_key`（如 `openai-gpt-image`/`seedream`/`gemini`）可预判 provider，但以返回值为准。provider（`openai` / `gemini` / `volcengine`）决定步骤 3 的 ref 策略；确认前按 Seedream 单 ref 与 OpenAI·Gemini 多 ref 两套准备。
-5. 尝试调用 `mcp__plugin_anban_creator__prepare_workspace(content_type="design", task_id=$TASK_ID)` 获取 `$DIR`
+5. 尝试调用 `prepare_workspace(content_type="design", task_id=$TASK_ID)` 获取 `$DIR`
    - prepare_workspace 返回的 path 可能是相对路径；相对路径以当前任务工作区 `$CWD` 为根，例如返回 `output` 时使用 `$CWD/output`
    - 如果 `prepare_workspace` 调用失败，使用 `$CWD/output/` 作为 `$DIR`
 6. `mkdir -p "$DIR"`
@@ -94,7 +94,7 @@ Call `mcp__plugin_anban_creator__update_task_progress(task_id=$TASK_ID, stage="i
 
 ### 步骤 3：渐进式上色（using the `line-art-coloring` skill）
 
-Call `mcp__plugin_anban_creator__update_task_progress(task_id=$TASK_ID, stage="coloring", title="上色", description="逐张线稿渐进式上色，原线稿作单源 ref，构建Color Bible")`。
+Call `update_task_progress(task_id=$TASK_ID, stage="coloring", title="上色", description="逐张线稿渐进式上色，原线稿作单源 ref，构建Color Bible")`。
 
 按 `input-manifest.md` 中的顺序逐张处理线稿：
 
@@ -120,7 +120,7 @@ Call `mcp__plugin_anban_creator__update_task_progress(task_id=$TASK_ID, stage="c
 
 ### 步骤 4：全量一致性审计
 
-Call `mcp__plugin_anban_creator__update_task_progress(task_id=$TASK_ID, stage="audit", title="审计", description="全量一致性审计，逐实体逐部位比对Color Bible，双轨记录颜色+线稿风险")`。
+Call `update_task_progress(task_id=$TASK_ID, stage="audit", title="审计", description="全量一致性审计，逐实体逐部位比对Color Bible，双轨记录颜色+线稿风险")`。
 
 对每张已上色图调用 `analyze_image`，对 Color Bible 中每个跨图实体逐部位比对。
 
@@ -128,7 +128,7 @@ Call `mcp__plugin_anban_creator__update_task_progress(task_id=$TASK_ID, stage="a
 
 ### 步骤 5：收敛修正循环（最多 3 轮）
 
-Call `mcp__plugin_anban_creator__update_task_progress(task_id=$TASK_ID, stage="correction", title="修正", description="收敛修正不一致项，回归守卫，最多3轮")`。
+Call `update_task_progress(task_id=$TASK_ID, stage="correction", title="修正", description="收敛修正不一致项，回归守卫，最多3轮")`。
 
 **先判断修正能否真正改善**：颜色问题若需要"只改色不动线"才能修，直接在 `consistency-report.md` 标 `needs_img2img`，**不要反复全量重绘**——当前只有 `generate_image`，重绘会改变线条，可能越修越破线。只在"重绘既能修色又不明显退化线稿"时才重生成。
 
@@ -144,7 +144,7 @@ Call `mcp__plugin_anban_creator__update_task_progress(task_id=$TASK_ID, stage="c
 
 ### 步骤 7：归档报告
 
-Call `mcp__plugin_anban_creator__update_task_progress(task_id=$TASK_ID, stage="report", title="报告", description="生成交付报告，汇总上色结果、一致性状态和保线风险")`。
+Call `update_task_progress(task_id=$TASK_ID, stage="report", title="报告", description="生成交付报告，汇总上色结果、一致性状态和保线风险")`。
 
 向用户交付结果摘要：
 - 模式：尽力保线的线稿上色

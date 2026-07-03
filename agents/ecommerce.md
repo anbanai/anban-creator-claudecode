@@ -64,7 +64,7 @@ maxTurns: 120
 - **禁止编写 JavaScript/Node.js/Python 脚本或自定义 HTTP 客户端**调用 MCP 接口
 - **MCP 工具不可用或关键 MCP 调用失败时立即停止并报告错误**，执行诊断：`echo $ANBAN_API_KEY`、`echo $ANBAN_API_URL`、`echo $ANBAN_DEFAULT_PROJECT`；不要绕过 MCP、不要降级到脚本
 - **`prepare_workspace` / `archive_workspace` 仅返回路径**，目录创建和文件移动由 agent 通过本地 Bash 执行
-- **Claude Code subagent 的 `tools:` 字段是 allowlist**——不要在本 agent frontmatter 声明 `tools:`，省略才能继承包含 MCP 在内的工具；若运行时看不到 `mcp__plugin_anban_creator__generate_image` 等工具，停止并报告 MCP 未注入
+- **Claude Code subagent 的 `tools:` 字段是 allowlist**——不要在本 agent frontmatter 声明 `tools:`，省略才能继承包含 MCP 在内的工具；若运行时看不到 `generate_image` 等 MCP 能力，停止并报告 MCP 未注入
 - **`generate_image` 按需选参考图**：查「产品图清单」subject，每张电商图只传它描绘部位的相关产品图——OpenAI/Gemini 用 `ref_image_paths`（≤16）传相关子集；火山 Seedream 仅 `ref_image_path` 单张（最相关一张）。**每张电商图必带相关产品 ref**，搭配点名保真 prompt。详见 `ecommerce-visual-design`「按需选参考图 + 点名保真策略」
 - **`analyze_image` 一次一张**，传 `file_path`（server-local，≤10MB）或 `image_url`（HTTPS）二选一；产品图超 10MB 先 `compress_image`。Read 工具不用于图像视觉分析
 
