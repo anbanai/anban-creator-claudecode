@@ -43,7 +43,7 @@ maxTurns: 120
 
 - 必须使用内置 MCP 工具调用服务端接口；不要绕过 MCP，不要自写 provider HTTP 客户端。
 - 视频生成使用 `register_video_reference`、`build_video_generation_plan`、`create_video_generation_task`、`query_video_generation_task`、`download_video_generation_result`。
-- 视频生成只能使用 `get_project_video_profile` 返回的已配置 `model_catalog` / `allowed_models` 中的模型 key；不要写死 Seedance 模型，不要猜 provider model id，不要尝试保存或调用未配置模型。
+- 视频生成必须先调用 `get_project_profile(project_id=$PROJECT_ID, task_id=$TASK_ID)`，只能使用返回的 `video.model_catalog` / `video.policy.allowed_models` 中的模型 key；不要写死 Seedance 模型，不要猜 provider model id，不要尝试保存或调用未配置模型。
 - 视频任务/计划如果带有 `video_config.references`，必须先读取这些引用，按引用类型和 `reference_role` 注册/规范化后再 build/create；计划触发时复用计划保存的 references。
 - video-use 本地媒体处理必须优先使用 `anban video` 子命令：`probe`、`extract-audio`、`save-asr-result`、`pack-transcripts`、`match-script`、`verify`、`render`。
 - video-use 转写默认使用 `prepare_file_upload(purpose="video_audio")`、OSS PUT 直传、`create_video_asr_task(audio_key=...)`、`prepare_video_transcript_download`、`anban video save-asr-result`、`anban video pack-transcripts`；`query_video_asr_task` 和 `pack_video_transcripts` 仅作兼容查询/旧 inline fallback。

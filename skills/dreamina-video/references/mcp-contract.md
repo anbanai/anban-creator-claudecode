@@ -2,24 +2,29 @@
 
 Agents must use MCP tools for video generation. API keys and raw provider calls stay on the server.
 
-## get_project_video_profile
+## get_project_profile
 
 Use this first for every video task.
 
 Input:
 - `project_id`
+- optional `task_id`
 
 Returns:
-- `video_defaults`: project defaults for purpose, model key, resolution, ratio, duration, watermark, preflight
-- `video_model_policy`: allowed models, default model, auto-downgrade policy, max resolution and max duration
-- `model_catalog`: server-configured video model keys and capabilities
-- `credit_multiplier`: default `1000`, meaning 1 RMB = 1000 credits unless server config changes it
+- `resolved_profile`: project name, platform, positioning/instructions, keywords, creative constraints, source metadata, and whether a task snapshot is in use
+- `agent_brief`: server-formatted project context and video creation constraints that the agent can read directly
+- `video.defaults`: resolved purpose, model key, resolution, ratio, duration, watermark, and preflight defaults
+- `video.policy`: allowed models, default model, auto-downgrade policy, max resolution, and max duration
+- `video.model_catalog`: server-configured and project-allowed video model keys and capabilities
+- `video.references`: task/plan `video_config.references` when `task_id` is supplied
+- `video.pricing.credit_multiplier`: default `1000`, meaning 1 RMB = 1000 credits unless server config changes it
+- `video.pricing.min_balance`: video creation/trigger balance gate, currently `100000`
 
 Do not hardcode a default model, resolution, duration, watermark, or fixed credit number in the skill. Project profile is the source of truth; plan/task overrides are snapshots and must not rewrite project defaults unless the user explicitly asks to save them.
 
 Model visibility is fail-closed:
-- Only keys present in `model_catalog` are configured and usable.
-- `video_model_policy.allowed_models`, `video_model_policy.default_model`, task `video_config.model_key`, and plan `video_config.model_key` are valid only if the key exists in `model_catalog`.
+- Only keys present in `video.model_catalog` are configured and usable.
+- `video.policy.allowed_models`, `video.policy.default_model`, task `video_config.model_key`, and plan `video_config.model_key` are valid only if the key exists in `video.model_catalog`.
 - If historical data contains a missing key, report “模型未配置或不可用” and stop. Do not show, save, estimate, trigger, or call the missing model.
 
 ## register_video_reference
@@ -71,7 +76,7 @@ Important inputs:
 - `duration`: seconds
 - `ratio`: usually `9:16`
 - `resolution`: usually `1080p`
-- `model`: configured model key from `get_project_video_profile.model_catalog`, not a hardcoded provider fallback
+- `model`: configured model key from `get_project_profile.video.model_catalog`, not a hardcoded provider fallback
 - `seed`
 - `camera_fixed`
 - `watermark`

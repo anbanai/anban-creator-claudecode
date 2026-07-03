@@ -11,7 +11,7 @@ Use this skill to turn references and a business goal into a stable short-video 
 
 | Tool | Use |
 | --- | --- |
-| `get_project_video_profile` | Read project video defaults, model policy, model catalog, and credit multiplier before planning. |
+| `get_project_profile` | Read the resolved project runtime profile, `agent_brief`, and `video` block before planning. |
 | `register_video_reference` | Upload or normalize a text/image/audio/video reference into an OSS-backed, Ark-accessible URL. |
 | `validate_video_generation_params` | Preflight model/ratio/resolution/duration/references and return estimated dynamic credits. |
 | `build_video_generation_plan` | Validate parameters and produce `generation-plan.json` plus SDK payload preview and estimated credits. |
@@ -24,8 +24,8 @@ Never call Volcengine/Dreamina HTTP APIs directly, never handle API keys, never 
 ## Workflow
 
 1. Work inside the existing project/plan/task flow. A video generation job is a `video` task, not a separate product line.
-2. Call `get_project_video_profile(project_id)` first. Use only the returned project defaults, model policy, model catalog, and `credit_multiplier`; do not hardcode model IDs, default resolution, duration, or fixed credits.
-   - The only valid model keys are keys present in the returned `model_catalog` and allowed by the returned project policy.
+2. Call `get_project_profile(project_id, task_id)` first. Use only the returned `resolved_profile`, `agent_brief`, and `video` block; do not hardcode model IDs, default resolution, duration, watermark, or fixed credits.
+   - The only valid model keys are keys present in `video.model_catalog` and allowed by `video.policy.allowed_models`.
    - If a task/plan/history mentions a model key that is not in the returned catalog, stop with “模型未配置或不可用” instead of guessing a replacement.
    - Never persist, display, or call an unconfigured model key.
 3. Prepare the workspace with `prepare_workspace(content_type="video", task_id=...)` when available. Local files are temporary Claude workspace artifacts only; anything persistent must become an OSS-backed task file through MCP/server tools.

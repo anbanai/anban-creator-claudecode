@@ -1,156 +1,93 @@
 ---
 name: content-writing
-description: Writes WeChat articles with style guidance, removes AI traces (去AI痕), converts Markdown to WeChat HTML, and checks content compliance (合规检查). Use when writing articles, removing AI traces, converting Markdown to WeChat HTML, or checking content compliance. Also use when user mentions '写文章', '去痕', '去AI味', 'HTML转换', '违禁词检查', '合规检查', 'humanize', or when any step in the article pipeline calls for writing, decontaminating, or converting article content.
+description: Writes WeChat articles with server-side writer resources, removes AI traces, prepares content for render_template, and checks platform compliance. Use when writing article body content, de-AI rewriting, content quality review, compliance review, or when the article pipeline calls for writing/decontaminating article text.
+user-invocable: false
 ---
 
-# 微信公众号内容写作
+# 微信公众号内容写作知识库
 
 ## MCP 工具
 
 | MCP 工具 | 说明 |
 |----------|------|
-| `write_article` (project_id, topic, input_type?, article_type?, length?) | 调用 LLM 按项目写作风格生成文章 |
-| `convert_markdown` (project_id, markdown, theme?) | 调用 LLM 将 Markdown 转为 WeChat HTML |
-| `list_resources` (category) | 获取可用排版模块列表（如可用） |
-| `get_resource` (category, name) | 获取特定排版模块的详细语法和示例（如可用） |
+| `write_article(project_id, topic, input_type?, article_type?, length?, task_id?)` | 服务端按已解析 writer resource 生成 Markdown 正文 |
+| `list_resources(category="writers")` | 发现可用写作风格资源 |
+| `get_resource(category="writers", name, include_raw?)` | 读取 writer metadata / 标题公式 / raw YAML |
+| `list_resources(category="layouts" / "article_templates")` | 发现排版模块与文章节奏模板 |
+| `get_resource(category="layouts" / "article_templates", name, include_raw?)` | 获取模块 schema、模板 rhythm、字段契约 |
+| `inspect_article(project_id, markdown, article_image_mode?, layout_plan?, cover_media_id?)` | 发布前只读预检 readiness / blockers / suggested fixes |
+| `render_template(project_id, markdown, layout_plan, theme?, task_id?)` | 主路径：按 `visual-rhythm-plan.md` 确定性渲染微信 HTML |
+| `convert_markdown(project_id, markdown, theme?, task_id?)` | 兼容旧 server 的降级路径；新流水线不得作为主路径 |
 
 ---
+
+## 写作职责边界
+
+content-writing 只负责正文质量，不负责图片生成和最终 HTML slot 规划。
+
+- writer 只决定文字风格、段落节奏、标题公式和语气，不携带视觉/封面风格。
+- 视觉风格来自 project/task 的 `visual_style`，文章模板来自 `article_templates`，排版样式来自 `theme`。
+- 写作时不插入图片占位符；配图由 `article-visual-design` 生成并回填到 `visual-rhythm-plan.md`。
+- HTML 主路径是 `render_template`，由服务端按 layout_plan 和 layout schema 确定性渲染。
 
 ## 写作流程
 
-### 步骤 1：准备上下文
+1. 读取 `$DIR/context-brief.md`、`$DIR/02-outline.md` 和项目 profile。
+2. 调用 `write_article` 生成 `$DIR/03-article.md`。
+3. 使用 `humanizer` skill 就地改写，保存 `$DIR/04-article-final.md`。
+4. 执行违禁词和内容质量检查，输出 `$DIR/content-quality-report.md`。
+5. 后续由 article 流程调用 `inspect_article` 与 `render_template`。
 
-读取以下文件：
-- `$DIR/context-brief.md` — 上下文锚点，每个章节绑定的核心信息和方向
-- `$DIR/02-outline.md` — 结构化大纲
+## 正文质量标准
 
-### 步骤 2：生成文章初稿
+- 每个 `##` 章节绑定 context-brief 中至少 1 个上下文锚点。
+- 每个章节包含具体素材：案例、场景、数据、人物、冲突、比喻或操作细节。
+- 前 100 字有清晰钩子，不用“今天给大家分享”式空开场。
+- 小标题可扫读，移动端段落短，长短句交替。
+- 有可摘出的判断句，但不堆空泛金句。
+- 结尾给具体行动或一个好回答的问题，不做违规诱导。
 
-调用 `write_article`：
+## AI 去痕
 
-```
-write_article(
-  project_id="$PROJECT_ID",
-  topic="大纲中选定的主题",
-  input_type="outline",     // 从大纲扩展
-  article_type="essay",     // 可选: essay, commentary, story, tutorial, review
-  length="medium"           // 可选: short, medium, long
-)
-```
+使用 `humanizer` skill 执行 draft → audit → final 流程：
 
-**input_type 选择**：
+- 改写而非删除，保留信息点、段落数量级和作者意图。
+- 重点处理意义拔高、三段式套话、AI 高频词、空洞总结、连续排比、过度转折。
+- 不调用 MCP、不计费、无强度档位。
 
-| 值 | 何时使用 | 传入内容 |
-|----|----------|----------|
-| `idea` | 从零开始 | 一句话观点或想法 |
-| `outline` | 有大纲 | 完整大纲内容 |
-| `fragment` | 润色现有内容 | 草稿或未完成的文章 |
-| `title` | 围绕标题写作 | 文章标题 |
-
-**写作要求**：
-- 每个 `##` 章节必须绑定 `context-brief.md` 中至少 1 个上下文锚点
-- 每个章节必须包含具体素材（案例、场景、比喻、数据、人物、冲突或操作细节）
-- 不要在正文中插入配图占位符（配图由后续步骤专门处理）
-- 句子长短交替，避免连续相同句式开头
-
-保存为 `$DIR/03-article.md`。
-
-### 步骤 3：去 AI 味（humanizer skill）
-
-**using the `humanizer` skill** 就地对 `$DIR/03-article.md` 全文执行去 AI 改写：扫描 33 类 AI 写作模式（意义拔高、AI 高频词、三段式、否定排比、破折号滥用、空洞结尾等），按 draft → audit → final 流程改写。**改写而非删除**——覆盖原文全部信息点，保持段落数与字数量级，保留人称代入、情绪节奏与具体细节等人味。本步骤不调用任何 MCP 工具、不计费、无强度档位。
-
-中文等价映射、「不该标记为 AI 的特征」（看集群而非孤例）与「人味特征」详见 `humanizer` skill。
-
-保存为 `$DIR/04-article-final.md`。
-
-### 步骤 4：违禁词合规检查
-
-对 `$DIR/04-article-final.md` 全文执行违禁词扫描。
+## 合规检查
 
 词库详见 [prohibited-words.md](references/prohibited-words.md)。
 
-**处理规则**：
-- 高风险（政治敏感/色情/暴力/赌博）：删除相关内容
-- 中风险（广告法绝对化用语/虚假承诺）：替换为合规近义词
-- 低风险：替换或删除
-- 禁止变相使用：不得通过谐音字、拼音、特殊符号规避
+- 高风险：删除相关内容。
+- 中风险：替换为合规近义表达。
+- 低风险：替换、弱化或删除。
+- 禁止使用谐音字、拼音、特殊符号规避平台规则。
 
-**报告格式**：
-```
+报告格式：
+
+```text
 违禁词检查报告：
 - [词汇] → 已替换为 [合规表述]（位置：第X段）
+- [词汇] → 已删除相关句子（位置：第X段）
 共处理 N 处违禁词，内容已达到平台合规标准。
 ```
 
-### 步骤 5：内容质量报告
+## 渲染交接
 
-创建 `$DIR/content-quality-report.md`，检查以下 6 项：
+正文完成后不要直接调用 `convert_markdown`。
 
-| 检查项 | 通过标准 |
-|--------|----------|
-| 用户需求覆盖 | 文章回应了用户原始需求 |
-| 账号定位一致 | 语气、深度与账号定位匹配 |
-| 历史文章差异 | 与已有文章选题不重复，角度有差异 |
-| 章节实质内容 | 每个 `##` 章节包含具体素材，不是泛泛而谈 |
-| 研究结论引用 | 大纲中的核心观点在正文中得到展开 |
-| AI 套话风险 | 无明显 AI 痕迹（参考 `humanizer` skill 的 33 类模式） |
+正确交接路径：
 
-任一检查项不通过时，必须回到步骤 2/3 重写（最多重试 2 次，超过则记录问题继续后续流程）。
+1. `article-visual-design` 创建/回填 `$DIR/visual-rhythm-plan.md`。
+2. 调用 `inspect_article` 检查 layout_plan、图片模式和 draft blockers。
+3. 调用 `render_template`，保存 `$DIR/05-article.html`。
+4. 把 `slots_rendered` / `render_audit` 写入 `$DIR/final-review.md`。
 
----
-
-## 排版模块
-
-通过 `list_resources(category="layouts")` 获取可用的排版模块列表，用 `get_resource(category="layouts", name="<模块名>")` 获取详细语法。（如果 MCP 工具不可用，跳过此步骤，直接写作。）
-
-排版模块使用标准 Markdown 语法，由 `convert_markdown` 工具中的 LLM 自动渲染为微信 HTML。写作时按需选用 2-4 个模块增强视觉丰富度。
-
-**使用原则**：
-- 根据内容需要选用，不要为了用而用
-- 优先保证内容质量，排版模块是锦上添花
-
----
-
-## HTML 转换
-
-将定稿 Markdown 转为微信 HTML：
-
-```
-convert_markdown(
-  project_id="$PROJECT_ID",
-  markdown="文章全文（含已插入的 CDN 图片链接）",
-  theme="default"        // 可选，默认使用项目配置的主题
-)
-```
-
-**微信 HTML 限制**：
-- 所有 CSS 必须内联（style 属性）
-- 禁止外部资源（无外部字体、图片、CSS）
-- 安全标签：section, p, span, strong, em, h1-h6, ul, ol, li, blockquote, pre, code, table, img, br, hr
-
-保存为 `$DIR/05-article.html`。
-
----
-
-## 配图说明
-
-配图由 `article-visual-design` skill 在文章定稿后专门设计并插入，写作步骤不需要处理配图。
-
-写作时应确保每个 `##` 章节有足够的实质性内容（具体案例、比喻、场景描述等），为后续配图提供丰富的视觉素材。
-
----
-
-## 写作风格
-
-内置风格定义文件位于 `writers/` 目录：
-- [dan-koe.yaml](../../writers/dan-koe.yaml) — 简洁有力、直击要点、哲理深度
-- [cultural-depth.yaml](../../writers/cultural-depth.yaml) — 文化底蕴、文学修辞、深度思考
-- [casual-science.yaml](../../writers/casual-science.yaml) — 通俗易懂、生动有趣、科学严谨
-
-写作风格由项目配置决定，调用 `write_article` 时自动应用。
+`convert_markdown` 只用于旧版 server 兼容降级；使用时必须在 final-review 中记录原因。
 
 ## 深入参考
 
-- AI 去痕详细指南（33 类 AI 写作模式 + draft→audit→final 流程）：`humanizer` skill
-- 写作工具完整参数说明：[writing-guide.md](references/writing-guide.md)
-- 内容合规详细规则：[content-compliance.md](references/content-compliance.md)
+- 写作工具参数：[writing-guide.md](references/writing-guide.md)
+- 内容合规规则：[content-compliance.md](references/content-compliance.md)
+- 违禁词：[prohibited-words.md](references/prohibited-words.md)
