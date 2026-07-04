@@ -56,6 +56,34 @@
         ]
       },
       {
+        "matcher": "videocreator",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/video-quality-gate.sh",
+            "timeout": 30
+          },
+          {
+            "type": "prompt",
+            "prompt": "videocreator agent 已完成执行。请检查 input-manifest.md、video-task-submit.json、video-task-result.json、delivery-manifest.json、quality-review.md 和已注册视频 task file。确认未自动进入字幕、剪辑或后期流程。最后调用 submit_agent_feedback(task_id=$TASK_ID, agent_name=\"videocreator\", scores={quality:N, completeness:N, efficiency:N}, errors=\"<errors>\", optimizations=\"<optimizations>\", summary=\"<brief summary>\")。"
+          }
+        ]
+      },
+      {
+        "matcher": "videoeditor",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/video-quality-gate.sh",
+            "timeout": 30
+          },
+          {
+            "type": "prompt",
+            "prompt": "videoeditor agent 已完成执行。请检查 input-manifest.md、edit/edl.json、edit/media-manifest.json、preview.mp4/final.mp4、render-report.md 或 quality-review.md；确认未调用视频生成主链路。最后调用 submit_agent_feedback(task_id=$TASK_ID, agent_name=\"videoeditor\", scores={quality:N, completeness:N, efficiency:N}, errors=\"<errors>\", optimizations=\"<optimizations>\", summary=\"<brief summary>\")。"
+          }
+        ]
+      },
+      {
         "matcher": "video",
         "hooks": [
           {

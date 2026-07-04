@@ -36,7 +36,10 @@ PY
 
 INPUT=$(cat)
 AGENT_TYPE=$(printf "%s" "$INPUT" | json_agent_type)
-[[ "$AGENT_TYPE" != "video" ]] && exit 0
+case "$AGENT_TYPE" in
+  video|videocreator|videoeditor) ;;
+  *) exit 0 ;;
+esac
 
 WORKSPACE_ROOT="${CLAUDE_PROJECT_DIR:-$PWD}"
 CANDIDATES=()
@@ -82,7 +85,7 @@ if echo "$TEXT" | grep -q "dreamina-video"; then
   fi
 elif echo "$TEXT" | grep -q "video-use"; then
   [[ ! -s "$VIDEO_DIR/edit/edl.json" ]] && MISSING+=("edit/edl.json")
-  [[ ! -s "$VIDEO_DIR/final.mp4" ]] && MISSING+=("final.mp4")
+  [[ ! -s "$VIDEO_DIR/final.mp4" && ! -s "$VIDEO_DIR/preview.mp4" ]] && MISSING+=("final.mp4 或 preview.mp4")
 elif echo "$TEXT" | grep -q "short-video-cover"; then
   [[ ! -s "$VIDEO_DIR/cover.png" && ! -s "$VIDEO_DIR/cover_v2.png" ]] && MISSING+=("cover.png 或 cover_v2.png")
 elif echo "$TEXT" | grep -q "portrait-pose-variants"; then
