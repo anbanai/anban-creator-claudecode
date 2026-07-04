@@ -74,9 +74,9 @@ TEXT=$(tr '[:upper:]' '[:lower:]' < "$MANIFEST")
 MISSING=()
 
 if echo "$TEXT" | grep -q "dreamina-video"; then
-  [[ ! -s "$VIDEO_DIR/video-task-submit.json" ]] && MISSING+=("video-task-submit.json（缺 create_video_generation_task 记录）")
-  [[ ! -s "$VIDEO_DIR/video-task-result.json" ]] && MISSING+=("video-task-result.json（缺 query_video_generation_task 终态记录）")
-  [[ ! -s "$VIDEO_DIR/delivery-manifest.json" ]] && MISSING+=("delivery-manifest.json（缺 download_video_generation_result 注册结果）")
+  [[ ! -s "$VIDEO_DIR/video-task-submit.json" ]] && MISSING+=("video-task-submit.json（缺 create_video_generation_job 记录）")
+  [[ ! -s "$VIDEO_DIR/video-task-result.json" ]] && MISSING+=("video-task-result.json（缺 query_video_generation_job 终态记录）")
+  [[ ! -s "$VIDEO_DIR/delivery-manifest.json" ]] && MISSING+=("delivery-manifest.json（缺 download_video_generation_results/compose_video_segments 注册 final_video）")
   if [[ -s "$VIDEO_DIR/video-task-result.json" ]] && ! json_status_succeeded "$VIDEO_DIR/video-task-result.json" >/dev/null 2>&1; then
     MISSING+=("video-task-result.json status 不是 succeeded")
   fi

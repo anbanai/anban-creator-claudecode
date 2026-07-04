@@ -83,43 +83,64 @@ Important inputs:
 - `service_tier`
 - `task_id`
 
-## create_video_generation_task
+## create_video_generation_job
 
 Use only after artifacts and plan are written. The server:
-- deducts dynamic credits when applicable, or reuses the existing video task deduction when `task_id` was already charged at task creation
-- calls Volcengine Ark `CreateContentGenerationTask`
-- returns `video_task_id`, model, ratio, resolution, duration, seed, estimated credits, and pricing breakdown
+- resolves target deliverable duration and duration source
+- splits the job into legal provider-bounded `segments`
+- deducts total dynamic credits once, or reuses the existing video task deduction when `task_id` was already charged
+- calls Volcengine Ark `CreateContentGenerationTask` once per segment
+- records `video_generation_id`, segment provider task IDs, segment duration, and segment credits
 
 Save response to `video-task-submit.json`.
 
-## query_video_generation_task
+## query_video_generation_job
 
-Poll until terminal status.
+Poll until all segments reach a terminal status.
+
+Input:
+- `project_id`
+- `task_id` or `video_generation_id`
 
 Returns:
-- `video_task_id`
-- `status`: `queued`, `running`, `succeeded`, `failed`, `cancelled`
-- `video_url`
-- `last_frame_url`
-- `file_url`
-- `model`
-- `resolution`
-- `ratio`
-- `duration`
-- `seed`
-- `revised_prompt`
-- `error`
+- `video_generation_id`
+- aggregate `status`
+- `segments[]` with `index`, `video_task_id`, `status`, provider URLs, duration, task file ID, and error
 
 Provider raw URLs are diagnostic/intermediate fields. They are not the final Studio delivery link.
 
 Save terminal response to `video-task-result.json`.
 
-## download_video_generation_result
+## download_video_generation_results
 
-Use after `succeeded`. Input:
+Use after segment success. Input:
 - `project_id`
-- `video_url`
 - `task_id`
+- `video_generation_id`
+- `segments[]` with `index` and `video_url` or `file_url`
+
+The server downloads each provider segment URL to a temporary area, uploads each MP4 to OSS, and registers segment task files. A single-segment job is marked as `final_video`; multi-segment jobs are not complete until composed.
+
+## compose_video_segments
+
+Use after all segment files are downloaded and a local ffmpeg composition exists.
+
+Input:
+- `project_id`
+- `task_id`
+- `video_generation_id`
+- `file_path`: server/agent-local `final.mp4`
 - optional `file_name`
 
-The server downloads the provider URL to a temporary area, uploads the MP4 to OSS, and registers it as a task file. The delivery manifest should point at the returned task file and platform URL, not a local absolute path or provider raw URL.
+The server uploads the composed MP4 to OSS, registers it as a task file, and stores its ID as `final_video`.
+
+## validate_video_delivery
+
+Use before final feedback.
+
+Input:
+- `project_id`
+- `task_id`
+- optional `video_generation_id`
+
+Returns `valid=true` only when the job has a registered `final_video` task file. Segment-only output is not a completed video generation delivery.

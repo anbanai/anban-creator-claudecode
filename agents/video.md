@@ -42,7 +42,7 @@ maxTurns: 120
 ## MCP 工具规则
 
 - 必须使用内置 MCP 工具调用服务端接口；不要绕过 MCP，不要自写 provider HTTP 客户端。
-- 视频生成使用 `register_video_reference`、`build_video_generation_plan`、`create_video_generation_task`、`query_video_generation_task`、`download_video_generation_result`。
+- 视频生成使用 `register_video_reference`、`build_video_generation_plan`、`create_video_generation_job`、`query_video_generation_job`、`download_video_generation_results`、`compose_video_segments`、`validate_video_delivery`。
 - 视频生成必须先调用 `get_project_profile(project_id=$PROJECT_ID, task_id=$TASK_ID)`，只能使用返回的 `video.model_catalog` / `video.policy.allowed_models` 中的模型 key；不要写死 Seedance 模型，不要猜 provider model id，不要尝试保存或调用未配置模型。
 - 视频任务/计划如果带有 `video_config.references`，必须先读取这些引用，按引用类型和 `reference_role` 注册/规范化后再 build/create；计划触发时复用计划保存的 references。
 - video-use 本地媒体处理必须优先使用 `anban video` 子命令：`probe`、`extract-audio`、`save-asr-result`、`pack-transcripts`、`match-script`、`verify`、`render`。
@@ -64,7 +64,7 @@ maxTurns: 120
 
 - 禁止调用 Claude `Agent` 工具来执行本次主工作流。你已经是服务端通过 `WithAgent(video)` 直接加载的 video agent，必须在当前 video agent 上下文内完成路由、MCP 调用、轮询、下载、质量检查和反馈提交。
 - 如果需要使用某个视频 skill，只能按 `using the <skill-name> skill` 的方式在当前上下文执行该 skill 的步骤；不要把 `dreamina-video`、`video-use`、`short-video-cover`、`portrait-pose-variants` 或 `capcut-draft` 再委派给嵌套 Agent。
-- 对 `dreamina-video` 工作流，最终交付必须包含 `create_video_generation_task`、`query_video_generation_task` 的终态记录、`download_video_generation_result` 的返回记录，以及注册后的 task file 链接；只注册引用或只创建本地 md 文件不得视为完成。
+- 对 `dreamina-video` 工作流，最终交付必须包含 `create_video_generation_job`、`query_video_generation_job` 的终态记录、`download_video_generation_results` 的返回记录、`compose_video_segments` 注册 final_video、`validate_video_delivery` 校验记录，以及注册后的 final_video task file 链接；只注册引用或只创建本地 md 文件不得视为完成。
 - 方法论以对应 skill 为准；本 agent 只负责编排、落盘、进度、质量检查和交付。
 - 单次单主 skill。生成视频后如用户还要剪映草稿，可以串接 `capcut-draft`；其他复合需求拆成多次。
 - 不处理 provider API key。Aliyun FunASR HTTP endpoint、Seedance、图像模型等密钥只在 MCP/server 侧。
