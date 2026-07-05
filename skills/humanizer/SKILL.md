@@ -16,6 +16,16 @@ allowed-tools:
 
 # Humanizer：去除 AI 写作痕迹（去 AI 味）
 
+## 图片比例固定规则
+
+本 Skill 只要涉及生成、选择、裁切、校验或引用图片，必须按以下优先级决定画面比例：
+
+1. 用户/任务明确指定的 `image_ratio`、`size` 或平台规格优先。
+2. 项目/频道默认比例次之。
+3. 业务默认比例只作兜底：微信文章封面/正文图默认 `16:9`；Seednote/XLS/移动信息流默认 `3:4`；电商、广告投放、视频封面按具体平台素材位要求执行。
+4. 不得从模型路由、供应商默认 `size` 或模型能力反推业务比例；模型只决定能力和成本，比例属于创作场景约束。
+
+
 > **来源与许可证**：本 skill 内置自 [blader/humanizer](https://github.com/blader/humanizer) v2.8.0（MIT License），内容基于维基百科 [Wikipedia:Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing)（WikiProject AI Cleanup 维护）。下方「## 上游原文」起的内容逐字保留上游，仅在开头补充「## 中文适配说明」。请保留本署名与许可证信息。
 
 ## 中文适配说明（先读这段）
