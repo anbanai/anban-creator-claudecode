@@ -17,7 +17,8 @@ Returns:
 - `video.policy`: allowed models, default model, auto-downgrade policy, max resolution, and max duration
 - `video.model_catalog`: server-configured and project-allowed video model keys and capabilities
 - `video.references`: task/plan `video_config.references` when `task_id` is supplied
-- `video.pricing.credit_multiplier`: default `1000`, meaning 1 RMB = 1000 credits unless server config changes it
+- `video.pricing.credits_per_cny`: billing conversion from real CNY model cost to base credits
+- `video.pricing.tier_multiplier`: current membership multiplier applied after base cost
 - `video.pricing.min_balance`: video creation/trigger balance gate, currently `100000`
 
 Do not hardcode a default model, resolution, duration, watermark, or fixed credit number in the skill. Project profile is the source of truth; plan/task overrides are snapshots and must not rewrite project defaults unless the user explicitly asks to save them.
@@ -58,12 +59,13 @@ Input:
 - optional `reference_role`: subject identity, product appearance, scene background, action, camera movement, rhythm, first frame, last frame, voice tone, BGM, or typography
 - optional `purpose_hint`: creative/business hint such as `personal_ip`, `high_efficiency_joke`, `planting`, or `ecommerce`
 - optional `analysis_prompt`
-- optional `sample_count`: default 6, max 8
 
 Returns:
-- `analysis_mode`: `native_video` when the configured OpenAI-compatible multimodal model understood the whole video directly; `sampled_frames` when fallback frame/metadata analysis was used
+- `analysis_mode`: always `native_video` on success
 - `video_understanding.metadata`
 - `video_understanding.model`
+- `video_understanding.usage`: token counts from the native video-understanding model
+- `video_understanding.credits_charged`: final charged credits after tier/user multipliers
 - `video_understanding.visual_summary`
 - `video_understanding.timeline`
 - `video_understanding.subjects`
@@ -79,7 +81,7 @@ Returns:
 - `video_understanding.planning_hints`
 - `task_file` / `task_file_id` when `task_id` is supplied
 
-The model is not hardcoded by the skill. The server uses the configured `vision` OpenAI-compatible model; deployments may configure a video-capable large model such as Kimi through the same SDK path. Prefer `native_video`; accept `sampled_frames` only as fallback. Never proceed from transcript/audio alone when a visual reference video exists.
+The model is not hardcoded by the skill. The server uses `model_routes.video_understanding`, resolved through `model_providers`, with `require_native_video=true` and `require_usage=true`. Deployments may configure a video-capable large model such as Kimi through the OpenAI-compatible SDK path. If the provider cannot understand the whole video natively, the tool fails immediately. Never fall back to frame sampling, screenshot analysis, image understanding, transcript/audio-only analysis, or marketing copy when a visual reference video exists.
 
 Save or read the registered `video-understanding.json`. It is a planning source of truth:
 - `reference-anchors.md` must cite must_keep / can_change / must_not_change
@@ -98,7 +100,7 @@ Returns:
 - `pricing_breakdown`
 - validation errors for unsupported model/parameter/reference combinations
 
-The server estimates credits dynamically from configured RMB price tables, `credit_multiplier`, model key, output resolution, ratio, duration, whether an input video is present, and server-measured input video duration. Do not trust agent-supplied input video duration. Video task/plan creation and plan trigger require at least `100000` credits balance; this is a balance gate, not the minimum charge.
+The server estimates credits dynamically from `model_prices.video_generation`, `billing.credits_per_cny`, membership/user multipliers, model key, output resolution, ratio, duration, whether an input video is present, and server-measured input video duration. Real model cost stays separate from billing multipliers. Do not trust agent-supplied input video duration. Video task/plan creation and plan trigger require at least `100000` credits balance; this is a balance gate, not the minimum charge.
 
 ## build_video_generation_plan
 

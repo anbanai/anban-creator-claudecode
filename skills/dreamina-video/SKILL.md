@@ -13,7 +13,7 @@ Use this skill to turn references and a business goal into a stable short-video 
 | --- | --- |
 | `get_project_profile` | Read the resolved project runtime profile, `agent_brief`, and `video` block before planning. |
 | `register_video_reference` | Upload or normalize a text/image/audio/video reference into an OSS-backed, Ark-accessible URL. |
-| `analyze_video_reference` | Understand an input video through the configured OpenAI-compatible vision model before planning; returns `video-understanding.json` with visual, action, expression, scene, camera, rhythm, and consistency anchors. |
+| `analyze_video_reference` | Understand an input video through the configured native video-understanding route before planning; returns `video-understanding.json`, token usage, charged credits, and visual/action/expression/scene/camera/rhythm/consistency anchors. |
 | `validate_video_generation_params` | Preflight model/ratio/resolution/duration/references and return estimated dynamic credits. |
 | `build_video_generation_plan` | Validate parameters and produce `generation-plan.json` plus SDK payload preview and estimated credits. |
 | `create_video_generation_job` | Submit one target-duration job; the server splits legal provider segments, deducts total credits once, and records segment state. |
@@ -54,8 +54,9 @@ Never call Volcengine/Dreamina HTTP APIs directly, never handle API keys, never 
    - Plan-triggered tasks reuse the plan's saved references unless the user explicitly changes the plan.
 8. Register every non-text reference with `register_video_reference`. Prefer `task_file_id` or upload through the platform; for video input, use the returned reference with server-measured `input_duration_seconds` and never hand-write a raw `video_url` into plan/create. Raw provider URLs are intermediate only and must not be the main delivery link.
 9. For every video reference, call `analyze_video_reference` after registration and save/consume `video-understanding.json`.
-   - Prefer `analysis_mode=native_video`, where the configured large model understands the whole OSS video directly.
-   - Accept `analysis_mode=sampled_frames` only as a fallback and still use its visual/camera/rhythm anchors.
+   - Require `analysis_mode=native_video`, where the configured large model understands the whole OSS video directly through `model_routes.video_understanding`.
+   - If native video understanding fails, stop and report the configuration/provider error. Do not degrade to screenshots, frame sampling, transcript-only analysis, or image understanding.
+   - Treat returned `usage` and `credits_charged` as billing evidence; missing usage is a server-side error for understanding routes.
    - The analysis must cover frame content, character identity, facial expressions, body actions, scene, camera movement, editing rhythm, and what must not drift. Do not rely only on ASR, transcript, or marketing copy.
 10. Write `reference-anchors.md`: first declare `reference_role` for every reference, then separate each reference into must-keep, can-change, and must-not-change anchors. Subject consistency is mandatory: `subject_profile` and every `reference_role=subject identity` source must appear in all shots where the subject appears.
 11. Write `script.md`: structure beats against the 目标成片时长. For long-form references, preserve the reference rhythm and compress only when the user asks for a shorter result. Do not submit raw marketing copy as a video prompt.
