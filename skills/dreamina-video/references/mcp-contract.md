@@ -46,6 +46,47 @@ Media URLs must be OSS/CDN-backed public HTTPS URLs. Localhost, private IPs, rel
 
 When a task or plan has `video_config.references`, consume those references first. Preserve `reference_role` and server-measured `input_duration_seconds`; for raw video references, never invent or overwrite duration client-side.
 
+## analyze_video_reference
+
+Use this after `register_video_reference` for every input video before writing `reference-anchors.md`, `script.md`, or `shot-plan.md`.
+
+Input:
+- `project_id`
+- optional `task_id`
+- optional `task_file_id`
+- optional `video_url`
+- optional `reference_role`: subject identity, product appearance, scene background, action, camera movement, rhythm, first frame, last frame, voice tone, BGM, or typography
+- optional `purpose_hint`: creative/business hint such as `personal_ip`, `high_efficiency_joke`, `planting`, or `ecommerce`
+- optional `analysis_prompt`
+- optional `sample_count`: default 6, max 8
+
+Returns:
+- `analysis_mode`: `native_video` when the configured OpenAI-compatible multimodal model understood the whole video directly; `sampled_frames` when fallback frame/metadata analysis was used
+- `video_understanding.metadata`
+- `video_understanding.model`
+- `video_understanding.visual_summary`
+- `video_understanding.timeline`
+- `video_understanding.subjects`
+- `video_understanding.people`
+- `video_understanding.expressions`
+- `video_understanding.actions`
+- `video_understanding.scenes`
+- `video_understanding.camera_motion`
+- `video_understanding.rhythm`
+- `video_understanding.must_keep`
+- `video_understanding.can_change`
+- `video_understanding.must_not_change`
+- `video_understanding.planning_hints`
+- `task_file` / `task_file_id` when `task_id` is supplied
+
+The model is not hardcoded by the skill. The server uses the configured `vision` OpenAI-compatible model; deployments may configure a video-capable large model such as Kimi through the same SDK path. Prefer `native_video`; accept `sampled_frames` only as fallback. Never proceed from transcript/audio alone when a visual reference video exists.
+
+Save or read the registered `video-understanding.json`. It is a planning source of truth:
+- `reference-anchors.md` must cite must_keep / can_change / must_not_change
+- `script.md` must use rhythm and creative function, not merely copied text
+- `shot-plan.md` must use visual, action, expression, scene, and camera facts
+- `quality-review.md` must check the generated result against these anchors
+
 ## validate_video_generation_params
 
 Use before create, and usually before writing the final submission note.

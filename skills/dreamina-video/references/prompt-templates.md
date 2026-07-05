@@ -27,6 +27,56 @@
 - must_not_change:
 ```
 
+## creative-brief.md
+
+```markdown
+# Creative Brief
+
+creative_type: personal_ip | high_efficiency_joke | product_demo | brand_promo | custom
+purpose: planting | ecommerce | lead_gen | promotion
+audience:
+subject_profile:
+single_message:
+proof:
+cta:
+tone:
+must_not_change:
+source_video_understanding: video-understanding.json
+```
+
+## video-understanding.json
+
+Produced by `analyze_video_reference`. Use it as evidence, not decoration.
+
+```json
+{
+  "analysis_mode": "native_video",
+  "visual_summary": "",
+  "timeline": [
+    {
+      "time_range": "0-3s",
+      "visual": "",
+      "action": "",
+      "expression": "",
+      "camera": "",
+      "rhythm": "",
+      "creative_function": ""
+    }
+  ],
+  "subjects": [],
+  "people": [],
+  "expressions": [],
+  "actions": [],
+  "scenes": [],
+  "camera_motion": [],
+  "rhythm": [],
+  "must_keep": [],
+  "can_change": [],
+  "must_not_change": [],
+  "planning_hints": []
+}
+```
+
 ## script.md
 
 ```markdown
@@ -131,6 +181,56 @@ Use when rhythm and memorability matter more than detailed explanation.
 
 ```text
 Create a {duration}s beat-cut promotion. Use {reference_role:节奏 or BGM} as pacing guidance. Each beat reveals one visual proof: product close-up, use moment, result, brand frame. Camera movement changes only on beat boundaries. Audio cue: cuts must match the BGM energy curve. Negative constraints: no off-beat scene jumps, no more than one message per beat.
+```
+
+### 个人 IP 种草
+
+Use when a recognizable person is the trust asset.
+
+```text
+Create a {duration}s vertical personal-IP planting video.
+Subject identity: {subject_profile}. Keep age impression, hairstyle, clothing color family, speaking energy, expression range, and expertise role consistent in every shot.
+Audience: {audience}.
+Single message: {single_message}.
+0-3s: direct lived pain or contrarian hook.
+3-10s: one practical method or experience proof, shown visually.
+10-13s: visible result, checklist, or short insight.
+13-15s: soft CTA matching trust-building, not hard selling.
+Reference video understanding: use {video-understanding.json rhythm/camera/expression anchors}.
+Negative constraints: no identity drift, no outfit color drift, no random scene jumps, no exaggerated ad tone.
+```
+
+### 高效段子
+
+Use when retention comes from recognition and reversal.
+
+```text
+Create a {duration}s fast joke-style short video.
+Audience: {audience}.
+Setup: {recognizable situation}.
+Pressure: {social pain or absurd escalation}.
+Reversal: {unexpected method, product, or insight}.
+Payoff line: {short memorable punchline}.
+CTA: {one light in-tone action}.
+Shot rhythm: quick setup, faster escalation, clean pause before payoff, one proof frame after the laugh.
+Negative constraints: no long explanation before the joke lands, no unrelated gag, no hard-sell unless purpose=ecommerce.
+```
+
+### 参考视频复刻
+
+Use when the user says to follow a reference video.
+
+```text
+Create a {duration}s vertical video that follows the reference video's {reference_role} only.
+Use video-understanding.json:
+- rhythm: {rhythm anchors}
+- camera: {camera_motion anchors}
+- scene: {scene anchors}
+- action: {action anchors}
+Replace or preserve the subject according to user instructions:
+- preserve subject only when reference_role includes subject identity
+- otherwise preserve timing/camera/action while using the user's subject_profile
+Negative constraints: do not copy unspecified people, brands, text, or products; do not change the user's subject identity.
 ```
 
 ## quality-review.md

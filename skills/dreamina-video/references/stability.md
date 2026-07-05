@@ -106,3 +106,21 @@ Write `quality-review.md` after every terminal result:
 | CTA fit | 1-5 | CTA strength matches purpose |
 
 Retry only when a concrete failure dimension scores 3 or lower. In `iteration-log.md`, record the failure, the one change made, and the new result.
+
+## Experience-Based Stabilizers
+
+- Subject consistency starts before generation. If `subject_profile` is vague, convert it into visible anchors: age impression, hairstyle, clothing color family, posture, expression range, role identity, and environment.
+- Reference videos must become facts. Read `video-understanding.json` and quote its must_keep/camera/rhythm facts in the prompt; do not say "参考这个视频" without naming what to preserve.
+- Personal IP needs fewer scene changes than product ads. Stable background, recognizable wardrobe, and repeated gesture language often matter more than cinematic variety.
+- High-efficiency jokes need a clean pause before payoff. If every shot moves fast, the reversal gets lost; plan one micro-beat where expression or camera holds.
+- Product demos need visible proof. Replace abstract claims with hand action, close-up, comparison, or result state.
+- Reference-video remixes should preserve one axis at a time: identity, action, camera, rhythm, or scene. Copying all axes while changing the user's subject causes drift.
+
+## Example Diagnosis
+
+| Failure | Likely Cause | Fix |
+| --- | --- | --- |
+| 个人 IP 不像同一个人 | subject_profile was not repeated in every shot | Add identity anchors to each shot and reduce scene/wardrobe changes |
+| 高效段子不好笑 | setup and reversal are both vague | Make setup a familiar workplace moment and make payoff one short line |
+| 参考视频没被参考 | video-understanding.json was not used in prompt | Copy rhythm/camera/action anchors explicitly |
+| 产品变形 | product anchor appears only once | Repeat shape, material, color, and use method in each product shot |
