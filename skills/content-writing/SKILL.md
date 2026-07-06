@@ -29,7 +29,6 @@ user-invocable: false
 | `get_resource(category="writers", name, include_raw?)` | 读取 writer metadata / 标题公式 / raw YAML |
 | `list_resources(category="layouts" / "article_templates")` | 发现排版模块与文章节奏模板 |
 | `get_resource(category="layouts" / "article_templates", name, include_raw?)` | 获取模块 schema、模板 rhythm、字段契约 |
-| `inspect_article(project_id, markdown, article_image_mode?, layout_plan?, cover_media_id?)` | 发布前只读预检 readiness / blockers / suggested fixes |
 | `render_template(project_id, markdown, layout_plan, theme?, task_id?)` | 主路径：按 `visual-rhythm-plan.md` 确定性渲染微信 HTML |
 | `convert_markdown(project_id, markdown, theme?, task_id?)` | 兼容旧 server 的降级路径；新流水线不得作为主路径 |
 
@@ -49,8 +48,8 @@ content-writing 只负责正文质量，不负责图片生成和最终 HTML slot
 1. 读取 `$DIR/context-brief.md`、`$DIR/02-outline.md` 和项目 profile。
 2. 调用 `write_article` 生成 `$DIR/03-article.md`。
 3. 使用 `humanizer` skill 就地改写，保存 `$DIR/04-article-final.md`。
-4. 执行违禁词和内容质量检查，输出 `$DIR/content-quality-report.md`。
-5. 后续由 article 流程调用 `inspect_article` 与 `render_template`。
+4. 执行公众号文章预检、违禁词和内容质量检查，输出 `$DIR/content-quality-report.md`。
+5. 后续由 article 流程完成视觉规划与 `render_template`。
 
 ## 正文质量标准
 
@@ -60,6 +59,18 @@ content-writing 只负责正文质量，不负责图片生成和最终 HTML slot
 - 小标题可扫读，移动端段落短，长短句交替。
 - 有可摘出的判断句，但不堆空泛金句。
 - 结尾给具体行动或一个好回答的问题，不做违规诱导。
+
+## 公众号文章预检
+
+文章预检是 SKILL/Agent 内部业务流程，不依赖 MCP 校验工具。审阅未通过代表内容待调整，不是任务失败；必须自动调整后重新审阅，直到 `content-quality-report.md` 无待调整项。
+
+预检必须覆盖：
+
+- **导流风险**：禁止二维码、个人联系方式、外链 URL、跳小程序、跳其他公众号/服务号/视频号、进群、加微信、关注/点赞/留言/转发领资料、回复关键词领福利，以及多重跳转后交易。
+- **内容完整性**：正文必须让读者在当前文章内获得完整信息，不能发布半截内容再诱导去其他页面查看。
+- **标题摘要一致性**：标题、digest、开头和正文承诺一致，不用省略号或悬念遮挡关键信息。
+- **互动合规**：可以提出自然评论问题、提醒收藏文章内完整清单、建议转给需要的人；不得把互动与福利、资料包、联系方式或站外动作绑定。
+- **自动调整**：发现问题时直接改写对应段落、标题、摘要或结尾互动诱因，再重新跑预检。
 
 ## AI 去痕
 
@@ -94,7 +105,7 @@ content-writing 只负责正文质量，不负责图片生成和最终 HTML slot
 正确交接路径：
 
 1. `article-visual-design` 创建/回填 `$DIR/visual-rhythm-plan.md`。
-2. 调用 `inspect_article` 检查 layout_plan、图片模式和 draft blockers。
+2. 确认 `$DIR/content-quality-report.md` 无审阅未通过 / 待调整项。
 3. 调用 `render_template`，保存 `$DIR/05-article.html`。
 4. 把 `slots_rendered` / `render_audit` 写入 `$DIR/final-review.md`。
 

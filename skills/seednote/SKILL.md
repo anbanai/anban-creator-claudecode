@@ -57,12 +57,12 @@ description: 种草笔记图文全自动创作。用户提到"种草笔记"、"s
 ### 步骤 3：研究选题
 
 原创模式使用 `seednote-research` skill：
-- 采集热门笔记数据
+- 通过 Agent-Reach（`agent-reach doctor --json`）采集真实热门笔记数据
 - 自动选 Top 1 选题
 - 评分结果写入 `$DIR/topic-analysis.md`
 
 复刻模式使用 `seednote-research` skill：
-- 获取源笔记详情、互动数据和评论数据
+- 通过 Agent-Reach 获取源笔记详情、互动数据和评论数据
 - 原始详情写入 `$DIR/source-note.md`
 
 然后使用 `seednote-viral-analysis` skill：

@@ -38,6 +38,7 @@ maxTurns: 300 # 公众号 10 步 + 7 图 + HTML + 草稿，实测需 120-175 tur
 | **SEO 优化** | 自动提取关键词，生成标题/摘要/标签，结果用于草稿发布 |
 | **去 AI 味** | 用 `humanizer` skill 扫描 33 类 AI 写作模式并按 draft→audit→final 改写（不改原意） |
 | **爆款互动** | 用 `article-viral-strategy` skill 在选题/写作/标题/验收四个环节注入完读率+转发率+收藏率+评论率四大驱动力（合规前提下，全程自动） |
+| **文章预检** | 用 SKILL/Agent 自审导流风险、内容完整性、标题摘要一致性和互动合规；审阅未通过即待调整，自动修订后复审 |
 | **错误处理** | 自动重试 + 降级，非关键步骤跳过继续 |
 
 决策过程透明记录在 `$DIR/*.md` 文件中，不向用户提问。
@@ -165,9 +166,13 @@ Call `update_task_progress(task_id=$TASK_ID, stage="humanize", title="去AI味",
   - 历史文章差异：是否避开已有草稿/已发布文章的重复角度
   - 章节实质内容：每个 `##` 是否有具体素材，不是空泛论述
   - 研究结论引用：核心观点是否来自 `01-research.md` 或 `context-brief.md`
+  - 导流风险：是否出现二维码、联系方式、外链 URL、跳小程序、其他公众号/服务号/视频号、进群、加微信、关注/点赞/留言/转发领资料、回复关键词或多重跳转交易
+  - 内容完整性：读者是否能在当前文章内获得完整信息，没有用半截内容诱导离开当前页面
+  - 标题摘要一致性：标题、digest、开头和正文承诺是否一致，不用省略号隐藏关键信息
+  - 互动合规：评论/收藏/转发诱因是否自然连接正文价值，没有绑定福利、资料包、联系方式或站外动作
   - AI 套话风险：是否仍存在泛化表达、三段式套话、过度总结、无来源判断（参考 `humanizer` skill 33 类模式）
 
-**硬性闸门**：`content-quality-report.md` 中任一项为不通过时，必须回到步骤 3/4 重写并重新检查；不得进入 SEO、视觉或发布阶段。
+**审阅闭环**：`content-quality-report.md` 中任一项审阅未通过时，标记为待调整并自动回到步骤 3/4 改写，随后重新检查；无待调整项后才能进入 SEO、视觉或发布阶段。内容 review 不通过不是任务失败。
 
 **产出**：`$DIR/04-article-final.md`, `$DIR/content-quality-report.md`
 
@@ -392,6 +397,7 @@ render_template(
 
 创建 `$DIR/final-review.md`，汇总并判定以下硬性项（**图片开关守卫**：封面/配图相关项在对应开关关闭时跳过且不计为失败；纯文字文章时额外记录「未生成封面，公众号后台可能不显示封面/需手动设置」）：
 - 内容质量：`content-quality-report.md` 全部通过，文章贴合用户需求、账号定位和上下文
+- **导流风险**：无二维码、联系方式、外链 URL、跳小程序、其他公众号/服务号/视频号、进群、加微信、关注/点赞/留言/转发领资料、回复关键词或多重跳转交易；文章在当前页面提供完整信息
 - **模板与节奏**：`visual-rhythm-plan.md` 存在；所选模板的 rhythm 规则被遵守；每个 `##` 章节映射到 slot；封面/配图开启时 `layout_plan` JSON 块的所有 `image_url` 已用 CDN URL 回填（关闭时对应 slot `image_url=null`）
 - **配图内容贴切**（配图开关开启时）：`image-plan.md` 每张图含 `visual_brief` + `required_entities` + `must_match_excerpts`；`images.json` 中至少 80% 的内容图 `verification.passed=true`
 - 视觉一致性（封面开关开启时）：封面存在且已上传获得 `media_id`；所有内容图 `ref_image_path="$DIR/cover.png"`（封面关·配图开时改为不传或链首图）
@@ -411,7 +417,7 @@ render_template(
 
 审计 rubric、阈值、输出格式详见 `article-viral-strategy` skill 的 `references/viral-audit.md`。
 
-**硬性闸门**：任一项失败时停止发布，记录失败原因和需要回退的步骤；不得调用 `publish_draft`。`viral-audit.md` 未通过（整体 <7.0 或任一硬性必过项失败）同样不得发布。
+**审阅闭环**：任一项审阅未通过时标记待调整，自动回到对应步骤（正文、标题摘要、互动诱因、视觉 prompt 或 HTML 渲染）修订并重新审阅；不得调用 `publish_draft`。`viral-audit.md` 未通过（整体 <7.0 或任一硬性必过项不通过）同样先调整再复审。
 
 **产出**：`$DIR/final-review.md`
 
@@ -442,6 +448,7 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 - 有价值、有见地、语言自然
 - **上下文锚定**（硬性要求）：`context-brief.md` 存在，文章每个 `##` 章节至少绑定 1 个上下文锚点
 - **内容质量闸门**（硬性要求）：`content-quality-report.md` 全部通过后才能进入 SEO 与视觉阶段
+- **导流风险清零**（硬性要求）：不得出现二维码、联系方式、外链 URL、扫码进群、加微信、关注/点赞/留言/转发领资料、回复关键词、跳小程序/其他账号或多重跳转交易；审阅未通过 / 待调整项必须自动修订并复审
 - **模板驱动节奏**（硬性要求）：从 `claudecode/templates/article/*.yaml` 加载模板，不得临时编造节奏
 - **节奏规划完整**（硬性要求）：`visual-rhythm-plan.md` 存在且每个 `##` 都映射到 slot
 - 封面图必须成功生成并上传（硬性要求，**仅封面开关开启时**）
@@ -500,6 +507,7 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 - [ ] `03-article.md` 包含完整文章内容（纯文字，无配图占位符）
 - [ ] `04-article-final.md` 无 AI 痕迹，无违禁词
 - [ ] `content-quality-report.md` 全部通过，未通过时已回退重写
+- [ ] `content-quality-report.md` 已完成导流风险、内容完整性、标题摘要一致性和互动合规预检，且无待调整项
 - [ ] `seo-result.md` 包含优化后的标题和摘要
 - [ ] **`visual-rhythm-plan.md` 存在**，记录所选模板、slot 分配表、`layout_plan` JSON
 - [ ] 封面图 `$DIR/cover.png` 存在且可访问，视觉风格与账号定位匹配，**vision 校验通过**
@@ -537,6 +545,7 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 - [ ] 文章缺少二级标题（<3 个）→ 需补充结构
 - [ ] `context-brief.md` 缺失或未记录用户原始需求 → 不得开始写作
 - [ ] `content-quality-report.md` 有不通过项 → 不得进入 SEO、视觉或发布阶段
+- [ ] **导流风险存在**（二维码/联系方式/外链 URL/跳小程序/其他公众号或视频号/进群/加微信/关注点赞留言转发领资料/回复关键词/多重跳转交易）→ 回步骤 3/4 自动调整并复审
 - [ ] 章节没有绑定上下文锚点 → 回到步骤 3 重写
 - [ ] **`visual-rhythm-plan.md` 缺失** → 步骤 6b 必须创建，不得跳过
 - [ ] **模板选择含糊** → 默认选 `long-form-essay`，避免临时编造
@@ -597,12 +606,12 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 - 尝试重试一次
 - 仍失败则请求用户协助
 
-**质量闸门失败**（内容质量、视觉审计、发布前总验收）：
+**质量审阅未通过**（内容质量、视觉审计、发布前总验收）：
 
-- 记录失败项到对应报告文件
-- 按报告指向回退到步骤 3、4、6 或 7
-- 重新生成对应产物并再次执行闸门检查
-- 不允许绕过闸门继续发布
+- 记录待调整项到对应报告文件
+- 按报告指向自动回退到步骤 3、4、5、6、7 或 8
+- 重新生成对应产物并再次执行 review
+- 不允许绕过审阅继续发布
 
 **配置问题**：
 

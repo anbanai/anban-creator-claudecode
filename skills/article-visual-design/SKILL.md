@@ -54,6 +54,7 @@ description: Manages images for WeChat article (公众号图文) content includi
 - 封面：当标题利益点强、系列感明显、教程/清单/杂志编辑风、或用户/项目视觉风格明确需要时，可生成 2-8 个字的短标题/关键词；普通氛围图、真实场景摄影、情绪意象封面默认无字。
 - 正文图：真实场景/氛围图默认无字；信息图、流程图、对比图、清单总结图可带少量中文标签或短句。
 - 所有文字必须写入 prompt 与 verification_prompt，vision 校验必须检查文字是否短、清晰、无乱码、无水印、无 logo、无密集排版；文字失败时优先改为无字图或重试。
+- **反导流视觉禁区**：任何封面和正文图都不得出现二维码、联系方式、外链 URL、扫码提示、跳转图标、加群、加微信、关注领资料或回复关键词等导流元素。若生成结果含上述元素，vision review 必须判为不通过并重试。
 
 ## MCP 工具
 
@@ -209,7 +210,7 @@ Phase 4: 配图生成（带 vision 校验）
   "missing_entities": ["缺的实体 1", ...],
   "relevance_score": "high" | "medium" | "low",
   "has_forbidden_content": true/false,
-  "forbidden_notes": "文字/水印/低俗等问题描述",
+  "forbidden_notes": "文字/水印/低俗/二维码/联系方式/外链 URL/扫码提示/加群/加微信等问题描述",
   "overall_pass": true/false,
   "sharper_prompt_hint": "如不通过，给出更锐化的 prompt 建议"
 }

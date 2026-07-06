@@ -73,7 +73,7 @@ fi
 TEXT=$(tr '[:upper:]' '[:lower:]' < "$MANIFEST")
 MISSING=()
 
-if echo "$TEXT" | grep -q "dreamina-video"; then
+if echo "$TEXT" | grep -q "seedance-20\|dreamina-video"; then
   [[ ! -s "$VIDEO_DIR/video-task-submit.json" ]] && MISSING+=("video-task-submit.json（缺 create_video_generation_job 记录）")
   [[ ! -s "$VIDEO_DIR/video-task-result.json" ]] && MISSING+=("video-task-result.json（缺 query_video_generation_job 终态记录）")
   [[ ! -s "$VIDEO_DIR/delivery-manifest.json" ]] && MISSING+=("delivery-manifest.json（缺 download_video_generation_results/compose_video_segments 注册 final_video）")
@@ -97,7 +97,7 @@ elif echo "$TEXT" | grep -q "capcut-draft"; then
     MISSING+=("剪映草稿 JSON/files")
   fi
 else
-  MISSING+=("input-manifest.md 未声明 dreamina-video/video-use/short-video-cover/portrait-pose-variants/capcut-draft")
+  MISSING+=("input-manifest.md 未声明 seedance-20/dreamina-video/video-use/short-video-cover/portrait-pose-variants/capcut-draft")
 fi
 
 if [[ ${#MISSING[@]} -gt 0 ]]; then
