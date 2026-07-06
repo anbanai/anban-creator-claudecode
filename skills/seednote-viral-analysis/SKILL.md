@@ -5,6 +5,10 @@ description: Use when analyzing or decomposing a Seednote (种草笔记) viral n
 
 # 种草笔记爆款拆解
 
+## 案例库
+
+遇到场景分支、产物格式或质量边界不确定时，先读 [references/examples.md](references/examples.md)。
+
 ## 图片比例固定规则
 
 本 Skill 只要涉及生成、选择、裁切、校验或引用图片，必须按以下优先级决定画面比例：

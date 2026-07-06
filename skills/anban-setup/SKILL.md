@@ -5,6 +5,10 @@ description: Use when user mentions "初始化", "anban-setup", "第一次使用
 
 # /anban:anban-setup Anban Creator 初始化
 
+## 案例库
+
+遇到场景分支、产物格式或质量边界不确定时，先读 [references/examples.md](references/examples.md)。
+
 ## 图片比例固定规则
 
 本 Skill 只要涉及生成、选择、裁切、校验或引用图片，必须按以下优先级决定画面比例：

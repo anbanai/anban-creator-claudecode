@@ -5,6 +5,10 @@ description: Use when generating multiple pose/expression variants from a single
 
 # 人像姿态变体——基于一张参考人像生成多张封面
 
+## 案例库
+
+遇到场景分支、产物格式或质量边界不确定时，先读 [references/examples.md](references/examples.md)。
+
 ## 图片比例固定规则
 
 本 Skill 只要涉及生成、选择、裁切、校验或引用图片，必须按以下优先级决定画面比例：
