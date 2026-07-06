@@ -41,7 +41,7 @@ writing_prompt: |
 配置文件创建后，在 project 配置中引用该风格的 `english_name` 即可使用：
 
 - **Studio**: 在 project 编辑页面设置 **写作风格**（`writer`）字段为 `my-style`
-- **MCP 工具**: 调用 `write_article` 工具，写作风格由 project 配置决定
+- **Agent/Skill**: 运行文章流程，content-writing Skill 会读取 project 的 writer 配置
 - **自然语言**: "用 my-style 风格写一篇文章"
 
 > writer 仅决定**写作风格**（文字调性）。图片视觉与排版样式是另外两个正交维度，分别由 project 的 `style`（视觉）和 `theme`（排版）字段配置，互不影响。
@@ -158,7 +158,7 @@ A:
 
 1. 将风格文件放在 `plugin/writers/` 目录下（内置风格）或 `./writers/` 目录下（项目级）
 2. 在 project 配置中将 **写作风格**（`writer`）字段设为对应的 `english_name`（如 `my-style`）
-3. 通过 MCP 工具 `write_article` 发起写作请求，写作风格由 project 自动应用
+3. 运行文章流程，content-writing Skill 会读取 project 的 writer 配置并生成正文
 4. 或通过 Studio 界面在 project 编辑页面配置写作风格后创建内容任务
 
 ### Q: 可以分享我的风格吗？

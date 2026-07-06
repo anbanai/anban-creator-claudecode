@@ -1,10 +1,11 @@
 ---
 name: content-writing
-description: Writes WeChat articles with server-side writer resources, removes AI traces, prepares content for render_template, and checks platform compliance. Use when writing article body content, de-AI rewriting, content quality review, compliance review, or when the article pipeline calls for writing/decontaminating article text.
+description: Use when writing WeChat article body content, de-AI rewriting, content quality review, compliance review, or when an article pipeline reaches article body creation.
 user-invocable: false
 ---
 
 # 微信公众号内容写作知识库
+
 
 ## 案例库
 
@@ -19,100 +20,78 @@ user-invocable: false
 3. 业务默认比例只作兜底：微信文章封面/正文图默认 `16:9`；Seednote/XLS/移动信息流默认 `3:4`；电商、广告投放、视频封面按具体平台素材位要求执行。
 4. 不得从模型路由、供应商默认 `size` 或模型能力反推业务比例；模型只决定能力和成本，比例属于创作场景约束。
 
+## Intent Routing
 
-## MCP 工具
+Use this Skill for正文创作、正文质量修订、公众号文章预检和渲染交接。正文、写作判断和质量门禁在 Skill 内完成；MCP 只用于项目资料、writer/resource discovery、确定性渲染和任务状态等受控能力。
 
-| MCP 工具 | 说明 |
-|----------|------|
-| `write_article(project_id, topic, input_type?, article_type?, length?, task_id?)` | 服务端按已解析 writer resource 生成 Markdown 正文 |
-| `list_resources(category="writers")` | 发现可用写作风格资源 |
-| `get_resource(category="writers", name, include_raw?)` | 读取 writer metadata / 标题公式 / raw YAML |
-| `list_resources(category="layouts" / "article_templates")` | 发现排版模块与文章节奏模板 |
-| `get_resource(category="layouts" / "article_templates", name, include_raw?)` | 获取模块 schema、模板 rhythm、字段契约 |
-| `render_template(project_id, markdown, layout_plan, theme?, task_id?)` | 主路径：按 `visual-rhythm-plan.md` 确定性渲染微信 HTML |
-| `convert_markdown(project_id, markdown, theme?, task_id?)` | 兼容旧 server 的降级路径；新流水线不得作为主路径 |
+## Discovery First
 
----
+Before writing, read only the minimum necessary context:
 
-## 写作职责边界
+1. `$DIR/context-brief.md` and `$DIR/02-outline.md`.
+2. `get_project_profile(project_id, scope="article", task_id?)` for positioning, keywords, audience, writer, theme, and task overrides.
+3. `list_resources(category="writers")` to confirm the writer key exists.
+4. `get_resource(category="writers", name="$WRITER", include_raw=true)` for writer metadata, tone rules, structure patterns, title formulas, and raw YAML.
+5. When rendering handoff is needed, use `list_resources(category="article_templates")`, `get_resource(category="article_templates", ...)`, `list_resources(category="layouts")`, and `get_resource(category="layouts", ...)` only for the selected template/modules.
 
-content-writing 只负责正文质量，不负责图片生成和最终 HTML slot 规划。
+## Configuration Boundaries
 
-- writer 只决定文字风格、段落节奏、标题公式和语气，不携带视觉/封面风格。
-- 视觉风格来自 project/task 的 `visual_style`，文章模板来自 `article_templates`，排版样式来自 `theme`。
-- 写作时不插入图片占位符；配图由 `article-visual-design` 生成并回填到 `visual-rhythm-plan.md`。
-- HTML 主路径是 `render_template`，由服务端按 layout_plan 和 layout schema 确定性渲染。
+- writer controls voice, paragraph rhythm, title formula, rhetoric, and banned expressions.
+- visual_style controls image language; theme controls WeChat HTML styling; article_templates and layouts control slot rhythm and modules.
+- Do not infer writer from visual style, theme, image model, or supplier defaults.
+- Do not insert image placeholders during body writing; visual planning owns image slots.
+- `render_template` is the 主路径 for HTML. `convert_markdown` 只用于旧版 server 兼容降级, and the fallback reason must be recorded in `$DIR/final-review.md`.
 
-## 写作流程
+## Output Contract
 
-1. 读取 `$DIR/context-brief.md`、`$DIR/02-outline.md` 和项目 profile。
-2. 调用 `write_article` 生成 `$DIR/03-article.md`。
-3. 使用 `humanizer` skill 就地改写，保存 `$DIR/04-article-final.md`。
-4. 执行公众号文章预检、违禁词和内容质量检查，输出 `$DIR/content-quality-report.md`。
-5. 后续由 article 流程完成视觉规划与 `render_template`。
+Write these file-backed artifacts:
 
-## 正文质量标准
+1. `$DIR/03-article.md`: complete Markdown article body generated directly from writer resource, `context-brief.md`, and `02-outline.md`.
+2. `$DIR/04-article-final.md`: de-AI and compliance-adjusted final Markdown after the humanizer draft -> audit -> final loop.
+3. `$DIR/content-quality-report.md`: article preflight report with every item passed or adjusted.
 
-- 每个 `##` 章节绑定 context-brief 中至少 1 个上下文锚点。
-- 每个章节包含具体素材：案例、场景、数据、人物、冲突、比喻或操作细节。
-- 前 100 字有清晰钩子，不用“今天给大家分享”式空开场。
-- 小标题可扫读，移动端段落短，长短句交替。
-- 有可摘出的判断句，但不堆空泛金句。
-- 结尾给具体行动或一个好回答的问题，不做违规诱导。
+The article must satisfy:
+
+- each `##` section uses at least one anchor from `context-brief.md`;
+- each section contains concrete material: scenario, case, data, person, conflict, metaphor, or actionable detail;
+- first 100 Chinese characters contain a real hook, not generic opening filler;
+- subtitles are scannable, paragraphs are mobile-friendly, and claims are supported by context;
+- the ending gives a concrete action or one answerable question without forbidden engagement bait.
 
 ## 公众号文章预检
 
-文章预检是 SKILL/Agent 内部业务流程，不依赖 MCP 校验工具。审阅未通过代表内容待调整，不是任务失败；必须自动调整后重新审阅，直到 `content-quality-report.md` 无待调整项。
+文章预检 is owned by this Skill and does not depend on MCP validation. 审阅未通过 means the draft needs adjustment, not task failure. Automatically revise and rerun until no item is marked 待调整.
 
-预检必须覆盖：
+Required checks:
 
-- **导流风险**：禁止二维码、个人联系方式、外链 URL、跳小程序、跳其他公众号/服务号/视频号、进群、加微信、关注/点赞/留言/转发领资料、回复关键词领福利，以及多重跳转后交易。
-- **内容完整性**：正文必须让读者在当前文章内获得完整信息，不能发布半截内容再诱导去其他页面查看。
-- **标题摘要一致性**：标题、digest、开头和正文承诺一致，不用省略号或悬念遮挡关键信息。
-- **互动合规**：可以提出自然评论问题、提醒收藏文章内完整清单、建议转给需要的人；不得把互动与福利、资料包、联系方式或站外动作绑定。
-- **自动调整**：发现问题时直接改写对应段落、标题、摘要或结尾互动诱因，再重新跑预检。
+- 导流风险: no QR codes, personal contact, external URL, mini-program jumps, other account/service/video-account jumps, group joining, WeChat adding, reward-bound follow/like/comment/share, keyword reply, or multi-hop transaction diversion.
+- 内容完整性: readers can get the promised information inside this article without being pushed elsewhere.
+- 标题摘要一致性: title, digest, opening, and body promises align; do not hide key information with ellipsis or vague suspense.
+- 互动合规: natural questions and collection/share suggestions are allowed only when tied to article value; no benefits, materials, contact, or off-platform action can be bound to interaction.
+- AI 套话风险: remove generic elevation, rigid three-part summaries, empty conclusions, overused transition words, and unsupported judgment sentences.
+- 自动调整: revise the affected paragraph, title, digest, or ending, then rerun the preflight.
 
-## AI 去痕
-
-使用 `humanizer` skill 执行 draft → audit → final 流程：
-
-- 改写而非删除，保留信息点、段落数量级和作者意图。
-- 重点处理意义拔高、三段式套话、AI 高频词、空洞总结、连续排比、过度转折。
-- 不调用 MCP、不计费、无强度档位。
-
-## 合规检查
-
-词库详见 [prohibited-words.md](references/prohibited-words.md)。
-
-- 高风险：删除相关内容。
-- 中风险：替换为合规近义表达。
-- 低风险：替换、弱化或删除。
-- 禁止使用谐音字、拼音、特殊符号规避平台规则。
-
-报告格式：
+Report format:
 
 ```text
-违禁词检查报告：
-- [词汇] → 已替换为 [合规表述]（位置：第X段）
-- [词汇] → 已删除相关句子（位置：第X段）
-共处理 N 处违禁词，内容已达到平台合规标准。
+公众号文章预检：
+- 导流风险：通过 / 已调整（说明）
+- 内容完整性：通过 / 已调整（说明）
+- 标题摘要一致性：通过 / 已调整（说明）
+- 互动合规：通过 / 已调整（说明）
+- AI 套话风险：通过 / 已调整（说明）
+结论：无审阅未通过项，可以进入 SEO 与视觉阶段。
 ```
 
-## 渲染交接
+## Failure Handling
 
-正文完成后不要直接调用 `convert_markdown`。
-
-正确交接路径：
-
-1. `article-visual-design` 创建/回填 `$DIR/visual-rhythm-plan.md`。
-2. 确认 `$DIR/content-quality-report.md` 无审阅未通过 / 待调整项。
-3. 调用 `render_template`，保存 `$DIR/05-article.html`。
-4. 把 `slots_rendered` / `render_audit` 写入 `$DIR/final-review.md`。
-
-`convert_markdown` 只用于旧版 server 兼容降级；使用时必须在 final-review 中记录原因。
+- Missing writer resource: use project default only if `get_project_profile` provides one; otherwise stop with a clear missing-resource note.
+- Missing outline or context brief: create the smallest safe placeholder from available project profile and user prompt, then record the gap in `content-quality-report.md`.
+- Preflight failure: revise content in place and rerun. Do not pass downstream while any item remains 待调整.
+- Render handoff failure: keep Markdown artifacts, record the reason, and let the article agent decide whether to retry `render_template` or use the documented fallback.
 
 ## 深入参考
 
-- 写作工具参数：[writing-guide.md](references/writing-guide.md)
+- 写作方法与示例：[writing-guide.md](references/writing-guide.md)
 - 内容合规规则：[content-compliance.md](references/content-compliance.md)
 - 违禁词：[prohibited-words.md](references/prohibited-words.md)

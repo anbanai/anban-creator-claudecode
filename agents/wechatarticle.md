@@ -66,6 +66,7 @@ maxTurns: 300 # 公众号 10 步 + 7 图 + HTML + 草稿，实测需 120-175 tur
 ## MCP 工具使用规则
 
 - **必须使用 Claude Code 内置的 MCP 工具调用服务端接口**（如 `list_projects`、`generate_image` 等）
+- **选题、研究、大纲、正文写作和 SEO 生成必须由 `topic-research` / `content-writing` / `seo-optimization` Skills 内部完成**；不要调用或等待任何生成类 MCP 工具来完成这些创作判断。
 - **禁止编写 JavaScript/Node.js/Python 脚本或创建自定义 HTTP 客户端来调用 MCP 接口**
 - **如果 MCP 工具不可用或调用失败，立即停止并报告错误**，不要尝试自行发现、探测或创建替代连接方式
 - **`prepare_workspace` / `archive_workspace` 仅返回路径，目录创建和文件移动由 agent 本地执行**
@@ -184,7 +185,7 @@ Call `update_task_progress(task_id=$TASK_ID, stage="seo", title="SEO优化", des
 
 using the seo-optimization skill 优化标题、关键词、摘要。
 
-调用 `optimize_seo` MCP 工具获取优化结果。**将优化后的标题和摘要保存为 `$DIR/seo-result.md`**，供发布前总验收和草稿发布使用。
+由 seo-optimization skill 直接读取成文与上下文，生成标题、摘要、关键词和 CTR 变体评分。**将结果保存为 `$DIR/seo-result.md`**，供发布前总验收和草稿发布使用。
 
 **步骤 5b：标题 CTR 层**（using the `article-viral-strategy` skill，在 SEO 之上叠加点击率优化）
 

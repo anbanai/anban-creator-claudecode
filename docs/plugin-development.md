@@ -61,7 +61,7 @@ Key MCP tools:
 - `$ANBAN_DEFAULT_PROJECT`: Optional default project ID. When set, agents skip `list_projects` and use this directly.
 - `list_projects`, `get_project_profile`, `list_drafts`, `list_published_articles`, `list_project_titles`
 - `prepare_workspace`, `archive_workspace`
-- `write_article`, `convert_markdown`
+- `render_template`, `convert_markdown`
 - `image upload`, `draft article`
 - `get_feed_detail` (SeedNote source note fetching)
 - `upload_live_audio`, `create_live_analysis_task`, `query_live_analysis_task`, `recognize_live_invalid_sentences`, `recognize_live_segments`, `build_live_clip_plan`, `build_live_subject_clip_plan`, `build_live_clip_manifest`, `recognize_live_subjects`, `complete_live_subject`

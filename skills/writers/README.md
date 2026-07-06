@@ -38,9 +38,9 @@ writing_prompt: |
 
 ### 3. 使用新风格
 
-配置文件创建后，通过 MCP 工具立即可用：
+配置文件创建后，通过项目配置和 content-writing Skill 可用：
 
-- 调用 `write_article`，style 参数设为 `"my-style"`
+- 在项目中选择该 writer key，content-writing Skill 会按项目配置读取
 - 自然语言："用 my-style 风格写一篇文章"
 
 ---
@@ -150,7 +150,7 @@ A: 检查以下几点：
 
 ### Q: 如何测试新风格？
 
-A: 调用 `write_article` MCP 工具，style 参数设为新风格名称即可测试。
+A: 在项目配置中选择该 writer key，创建一篇测试文章，检查 `$DIR/03-article.md` 是否体现目标风格。
 
 ### Q: 可以分享我的风格吗？
 

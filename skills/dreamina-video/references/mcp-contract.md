@@ -20,7 +20,8 @@ Returns:
 - `video.visual_anchor_generation`: capability hints for generated visual anchors, including `available`, `default_image_type`, `max_auto_anchors`, `verify_with_vision`, `register_tool`, and fallback guidance
 - `video.pricing.credits_per_cny`: billing conversion from real CNY model cost to base credits
 - `video.pricing.tier_multiplier`: current membership multiplier applied after base cost
-- `video.pricing.min_balance`: video creation/trigger balance gate, currently `100000`
+- `video.pricing.base_task_fee_rule`: video task/plan creation charges only `credits.task_costs.video` as the base service fee
+- `video.pricing.operation_billing_rule`: `create_video_generation_job` and `create_video_generation_task` deduct `video_gen` operation credits independently when the provider job is submitted
 
 Do not hardcode a default model, resolution, duration, watermark, or fixed credit number in the skill. Project profile is the source of truth; plan/task overrides are snapshots and must not rewrite project defaults unless the user explicitly asks to save them.
 
@@ -119,7 +120,7 @@ Returns:
 - `pricing_breakdown`
 - validation errors for unsupported resolved model, parameter, or reference combinations
 
-The server estimates credits dynamically from `model_prices.video_generation`, `billing.credits_per_cny`, membership/user multipliers, the server-resolved model key, output resolution, ratio, duration, whether an input video is present, and server-measured input video duration. Real model cost stays separate from billing multipliers. Do not trust agent-supplied input video duration. Video task/plan creation and plan trigger require at least `100000` credits balance; this is a balance gate, not the minimum charge.
+The server estimates credits dynamically from `model_prices.video_generation`, `billing.credits_per_cny`, membership/user multipliers, the server-resolved model key, output resolution, ratio, duration, whether an input video is present, and server-measured input video duration. Real model cost stays separate from billing multipliers. Do not trust agent-supplied input video duration. Video task/plan creation charges only the base task service fee. The actual video provider cost is deducted later as an independent `video_gen` MCP operation when the provider job is submitted. If the balance cannot cover `video_gen` at execution time, stop and ask the user to recharge.
 
 ## build_video_generation_plan
 
