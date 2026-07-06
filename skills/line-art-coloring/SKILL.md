@@ -475,89 +475,16 @@ Color Bible 实体数: 5（3 角色 + 2 物体）
 
 ---
 
-## Prompt 构建技巧
+## Prompt 与故障处理速查
 
-### 语义色名参考
+- 语义色名、实物类比、反面约束和跨实体颜色关系的完整写法见 [references/color-bible.md](references/color-bible.md)。次要实体使用更简单直接的颜色指令，关键实体才叠加实物类比和反面约束。
+- 常见失败按 [references/verification.md](references/verification.md) 判断：颜色 FAIL 优先修；线稿退化直接触发回归守卫；当前 generate_image 非严格上色工具，强化 prompt 后仍失败就标 `needs_img2img`，不承诺 100% 保留。
+- 分析失败时遵循工具边界：Read 返回的 CDN URL 约 30 分钟过期；`file_path` 方式分析有 10MB 限制，先 `compress_image`，仍失败再 `upload_image` 后用 `image_url`。
+- `output_path` 是 MCP 服务器端路径，使用 `/tmp/anban-creator-line-art/$TASK_ID/...`；本地归档要下载 `download_url` 到 `$DIR/colored_NN.png`，不能把 `download_image` 当作写入本地文件的步骤。
+- 长 prompt 可能触发 504 Gateway Timeout。Prompt 控制在 500 词以内，优先关键实体、关键颜色和 1-2 个最重要反面约束。
 
-不用 hex，用 AI 模型能准确理解的色名：
+## 最终验证
 
-| 色系 | 好的描述 | 差的描述 |
-|------|---------|---------|
-| 红色 | bright cherry red, like a fire truck | #FF0000 |
-| 深红 | deep crimson, like dried blood | dark red |
-| 蓝色 | bright sky blue on a clear day | #0000FF |
-| 深蓝 | dark navy blue, like a midnight suit | #000080 |
-| 绿色 | fresh grass green, like spring lawn | #00FF00 |
-| 棕色 | dark chocolate brown, not milk chocolate | brown |
-| 金色 | warm golden, like honey in sunlight | #FFD700 |
-| 粉色 | soft rose pink, like cherry blossoms | pink |
-| 紫色 | rich plum purple, like ripe grapes | #800080 |
-| 黑色 | deep jet black, like polished obsidian | black |
-| 白色 | pure clean white, like fresh snow | white |
-| 灰色 | cool slate gray, like overcast sky | gray |
+每张图完成后确认：Color Bible 已更新、原线稿已作单源 ref、候选已做颜色和线稿双轨审计、best-refs.md 已更新、`$DIR/colored_NN.png` 已本地归档。
 
-关键：给主要实体附带实物类比——"like a fire truck"、"like dark chocolate"——这给模型一个具体的视觉锚点。次要实体使用更简单直接的颜色指令即可。
-
-### 反面约束模板
-
-```
-[Entity]'s [element] must NOT be:
-- [常见错误色 1] (too light / too dark / wrong hue)
-- [常见错误色 2] (common AI generation mistake)
-It must be [正确色名], [实物类比]
-```
-
-### 跨实体颜色关系
-
-如果两个实体共享某种颜色，明确写出：
-```
-COLOR RELATIONSHIPS:
-- Girl's hood is the SAME bright cherry red as the picnic blanket
-- Wolf's eyes are the SAME amber gold as the sunset
-```
-
-这帮助模型理解颜色必须跨实体一致。
-
----
-
-## 常见失败与修复
-
-| 问题 | 原因 | 修复 |
-|------|------|------|
-| 颜色不跟随参考图 | 模型随机性过大 | 原线稿作单源 ref；简化 prompt；必要时 2 候选选优；仍失败标人工复核 |
-| 角色色偏（如头发偏亮） | 模型对浅色有偏好 | 增加反面约束："must NOT be blonde" |
-| 背景色渗入角色 | 模型无法分离前景/背景 | prompt 明确分离："character colors must NOT be influenced by background" |
-| 多角色图中某角色颜色错误 | 多实体增加复杂度 | 单独指定每个实体的反面约束 |
-| 实体匹配错误 | 不同角色外观相似 | 增加 more specific 描述（位置、配饰、体型差异） |
-| 新实体颜色与已有实体冲突 | 颜色区分度不够 | 选色时确保跨实体区分度（色彩理论纪律） |
-| 线条被修改或重绘 | 当前 generate_image 非严格上色工具 | 强化 prompt 后仍失败标 `needs_img2img`，不承诺 100% 保留 |
-| **修正后线稿比修正前退化** | 全量重绘改线 | **回归守卫：拒收、回退修正前版本**，标 `needs_img2img` |
-| **走纯文生图** | 漏传 ref | 线稿上色每张必带原线稿 ref；先 download_image 注册再作 ref |
-| CDN URL 过期 | Read 返回的 CDN URL 约 30 分钟后过期 | 获取后立即使用；需要重新分析时重新 Read 获取新 URL |
-| analyze_image 文件过大 | `file_path` 方式分析有 10MB 限制 | 先 `compress_image`，再失败则 `upload_image` 后用 `image_url` |
-| output_path 权限错误 | `output_path` 是 MCP 服务器端路径 | 使用 `/tmp/anban-creator-line-art/$TASK_ID/...` |
-| 本地归档缺失 | 把 `download_image` 误当成本地保存工具 | 下载 `download_url` 到 `$DIR/colored_NN.png`，`download_image` 仅用于服务器端注册/中转 |
-| 长 prompt 504 Gateway Timeout | prompt 过长或约束过多 | Prompt 控制在 500 词以内，优先关键实体和关键颜色 |
-| ref_image_path 无法访问 | 远程 MCP Server 无法访问本地文件路径 | 使用 generate_image 返回的 file_path（服务器端路径），或通过 download_image 中转 |
-
----
-
-## 验证清单（每张图完成后）
-
-- [ ] 所有已识别实体都有颜色规格（含色彩理论纪律）
-- [ ] Color Bible 已更新
-- [ ] 原线稿已注册服务器并作 `ref_image_path`（单源）
-- [ ] 候选评估完成，选中颜色最优且线稿风险最低（已做回归检查）
-- [ ] best-refs.md 已更新
-- [ ] 正式上色图 `$DIR/colored_NN.png` 存在
-- [ ] 线稿完整性已通过 analyze_image 审计；失败时已标记 `needs_img2img`
-
-## 验证清单（全部完成后）
-
-- [ ] 所有上色图存在
-- [ ] consistency-report.md 已生成（双轨：颜色一致性 + 线稿保持风险）
-- [ ] 收敛修正完成（全部 PASS/MINOR 或达最大轮次），且已做回归检查
-- [ ] 回溯按 opt-in 规则处理（如触发）
-- [ ] FAIL 项已修正，或已标记 `needs_manual_review` / `needs_img2img`
-- [ ] 线稿完整性在所有图中已审计
-- [ ] 最终报告已交付，含保线风险清单，报告中无"100% 保线 / 完全一致"承诺
+全部完成后确认：所有上色图存在、consistency-report.md 已生成、收敛修正最多 3 轮且带回归守卫、FAIL 项已修正或标记 `needs_manual_review` / `needs_img2img`、最终报告不写"100% 保线 / 完全一致"承诺。

@@ -26,7 +26,7 @@ try:
 except json.JSONDecodeError:
     payload = {}
 
-if payload.get("agent_type") != "seednote":
+if payload.get("agent_type") not in ("seednote", "anban:seednote"):
     sys.exit(0)
 
 root = Path(os.environ.get("WORKSPACE_ROOT") or os.getcwd())

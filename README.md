@@ -118,7 +118,7 @@ claude --verbose --agent anban:live-slicer ./live.mp4
   公众号图文创作
 - `/anban:seednote`
   种草笔记创作
-- `anban:live-slicer`
+- `/anban:live-slicer`
   直播视频切片，需要本机可用 `ffmpeg` 和 `ffprobe`
 
 ## 遇到问题时先检查
@@ -139,6 +139,8 @@ claude --verbose --agent anban:live-slicer ./live.mp4
 ## 项目结构
 
 ```
+├── .claude-plugin/ # Claude Code 插件清单与 marketplace 元数据
+├── .mcp.json       # Anban Creator MCP server 配置（使用 userConfig 注入）
 ├── agents/          # 创作引擎（Agent 定义）
 ├── skills/          # 独立技能（多个 Skill）
 ├── hooks/           # 质量检查钩子
@@ -146,6 +148,14 @@ claude --verbose --agent anban:live-slicer ./live.mp4
 ├── writers/         # 写作风格 (YAML)
 └── docs/            # 插件开发说明（不会被 Claude Code 作为运行时上下文加载）
 ```
+
+## 开发与安全
+
+- 版本变更见 [CHANGELOG.md](CHANGELOG.md)
+- 贡献指南见 [CONTRIBUTING.md](CONTRIBUTING.md)
+- 漏洞报告和密钥处理规则见 [SECURITY.md](SECURITY.md)
+
+不要把 API Key、Bearer token、草稿私密链接或 MCP Authorization header 写进 issue、日志、截图、测试 fixture 或生成产物。
 
 ## 其他版本
 

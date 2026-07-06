@@ -37,7 +37,7 @@ PY
 INPUT=$(cat)
 AGENT_TYPE=$(printf "%s" "$INPUT" | json_agent_type)
 case "$AGENT_TYPE" in
-  video|videocreator|videoeditor) ;;
+  video|videocreator|videoeditor|anban:video|anban:videocreator|anban:videoeditor) ;;
   *) exit 0 ;;
 esac
 

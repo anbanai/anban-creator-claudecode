@@ -55,7 +55,9 @@ Key skill groups:
 
 ### MCP Server (`.mcp.json`)
 
-Connects to the `anban-creator` MCP server at `$ANBAN_API_URL` (default `https://api.creator.anbanai.com`). Key MCP tools:
+Connects to the `anban-creator` MCP server at `${user_config.api_url}/mcp` (default `https://api.creator.anbanai.com/mcp`). The `Authorization` header uses the sensitive `${user_config.api_key}` value declared in `.claude-plugin/plugin.json`; agents and docs must never print the key value.
+
+Key MCP tools:
 - `$ANBAN_DEFAULT_PROJECT`: Optional default project ID. When set, agents skip `list_projects` and use this directly.
 - `list_projects`, `get_project_profile`, `list_drafts`, `list_published_articles`, `list_project_titles`
 - `prepare_workspace`, `archive_workspace`
@@ -79,6 +81,10 @@ Lifecycle hooks for quality verification:
 - **SubagentStop**: Agent-specific delivery summaries checking output files, draft status, and completeness
 - **TaskCompleted**: Generic quality verification (file existence, format compliance)
 
+Command hooks that reference plugin paths use exec form (`command` plus `args`) rather than shell-form quoting. The SessionStart bootstrap hook is async so binary preparation does not block Claude Code startup.
+
+Plugin agent hook matchers use Claude Code's plugin-scoped agent type, for example `anban:seednote`, not the bare frontmatter name `seednote`. Hook scripts may accept both forms for local compatibility, but plugin `hooks.json` must use the scoped matcher.
+
 ## Key Conventions
 
 - **Zero user interaction**: All agents run autonomously. Decisions are recorded in `$DIR/*.md` files, never by asking the user.
@@ -89,10 +95,12 @@ Lifecycle hooks for quality verification:
 - **Skill references**: Agents invoke skills via `using the <skill-name> skill` phrasing, not the Skill tool.
 - **Content is Chinese**: All generated content targets Chinese social media platforms. Prohibited words lists (违禁词) are in `references/prohibited-words.md`.
 - **Video media dependency**: `live-slicer`, `live-slice`, and `video-use` require local `ffmpeg` and `ffprobe`; `video-use` uses Aliyun FunASR HTTP MCP tools for word-level ASR.
+- **Secret handling**: Never print API keys, bearer tokens, private draft URLs, or MCP Authorization headers. Diagnostics may state whether a sensitive value is present.
 
 ## Modifying This Plugin
 
 - **Adding a new agent**: Create `agents/<name>.md` with frontmatter (name, skills, maxTurns) and pipeline definition following existing agent structure. Omit `tools` unless you intentionally want to restrict the agent to a small allowlist that includes every required MCP tool. Omit `mcpServers`; plugin agents inherit the plugin-level `.mcp.json`.
-- **Adding a new skill**: Create `skills/<name>/SKILL.md` with frontmatter name/description. Add `references/` for detailed guides.
+- **Adding a new skill**: Create `skills/<name>/SKILL.md` with frontmatter name/description. Keep `SKILL.md` concise; move long examples, rubrics, and implementation details into one-level `references/` files.
 - **Adding a new theme**: Themes are managed server-side. Contact the server admin to add new themes.
 - **Adding a new writer style**: Add `writers/<name>.yaml` with required `name`, `english_name`, `writing_prompt`.
+- **Changing distribution assets**: Bump `.claude-plugin/plugin.json` in the same change and update `CHANGELOG.md`. Security-sensitive changes should also review `SECURITY.md`; contributor-facing process changes should update `CONTRIBUTING.md`.

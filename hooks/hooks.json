@@ -7,15 +7,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "nohup \"${CLAUDE_PLUGIN_ROOT}/scripts/bootstrap.sh\" >/dev/null 2>&1 &",
-            "timeout": 5
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/bootstrap.sh",
+            "args": [],
+            "timeout": 5,
+            "async": true
           }
         ]
       }
     ],
     "SubagentStop": [
       {
-        "matcher": "wechatarticle",
+        "matcher": "anban:wechatarticle",
         "hooks": [
           {
             "type": "prompt",
@@ -24,11 +26,12 @@
         ]
       },
       {
-        "matcher": "seednote",
+        "matcher": "anban:seednote",
         "hooks": [
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/hooks/seednote-quality-gate.sh",
+            "args": [],
             "timeout": 30
           },
           {
@@ -38,7 +41,7 @@
         ]
       },
       {
-        "matcher": "designer",
+        "matcher": "anban:designer",
         "hooks": [
           {
             "type": "prompt",
@@ -47,7 +50,7 @@
         ]
       },
       {
-        "matcher": "live-slicer",
+        "matcher": "anban:live-slicer",
         "hooks": [
           {
             "type": "prompt",
@@ -56,11 +59,12 @@
         ]
       },
       {
-        "matcher": "videocreator",
+        "matcher": "anban:videocreator",
         "hooks": [
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/hooks/video-quality-gate.sh",
+            "args": [],
             "timeout": 30
           },
           {
@@ -70,11 +74,12 @@
         ]
       },
       {
-        "matcher": "videoeditor",
+        "matcher": "anban:videoeditor",
         "hooks": [
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/hooks/video-quality-gate.sh",
+            "args": [],
             "timeout": 30
           },
           {
@@ -84,11 +89,12 @@
         ]
       },
       {
-        "matcher": "video",
+        "matcher": "anban:video",
         "hooks": [
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/hooks/video-quality-gate.sh",
+            "args": [],
             "timeout": 30
           },
           {
@@ -98,7 +104,7 @@
         ]
       },
       {
-        "matcher": "ecommerce",
+        "matcher": "anban:ecommerce",
         "hooks": [
           {
             "type": "prompt",
