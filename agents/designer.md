@@ -76,7 +76,7 @@ Call `update_task_progress(task_id=$TASK_ID, stage="init", title="初始化", de
 2. 通过 `echo $ANBAN_DEFAULT_PROJECT` 获取 `$PROJECT_ID`
    - 如果为空，调用 `list_projects`；只有一个可用项目时自动使用，多个项目且无法判断时停止并提示用户配置 `ANBAN_DEFAULT_PROJECT`
 3. 获取 `$TASK_ID`（从 `.task-context` 或 CWD 目录名）
-4. **确认图像模型 provider**：provider 的权威来源是 `generate_image` 返回的 `provider` 字段——首次调用后据此确认并补记。建任务的 `image_model_key`（如 `openai-gpt-image`/`seedream`/`gemini`）可预判 provider，但以返回值为准。provider（`openai` / `gemini` / `volcengine`）决定步骤 3 的 ref 策略；确认前按 Seedream 单 ref 与 OpenAI·Gemini 多 ref 两套准备。
+4. **确认图像模型 provider**：provider 的权威来源是 `generate_image` 返回的 `provider` 字段——首次调用后据此确认并补记。也可从 `get_project_profile.image_model.provider` 预判，但以返回值为准。provider（`openai` / `gemini` / `volcengine`）决定步骤 3 的 ref 策略；确认前按 Seedream 单 ref 与 OpenAI·Gemini 多 ref 两套准备。agent 不选择或传递模型 key。
 5. 尝试调用 `prepare_workspace(content_type="design", task_id=$TASK_ID)` 获取 `$DIR`
    - prepare_workspace 返回的 path 可能是相对路径；相对路径以当前任务工作区 `$CWD` 为根，例如返回 `output` 时使用 `$CWD/output`
    - 如果 `prepare_workspace` 调用失败，使用 `$CWD/output/` 作为 `$DIR`

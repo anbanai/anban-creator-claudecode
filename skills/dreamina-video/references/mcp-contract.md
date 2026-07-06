@@ -98,9 +98,9 @@ Returns:
 - `resolved_params`
 - `estimated_credits`
 - `pricing_breakdown`
-- validation errors for unsupported model/parameter/reference combinations
+- validation errors for unsupported resolved model, parameter, or reference combinations
 
-The server estimates credits dynamically from `model_prices.video_generation`, `billing.credits_per_cny`, membership/user multipliers, model key, output resolution, ratio, duration, whether an input video is present, and server-measured input video duration. Real model cost stays separate from billing multipliers. Do not trust agent-supplied input video duration. Video task/plan creation and plan trigger require at least `100000` credits balance; this is a balance gate, not the minimum charge.
+The server estimates credits dynamically from `model_prices.video_generation`, `billing.credits_per_cny`, membership/user multipliers, the server-resolved model key, output resolution, ratio, duration, whether an input video is present, and server-measured input video duration. Real model cost stays separate from billing multipliers. Do not trust agent-supplied input video duration. Video task/plan creation and plan trigger require at least `100000` credits balance; this is a balance gate, not the minimum charge.
 
 ## build_video_generation_plan
 
@@ -119,12 +119,13 @@ Important inputs:
 - `duration`: seconds
 - `ratio`: usually `9:16`
 - `resolution`: usually `1080p`
-- `model`: configured model key from `get_project_profile.video.model_catalog`, not a hardcoded provider fallback
 - `seed`
 - `camera_fixed`
 - `watermark`
 - `service_tier`
 - `task_id`
+
+Do not pass a model key. The server resolves the generation model from task/project configuration. You may read provider/model details from `get_project_profile` or tool responses to adapt reference strategy, but never choose or pass model keys.
 
 ## create_video_generation_job
 

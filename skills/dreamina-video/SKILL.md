@@ -38,9 +38,9 @@ Never call Volcengine/Dreamina HTTP APIs directly, never handle API keys, never 
 
 1. Work inside the existing project/plan/task flow. A video generation job is a `video` task, not a separate product line.
 2. Call `get_project_profile(project_id, task_id)` first. Use only the returned `resolved_profile`, `agent_brief`, and `video` block; do not hardcode model IDs, default resolution, duration, watermark, or fixed credits.
-   - The only valid model keys are keys present in `video.model_catalog` and allowed by `video.policy.allowed_models`.
-   - If a task/plan/history mentions a model key that is not in the returned catalog, stop with “模型未配置或不可用” instead of guessing a replacement.
-   - Never persist, display, or call an unconfigured model key.
+   - Treat the returned video model fields, including `video.model_catalog`, as read-only server-resolved context.
+   - Do not choose, persist, or pass a model key to video generation MCP tools.
+   - If the server reports the task/plan model as unavailable, stop with “模型未配置或不可用” instead of guessing a replacement.
 3. Prepare the workspace with `prepare_workspace(content_type="video", task_id=...)` when available. Local files are temporary Claude workspace artifacts only; anything persistent must become an OSS-backed task file through MCP/server tools.
 4. Read the relevant references:
    - Business structure: `references/methodology.md`
@@ -53,7 +53,7 @@ Never call Volcengine/Dreamina HTTP APIs directly, never handle API keys, never 
    - Write `creative-brief.md` before any prompt: one audience, one subject, one message, one desired emotional/behavioral outcome, and one 黄金三秒 hook.
    - For 个人 IP: default to `purpose=planting` unless the goal is consultation/private traffic, then use `lead_gen`. Preserve the creator's identity, outfit family, speaking energy, values, and repeatable catchphrases.
    - For 高效段子: default to `purpose=promotion`; use `planting` for soft recommendation and `ecommerce` for direct selling. Build the joke from setup → misunderstanding/pressure → reversal → payoff → light CTA.
-6. Collect inputs: references for people/objects/scenes, business purpose (`planting`, `ecommerce`, `lead_gen`, `promotion`), content type, target deliverable duration, ratio, resolution, configured model key, seed/camera preferences. Missing ratio/model/resolution values come from project video profile, but 目标成片时长 must be outcome-led:
+6. Collect inputs: references for people/objects/scenes, business purpose (`planting`, `ecommerce`, `lead_gen`, `promotion`), content type, target deliverable duration, ratio, resolution, and seed/camera preferences. The model is resolved by the server from task/project configuration; agents may read it for capability context but must not pass it to MCP generation tools. Missing ratio/resolution values come from project video profile, but 目标成片时长 must be outcome-led:
    - First use an explicit user-requested duration.
    - If absent and a registered video reference has server-measured `input_duration_seconds`, use that 参考视频时长 as the target.
    - Only use project `duration` as a fallback when neither the user nor references imply duration.
