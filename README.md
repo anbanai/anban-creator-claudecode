@@ -9,10 +9,10 @@
 1. 打开 [Anban Studio / Web 管理端](https://creator.anbanai.com) 注册或登录
 2. 在设置页创建 API Key
 3. 在 Claude Code 里安装插件
-4. 把 API Key 写入 Claude Code 配置
-5. 运行 `/anban-setup`
+4. 按 Claude Code 提示填写插件配置
+5. 运行 `/anban:anban-setup`
 6. 完全退出并重新启动 Claude Code
-7. 重启后再次运行 `/anban-setup` 验证连接
+7. 重启后再次运行 `/anban:anban-setup` 验证连接
 8. 开始用自然语言或指定 Agent 创作
 
 ---
@@ -46,42 +46,24 @@ claude plugin install --scope user anban@anbanai
 
 ## 4. 设置 API Key
 
-推荐把 Key 写到 Claude Code 的用户级配置里，这样所有项目都能直接复用。
+插件声明了 Claude Code 官方 `userConfig`：
 
-编辑 `~/.claude/settings.json`，确保有下面这段：
+- `api_key`：必填，敏感字段，用于连接 Anban Creator MCP 服务
+- `api_url`：可选，默认 `https://api.creator.anbanai.com`
 
-```json
-{
-  "env": {
-    "ANBAN_API_KEY": "你的完整 API Key"
-  }
-}
-```
+安装或启用插件时，Claude Code 会提示填写这些配置，并将敏感值保存到安全存储中。通常不需要手动编辑 `~/.claude/settings.json`。
 
-如果你使用的是 Anban 官方在线服务，可以额外补上服务地址：
+如果你接的是自建或本地服务，在插件配置里把 `api_url` 改成你自己的服务地址。
 
-```json
-{
-  "env": {
-    "ANBAN_API_KEY": "你的完整 API Key",
-    "ANBAN_API_URL": "https://api.creator.anbanai.com"
-  }
-}
-```
-
-如果你接的是自建或本地服务，就把 `ANBAN_API_URL` 改成你自己的服务地址。
-
-如果 `~/.claude/settings.json` 原来已经有别的配置，只需要把 `env` 里的字段合并进去，不要覆盖其他内容。
-
-## 5. 运行 `/anban-setup`
+## 5. 运行 `/anban:anban-setup`
 
 安装并写好 Key 后，在 Claude Code 中运行：
 
 ```bash
-/anban-setup
+/anban:anban-setup
 ```
 
-`/anban-setup` 会帮你检查：
+`/anban:anban-setup` 会帮你检查：
 
 - 本地视频工具是否已自动准备好
 - API Key 是否生效
@@ -90,14 +72,14 @@ claude plugin install --scope user anban@anbanai
 
 ## 6. 重启 Claude Code
 
-`/anban-setup` 完成后，请**完全退出并重新启动 Claude Code**。
+`/anban:anban-setup` 完成后，请**完全退出并重新启动 Claude Code**。
 
 这是为了让新的环境变量和 MCP 连接真正生效。只刷新当前会话通常不够。
 
 重启以后，再运行一次：
 
 ```bash
-/anban-setup
+/anban:anban-setup
 ```
 
 如果能看到项目列表或连接成功提示，就说明接入已经完成。
@@ -119,20 +101,22 @@ claude plugin install --scope user anban@anbanai
 如果你想明确指定流程，也可以直接运行：
 
 ```bash
-claude --dangerously-skip-permissions --verbose --agent anban:article AI Agent 入门指南
-claude --dangerously-skip-permissions --verbose --agent anban:seednote 降噪耳机种草笔记
-claude --dangerously-skip-permissions --verbose --agent anban:live-slicer ./live.mp4
+claude --verbose --agent anban:wechatarticle AI Agent 入门指南
+claude --verbose --agent anban:seednote 降噪耳机种草笔记
+claude --verbose --agent anban:live-slicer ./live.mp4
 ```
+
+如果你调整 Claude Code 权限模式，请只在受信任工作区中放宽权限，并确认本地媒体文件与输出目录都可被 agent 访问。
 
 ## 常用命令
 
-- `/anban-setup`
+- `/anban:anban-setup`
   初始化配置并验证连接
 - `/plugin`
   查看插件是否已安装成功
-- `anban:article`
+- `/anban:article`
   公众号图文创作
-- `anban:seednote`
+- `/anban:seednote`
   种草笔记创作
 - `anban:live-slicer`
   直播视频切片，需要本机可用 `ffmpeg` 和 `ffprobe`
@@ -140,9 +124,9 @@ claude --dangerously-skip-permissions --verbose --agent anban:live-slicer ./live
 ## 遇到问题时先检查
 
 1. 是否已经在 [设置页](https://creator.anbanai.com/settings) 创建并复制了完整 API Key
-2. `~/.claude/settings.json` 里是否真的写入了 `ANBAN_API_KEY`
+2. Claude Code 插件配置里是否已经填写 `api_key`
 3. 是否已经完全退出并重启过 Claude Code
-4. 重启后是否重新执行过 `/anban-setup`
+4. 重启后是否重新执行过 `/anban:anban-setup`
 
 ## 支持的创作类型
 
@@ -158,8 +142,9 @@ claude --dangerously-skip-permissions --verbose --agent anban:live-slicer ./live
 ├── agents/          # 创作引擎（Agent 定义）
 ├── skills/          # 独立技能（多个 Skill）
 ├── hooks/           # 质量检查钩子
-├── themes/          # 排版主题 (YAML)
-└── writers/         # 写作风格 (YAML)
+├── templates/       # 文章结构模板
+├── writers/         # 写作风格 (YAML)
+└── docs/            # 插件开发说明（不会被 Claude Code 作为运行时上下文加载）
 ```
 
 ## 其他版本

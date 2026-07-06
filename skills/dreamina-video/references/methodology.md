@@ -40,6 +40,18 @@ Use these roles:
 
 When writing `reference-anchors.md`, include `reference_role` beside the source. If one source has multiple roles, split them into separate bullets so each role has its own must-keep/can-change/must-not-change rules.
 
+## 视觉锚定图 Method
+
+Use this only when the user did not provide enough visual references for a stable subject, product, or first frame. The generated anchors are internal consistency aids, not proof that a real person or real product is accurate. User-provided images and videos always win.
+
+Write `anchor-strategy.md` before `reference-anchors.md`:
+- 0 张: user references already cover `subject identity`, `product appearance`, or `first frame`; the task has no stable visual subject; or image generation is unavailable.
+- 1 张: default for one person, IP, character, mascot, product, or core scene that must remain recognizable.
+- 2 张: person + product are both important, or one character needs talking-head plus usage/full-body state. The second image must derive from the first with `ref_image_path`.
+- 3 张: maximum automatic count for multi-segment video, cross-scene same subject, or explicit first/last-frame control. The third image also derives from the first with `ref_image_path`.
+
+Generate anchors with `generate_image(image_type="content", size="3:4", verify_with_vision=true)`. The main prompt must spell out visible anchors: age impression, hairstyle, clothing color family, expression range, posture, role identity, environment, product silhouette, product color/material, and no random logo/text. Accept only a passing vision check. If a score is present, require at least 0.75. Register every accepted image with `register_video_reference(type="image_url", file_path=..., reference_role=...)`, then cite the registered URL in `reference-anchors.md`.
+
 ## Business Goal Translation
 
 ## 创作定位 / Creative Type Selection

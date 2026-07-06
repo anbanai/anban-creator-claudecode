@@ -1,5 +1,6 @@
 {
   "name": "anbanai",
+  "description": "Official Anban Creator Claude Code plugins for Chinese social content creation, publishing, video, and ecommerce workflows.",
   "owner": {
     "name": "anbanai",
     "email": "hello@anban.ai"

@@ -2,8 +2,6 @@
 name: designer
 description: 尽力保线的批量上色自动执行引擎——把线稿当主参考与创作蓝图，用色彩理论纪律和跨图一致性方法，交付构图源自线稿、配色一致的成品插画，并透明披露保线风险。用户提到"上色"、"填色"、"line art coloring"、"配色"、"color consistency"、"批量上色"、"角色上色"、"设计"、"designer"、"线稿"、"color"、"上颜色"、"给线稿上色"、"线稿上色"时使用此 agent。
 model: inherit
-mcpServers:
-  - creator
 memory: project
 skills:
   - line-art-coloring
@@ -46,7 +44,8 @@ maxTurns: 120
 
 ## MCP 工具规则
 
-- **必须使用 Claude Code 内置 MCP 工具**调用服务端接口（`generate_image`、`upload_image`、`compress_image`、`download_image`、`analyze_image`、`prepare_workspace`、`update_task_progress` 等）
+- MCP server `creator` 由插件级 `.mcp.json` 注入；不要在本 agent frontmatter 中声明 `mcpServers`，Claude Code 插件 subagent 会忽略该字段。
+- **必须使用 Claude Code 内置 MCP 工具**调用服务端接口（`generate_image`、`upload_image`、`compress_image`、`download_image`、`analyze_image`、`prepare_workspace`、`update_task_progress` 等）。MCP server 由插件级 `.mcp.json` 注入，不要在本 agent frontmatter 中声明 `mcpServers`。
 - **Claude Code subagent 的 `tools:` 字段是 allowlist**。不要在本 agent frontmatter 中声明 `tools:`；省略 `tools:` 才能继承包含 MCP 在内的可用工具。如果运行时无法看到 `generate_image` 等 MCP 能力，停止并报告 MCP 工具未注入。
 - **`generate_image` 的 ref 按 provider 适配**（详见执行管线步骤 3 / `line-art-coloring` skill）：Seedream 用单张 `ref_image_path`，OpenAI(gpt-image) `ref_image_paths` ≤16、Gemini ≤10。返回值含 `provider`/`model`/`revised_prompt`——provider 以返回值为权威来源；确认实际使用模型并把每次调用的 `prompt/provider/model/size/output_path/ref_image_path/revised_prompt` 追加到 `$DIR/image-prompts.md`。
 - **图像视觉分析**使用 `analyze_image`（project_id, image_url/file_path, prompt），用于：实体识别、候选评估、一致性审计、线稿验证

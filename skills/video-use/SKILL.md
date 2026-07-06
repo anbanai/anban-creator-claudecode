@@ -47,12 +47,10 @@ Before the first `anban video` command, resolve the plugin-local binary once and
 
 ```bash
 ANBAN_BIN="${ANBAN_BIN:-}"
+ANBAN_DATA="${ANBAN_PLUGIN_DATA:-${CLAUDE_PLUGIN_DATA:-${PLUGIN_DATA:-}}}"
 if [ -z "$ANBAN_BIN" ] || ! command -v "$ANBAN_BIN" >/dev/null 2>&1; then
-  for root in "${ANBAN_PLUGIN_ROOT:-}" "${CLAUDE_PLUGIN_ROOT:-}" "${PLUGIN_ROOT:-}"; do
+  for root in "$ANBAN_DATA"; do
     [ -z "$root" ] && continue
-    if [ -x "$root/scripts/bootstrap.sh" ]; then
-      ANBAN_PLUGIN_ROOT="$root" "$root/scripts/bootstrap.sh" >/dev/null 2>&1 || true
-    fi
     if [ -x "$root/bin/anban" ]; then
       ANBAN_BIN="$root/bin/anban"
       break
@@ -61,6 +59,25 @@ if [ -z "$ANBAN_BIN" ] || ! command -v "$ANBAN_BIN" >/dev/null 2>&1; then
       ANBAN_BIN="$root/bin/anban.exe"
       break
     fi
+  done
+fi
+if [ -z "$ANBAN_BIN" ] || ! command -v "$ANBAN_BIN" >/dev/null 2>&1; then
+  for root in "${ANBAN_PLUGIN_ROOT:-}" "${CLAUDE_PLUGIN_ROOT:-}" "${PLUGIN_ROOT:-}"; do
+    [ -z "$root" ] && continue
+    if [ -x "$root/scripts/bootstrap.sh" ]; then
+      ANBAN_PLUGIN_ROOT="$root" CLAUDE_PLUGIN_DATA="$ANBAN_DATA" PLUGIN_DATA="$ANBAN_DATA" "$root/scripts/bootstrap.sh" >/dev/null 2>&1 || true
+    fi
+    for bin_root in "$ANBAN_DATA" "$root"; do
+      [ -z "$bin_root" ] && continue
+      if [ -x "$bin_root/bin/anban" ]; then
+        ANBAN_BIN="$bin_root/bin/anban"
+        break 2
+      fi
+      if [ -x "$bin_root/bin/anban.exe" ]; then
+        ANBAN_BIN="$bin_root/bin/anban.exe"
+        break 2
+      fi
+    done
   done
 fi
 ANBAN_BIN="${ANBAN_BIN:-anban}"

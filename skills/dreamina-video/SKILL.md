@@ -22,6 +22,8 @@ Use this skill to turn references and a business goal into a stable short-video 
 | Tool | Use |
 | --- | --- |
 | `get_project_profile` | Read the resolved project runtime profile, `agent_brief`, and `video` block before planning. |
+| `generate_image` | When no user visual reference covers a required stable subject/product/first frame, generate 1-3 temporary visual anchor images with `verify_with_vision=true`. |
+| `analyze_image` | Optional fallback audit for generated visual anchors when the `generate_image` result lacks normalized verification details. |
 | `register_video_reference` | Upload or normalize a text/image/audio/video reference into an OSS-backed, Ark-accessible URL. |
 | `analyze_video_reference` | Understand an input video through the configured native video-understanding route before planning; returns `video-understanding.json`, token usage, charged credits, and visual/action/expression/scene/camera/rhythm/consistency anchors. |
 | `validate_video_generation_params` | Preflight model/ratio/resolution/duration/references and return estimated dynamic credits. |
@@ -63,25 +65,42 @@ Never call Volcengine/Dreamina HTTP APIs directly, never handle API keys, never 
    - Register or normalize each reference before calling build/create.
    - Plan-triggered tasks reuse the plan's saved references unless the user explicitly changes the plan.
 8. Register every non-text reference with `register_video_reference`. Prefer `task_file_id` or upload through the platform; for video input, use the returned reference with server-measured `input_duration_seconds` and never hand-write a raw `video_url` into plan/create. Raw provider URLs are intermediate only and must not be the main delivery link.
-9. For every video reference, call `analyze_video_reference` after registration and save/consume `video-understanding.json`.
+9. Before writing final anchors, create `anchor-strategy.md` and decide whether visual-anchor bootstrap is needed:
+   - 0 images: user references already cover `subject identity`, `product appearance`, or `first frame`; the task has no stable visual subject; or `generate_image` is unavailable.
+   - 1 image by default: one person, IP, character, mascot, product, or core scene needs consistency.
+   - 2 images: person + product are both important, or the same subject needs talking-head plus use/full-body state.
+   - 3 images maximum: multi-segment video, cross-scene same subject, or explicit first/last-frame control. 最多自动 3 张; do not auto-generate more than 3 anchors.
+   Existing user media always wins; never generate a duplicate anchor for a role already covered by a user-approved reference.
+10. If visual anchors are needed, create `visual-anchors/` and call `generate_image(project_id=$PROJECT_ID, task_id=$TASK_ID, image_type="content", size="3:4", output_path="$DIR/visual-anchors/subject-anchor-01.png", verify_with_vision=true, verification_prompt=...)`.
+   - The prompt must name visible anchors: age impression, hairstyle, clothing color family, expression range, posture, role identity, environment, product silhouette/material/color, and no random logo/text.
+   - Accept only `verification.passed=true`; if a numeric score exists, require `score >= 0.75`.
+   - If normalized verification is missing, call `analyze_image` on the returned `file_path` and apply the same pass/score rule.
+   - For second or third anchors, pass the approved main anchor as `ref_image_path`; do not independently regenerate the same identity.
+   - After each accepted anchor, call `register_video_reference(type="image_url", file_path=<generated file_path>, reference_role="subject identity" | "product appearance" | "first frame")`.
+   - Record prompts, provider/model, revised prompt, verification, and registered reference URL in `visual-anchor-pack.md`.
+   - If the main anchor fails two attempts, stop and request a user reference for high-consistency tasks; for ordinary single-segment videos, continue with text-only anchors and record the risk. If a derived anchor fails, keep only the accepted main anchor.
+11. For every video reference, call `analyze_video_reference` after registration and save/consume `video-understanding.json`.
    - Require `analysis_mode=native_video`, where the configured large model understands the whole OSS video directly through `model_routes.video_understanding`.
    - If native video understanding fails, stop and report the configuration/provider error. Do not degrade to screenshots, frame sampling, transcript-only analysis, or image understanding.
    - Treat returned `usage` and `credits_charged` as billing evidence; missing usage is a server-side error for understanding routes.
    - The analysis must cover frame content, character identity, facial expressions, body actions, scene, camera movement, editing rhythm, and what must not drift. Do not rely only on ASR, transcript, or marketing copy.
-10. Write `reference-anchors.md`: first declare `reference_role` for every reference, then separate each reference into must-keep, can-change, and must-not-change anchors. Subject consistency is mandatory: `subject_profile` and every `reference_role=subject identity` source must appear in all shots where the subject appears.
-11. Write `script.md`: structure beats against the 目标成片时长. For long-form references, preserve the reference rhythm and compress only when the user asks for a shorter result. Do not submit raw marketing copy as a video prompt.
-12. Write `shot-plan.md`: plan one or more 单次生成片段 according to the selected model's max duration. Each segment needs subject, action, scene, camera movement, visual focus, negative constraints, and its segment time range.
-13. Build the final prompt using global anchors + shot instructions + negative constraints. Keep one intent per shot.
-14. Call `validate_video_generation_params` or `build_video_generation_plan`; save the result to `generation-plan.json`, including estimated dynamic credits and pricing breakdown. Show/record the estimate before submission. The server enforces the 100000-credit minimum balance gate for video task/plan creation and trigger; do not create a workaround.
-15. If the 目标成片时长 is longer than the allowed 单次生成片段 duration, split into consecutive segments and call `create_video_generation_job` once; the server uses `generation_plan.segments` to submit all legal provider-bounded segments. Save all submissions to `video-task-submit.json` with segment indexes.
-16. Poll the aggregate job with `query_video_generation_job`; save terminal responses to `video-task-result.json`.
-17. On success, call `download_video_generation_results` with `task_id` for every generated segment so each MP4 is uploaded to OSS and registered as a task file. For multi-segment jobs, assemble `output/final.mp4` with ffmpeg, call `compose_video_segments`, then call `validate_video_delivery`. Segment-only delivery is not complete.
-18. Write `quality-review.md` before deciding whether to retry. Score subject consistency, product/scene fidelity, business goal fit, motion clarity, target duration fit, and CTA fit.
-19. When submitting feedback, always use `agent_name="videocreator"`; `dreamina-video` is the selected skill/workflow, not the executing agent identity.
+12. Write `reference-anchors.md`: first declare `reference_role` for every reference, including generated visual anchors, then separate each reference into must-keep, can-change, and must-not-change anchors. Subject consistency is mandatory: `subject_profile` and every `reference_role=subject identity` source must appear in all shots where the subject appears.
+13. Write `script.md`: structure beats against the 目标成片时长. For long-form references, preserve the reference rhythm and compress only when the user asks for a shorter result. Do not submit raw marketing copy as a video prompt.
+14. Write `shot-plan.md`: plan one or more 单次生成片段 according to the selected model's max duration. Each segment needs subject, action, scene, camera movement, visual focus, negative constraints, and its segment time range.
+15. Build the final prompt using global anchors + shot instructions + negative constraints. Keep one intent per shot.
+16. Call `validate_video_generation_params` or `build_video_generation_plan`; save the result to `generation-plan.json`, including estimated dynamic credits and pricing breakdown. The `references` array must include user references plus every accepted generated visual anchor. Show/record the estimate before submission. The server enforces the 100000-credit minimum balance gate for video task/plan creation and trigger; do not create a workaround.
+17. If the 目标成片时长 is longer than the allowed 单次生成片段 duration, split into consecutive segments and call `create_video_generation_job` once; the server uses `generation_plan.segments` to submit all legal provider-bounded segments. Save all submissions to `video-task-submit.json` with segment indexes.
+18. Poll the aggregate job with `query_video_generation_job`; save terminal responses to `video-task-result.json`.
+19. On success, call `download_video_generation_results` with `task_id` for every generated segment so each MP4 is uploaded to OSS and registered as a task file. For multi-segment jobs, assemble `output/final.mp4` with ffmpeg, call `compose_video_segments`, then call `validate_video_delivery`. Segment-only delivery is not complete.
+20. Write `quality-review.md` before deciding whether to retry. Score subject consistency, product/scene fidelity, business goal fit, motion clarity, target duration fit, and CTA fit. If visual-anchor bootstrap was skipped or failed, record the fallback and consistency risk.
+21. When submitting feedback, always use `agent_name="videocreator"`; `dreamina-video` is the selected skill/workflow, not the executing agent identity.
 
 ## Required Artifacts
 
 - `creative-brief.md`: content type, business purpose, audience, subject/person/product, single message, proof, CTA, emotional target, and constraints.
+- `anchor-strategy.md`: whether visual anchors are skipped or generated, the reason, count, reference roles, and fallback decision.
+- `visual-anchor-pack.md`: generated anchor prompts, provider/model, revised prompts, verification results, registered reference URLs, and any failed attempts.
+- `visual-anchors/*.png`: accepted generated visual anchor images, at most 3.
 - `video-understanding.json`: output from `analyze_video_reference`; cite it in anchors and shot planning.
 - `reference-anchors.md`: must-keep / can-change / must-not-change anchors for person, product, scene, rhythm, and camera.
 - `script.md`: time-coded hook, proof/experience, reinforcement, CTA.

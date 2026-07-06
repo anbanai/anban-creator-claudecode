@@ -1,6 +1,9 @@
-# CLAUDE.md
+# Plugin developer notes
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file is development guidance for the Anban Claude Code plugin distribution.
+It intentionally lives under `docs/` because Claude Code does not load a
+plugin-root `CLAUDE.md` as plugin context. Runtime guidance belongs in
+`agents/*.md` or `skills/*/SKILL.md`.
 
 ## Project Overview
 
@@ -19,7 +22,9 @@ The plugin follows an **Agent + Skill + MCP** architecture: Claude Code agents o
 
 ### Agents (`agents/`)
 
-Orchestration engines that run fully autonomous, zero-interaction pipelines. Each agent has a frontmatter block with `name`, `skills`, `mcpServers`, `maxTurns`, and `memory` config. The agent definition is the single source of truth for its pipeline's flow, quality standards, risk mitigation, and success criteria. Do not add a `tools` allowlist to agents that need MCP tools; Claude Code treats `tools` as an allowlist and can hide inherited MCP tools from subagents.
+Orchestration engines that run fully autonomous, zero-interaction pipelines. Each agent has a frontmatter block with `name`, `skills`, `maxTurns`, and `memory` config. The agent definition is the single source of truth for its pipeline's flow, quality standards, risk mitigation, and success criteria. Do not add a `tools` allowlist to agents that need MCP tools; Claude Code treats `tools` as an allowlist and can hide inherited MCP tools from subagents.
+
+Do not add `mcpServers` to plugin agent frontmatter. Plugin subagents receive MCP servers from the plugin-level `.mcp.json`; Claude Code ignores `mcpServers` inside plugin agent frontmatter.
 
 | Agent | Trigger | Pipeline |
 |-------|---------|----------|
@@ -68,14 +73,6 @@ Themes define visual styling for article排版. Themes are managed server-side v
 
 YAML files defining **writing** styles (the writer dimension only). Each has `name`, `english_name`, `writing_prompt` (required), plus optional `core_beliefs`, `title_formulas`, `quote_templates`. Writers **do not** carry visual identity — image visual style is an orthogonal dimension configured per project/task (see `article-visual-design` skill). Built-in styles: `dan-koe`, `cultural-depth`, `casual-science`.
 
-### Layout Modules (`layouts/`)
-
-YAML files defining structured article layout modules (callout, steps, timeline, metrics, CTA, etc.). Agents use these as reference when writing articles to add visual richness. Each module specifies `when_to_use`, `markdown_syntax`, and concrete `example`. All modules use standard Markdown syntax (not md2wechat's `:::` fenced blocks) that the server-side LLM converter interprets and renders as WeChat HTML.
-
-### Image Prompt Presets (`prompts/image/`)
-
-YAML files defining reusable image generation prompt templates for covers and infographics. Each preset has `{{VARIABLES}}` that agents fill with article context. Categories: cover presets (default, hero, metaphor, editorial, minimal) and infographic presets (comparison, timeline, process, bento, handdrawn).
-
 ### Hooks (`hooks/hooks.json`)
 
 Lifecycle hooks for quality verification:
@@ -95,9 +92,7 @@ Lifecycle hooks for quality verification:
 
 ## Modifying This Plugin
 
-- **Adding a new agent**: Create `agents/<name>.md` with frontmatter (name, skills, mcpServers, maxTurns) and pipeline definition following existing agent structure. Omit `tools` unless you intentionally want to restrict the agent to a small allowlist that includes every required MCP tool.
+- **Adding a new agent**: Create `agents/<name>.md` with frontmatter (name, skills, maxTurns) and pipeline definition following existing agent structure. Omit `tools` unless you intentionally want to restrict the agent to a small allowlist that includes every required MCP tool. Omit `mcpServers`; plugin agents inherit the plugin-level `.mcp.json`.
 - **Adding a new skill**: Create `skills/<name>/SKILL.md` with frontmatter name/description. Add `references/` for detailed guides.
 - **Adding a new theme**: Themes are managed server-side. Contact the server admin to add new themes.
 - **Adding a new writer style**: Add `writers/<name>.yaml` with required `name`, `english_name`, `writing_prompt`.
-- **Adding a new layout module**: Add `layouts/<name>.yaml` with `name`, `category`, `serves`, `description`, `when_to_use`, `markdown_syntax`, and `example`.
-- **Adding a new image prompt preset**: Add `prompts/image/<name>.yaml` with `name`, `kind: image`, `archetype`, `primary_use_case`, `variables`, and `template`.

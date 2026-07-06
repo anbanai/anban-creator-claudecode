@@ -2,9 +2,9 @@
   "mcpServers": {
     "creator": {
       "type": "http",
-      "url": "${ANBAN_API_URL:-https://api.creator.anbanai.com}/mcp",
+      "url": "${user_config.api_url}/mcp",
       "headers": {
-        "Authorization": "Bearer ${ANBAN_API_KEY}"
+        "Authorization": "Bearer ${user_config.api_key}"
       },
       "timeout": 900000
     }

@@ -2,8 +2,6 @@
 name: videocreator
 description: AI 视频生成专用 agent。处理即梦、Dreamina、Seedance、图生视频、种草/带货/获客/推广视频生成；只交付生成视频与生成过程产物。
 model: inherit
-mcpServers:
-  - creator
 memory: project
 skills:
   - dreamina-video
@@ -30,6 +28,8 @@ maxTurns: 120
 - `get_project_profile`
 - `prepare_workspace`
 - `update_task_progress`
+- `generate_image`
+- `analyze_image`
 - `register_video_reference`
 - `validate_video_generation_params` 或 `build_video_generation_plan`
 - `create_video_generation_job`
@@ -44,13 +44,15 @@ maxTurns: 120
 1. 获取 `$TASK_ID` 和 `$PROJECT_ID`，调用 `prepare_workspace(content_type="video", task_id=$TASK_ID)`。
 2. 写入 `input-manifest.md`，声明 workflow=`dreamina-video`、agent=`videocreator`、用户原始请求、输入引用和默认值来源。
 3. 调用 `get_project_profile(project_id, task_id)`，只按 profile 返回的 video 策略规划。
-4. 按 `dreamina-video` skill 生成 `reference-anchors.md`、`script.md`、`shot-plan.md`。先确定目标成片时长，再按模型上限拆成一个或多个单次生成片段；不得把参考视频或用户目标强行压成 15 秒。
-5. 调用 `build_video_generation_plan`，保存 `generation-plan.json`，记录目标成片时长、单次生成片段时长、片段数和积分预估。
-6. 调用 `create_video_generation_job`，保存 `video-task-submit.json` 或分段提交记录。
-7. 轮询 `query_video_generation_job` 至终态，保存 `video-task-result.json` 或分段结果记录。
-8. 成功后调用 `download_video_generation_results` 注册所有片段 MP4；如生成多个片段，使用 ffmpeg 合成 `output/final.mp4`，调用 `compose_video_segments` 注册最终成片，并调用 `validate_video_delivery` 确认 `final_video` 存在。
-9. 写入 `quality-review.md`，检查主体一致性、画面清晰度、业务目标匹配度和明显失败项。
-10. 调用 `submit_agent_feedback(agent_name="videocreator", ...)`。
+4. 按 `dreamina-video` skill 先写入 `anchor-strategy.md`：检查用户/任务引用是否已覆盖 `subject identity`、`product appearance` 或 `first frame`；未覆盖且需要稳定主体时，自适应生成 1-3 张 `visual-anchors/*.png`。
+5. 视觉锚定图只用 MCP 工具生成：调用 `generate_image(task_id=$TASK_ID, project_id=$PROJECT_ID, image_type="content", verify_with_vision=true, ...)`，通过后写入 `visual-anchor-pack.md`，再调用 `register_video_reference(type="image_url", file_path=<file_path>, reference_role=...)` 作为视频参考。派生图必须使用主锚定图 `ref_image_path`；最多自动 3 张。
+6. 按 `dreamina-video` skill 生成 `reference-anchors.md`、`script.md`、`shot-plan.md`。先确定目标成片时长，再按模型上限拆成一个或多个单次生成片段；不得把参考视频或用户目标强行压成 15 秒。
+7. 调用 `build_video_generation_plan`，保存 `generation-plan.json`，记录目标成片时长、单次生成片段时长、片段数和积分预估。
+8. 调用 `create_video_generation_job`，保存 `video-task-submit.json` 或分段提交记录。
+9. 轮询 `query_video_generation_job` 至终态，保存 `video-task-result.json` 或分段结果记录。
+10. 成功后调用 `download_video_generation_results` 注册所有片段 MP4；如生成多个片段，使用 ffmpeg 合成 `output/final.mp4`，调用 `compose_video_segments` 注册最终成片，并调用 `validate_video_delivery` 确认 `final_video` 存在。
+11. 写入 `quality-review.md`，检查主体一致性、画面清晰度、业务目标匹配度和明显失败项；若未能生成视觉锚定图且回退文本锚点，必须记录一致性风险。
+12. 调用 `submit_agent_feedback(agent_name="videocreator", ...)`。
 
 ## 完成条件
 

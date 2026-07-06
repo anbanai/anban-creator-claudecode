@@ -3,7 +3,7 @@ name: anban-setup
 description: Use when user mentions "初始化", "anban-setup", "第一次使用", "API Key", "密钥", or when MCP tools fail with auth/connection errors suggesting missing ANBAN_API_KEY.
 ---
 
-# /anban-setup Anban Creator 初始化
+# /anban:anban-setup Anban Creator 初始化
 
 ## 图片比例固定规则
 
@@ -23,6 +23,19 @@ description: Use when user mentions "初始化", "anban-setup", "第一次使用
 
 ```bash
 ANBAN_CLI=""
+ANBAN_DATA="${ANBAN_PLUGIN_DATA:-${CLAUDE_PLUGIN_DATA:-${PLUGIN_DATA:-}}}"
+for root in "$ANBAN_DATA"; do
+  [ -z "$root" ] && continue
+  if [ -x "$root/bin/anban" ]; then
+    ANBAN_CLI="$root/bin/anban"
+    break
+  fi
+  if [ -x "$root/bin/anban.exe" ]; then
+    ANBAN_CLI="$root/bin/anban.exe"
+    break
+  fi
+done
+
 for root in "${ANBAN_PLUGIN_ROOT:-}" "${CLAUDE_PLUGIN_ROOT:-}" "${PLUGIN_ROOT:-}"; do
   [ -z "$root" ] && continue
   if [ -x "$root/bin/anban" ]; then
@@ -39,7 +52,18 @@ if [ -z "$ANBAN_CLI" ]; then
   for root in "${ANBAN_PLUGIN_ROOT:-}" "${CLAUDE_PLUGIN_ROOT:-}" "${PLUGIN_ROOT:-}"; do
     [ -z "$root" ] && continue
     if [ -x "$root/scripts/bootstrap.sh" ]; then
-      ANBAN_PLUGIN_ROOT="$root" "$root/scripts/bootstrap.sh" >/dev/null 2>&1 || true
+      ANBAN_PLUGIN_ROOT="$root" CLAUDE_PLUGIN_DATA="$ANBAN_DATA" PLUGIN_DATA="$ANBAN_DATA" "$root/scripts/bootstrap.sh" >/dev/null 2>&1 || true
+      for bin_root in "$ANBAN_DATA" "$root"; do
+        [ -z "$bin_root" ] && continue
+        if [ -x "$bin_root/bin/anban" ]; then
+          ANBAN_CLI="$bin_root/bin/anban"
+          break 2
+        fi
+        if [ -x "$bin_root/bin/anban.exe" ]; then
+          ANBAN_CLI="$bin_root/bin/anban.exe"
+          break 2
+        fi
+      done
       if [ -x "$root/bin/anban" ]; then
         ANBAN_CLI="$root/bin/anban"
         break
@@ -74,38 +98,22 @@ fi
 
 > Anban Creator MCP 服务器需要 API Key 进行认证。请前往 https://creator.anbanai.com 注册账号并获取 API Key。
 
-通过 AskUserQuestion 向用户索取密钥值。
+Claude Code 版插件已经在 `.claude-plugin/plugin.json` 中声明官方 `userConfig`：
 
-收到后，使用 Write/Edit 工具将密钥写入用户级别的 `~/.claude/settings.json` 的 `env` 字段中：
+- `api_key`：必填、敏感字段，映射到 MCP Authorization header。
+- `api_url`：可选，默认 `https://api.creator.anbanai.com`。
 
-```json
-{
-  "env": {
-    "ANBAN_API_KEY": "<用户提供的密钥>"
-  }
-}
-```
+如果 `list_projects` 因认证失败，先提示用户打开 Claude Code 插件配置，填写或更新 Anban 插件的 `api_key`。不要把 API Key 写入项目文件，也不要把密钥打印到日志或最终回答。
 
-**注意**：
-- 如果 `~/.claude/settings.json` 已存在，必须先 Read 读取现有内容，然后用 Edit 合并 `env` 字段，不要覆盖其他已有配置。
-- 如果已有 `env` 对象，只添加 `ANBAN_API_KEY` 字段。
-- 这是**用户级别**配置，对所有项目生效，无需在每个项目中重复设置。
+仅当用户明确要求兼容旧环境变量方式时，才引导其手动维护 `~/.claude/settings.json` 的 `env.ANBAN_API_KEY`；不得自动写入或覆盖用户配置。
 
 ## 项目级配置
 
-API Key 设置完成后，提示用户进行项目级配置（写入项目本地的 `.claude/settings.local.json`）。
+API Key 设置完成后，可根据需要提示用户补充项目级配置（写入项目本地的 `.claude/settings.local.json`）。
 
 ### 服务地址（可选）
 
-如果用户使用的不是默认地址 `http://localhost:8080`（如远程服务器），写入 `ANBAN_API_URL`：
-
-```json
-{
-  "env": {
-    "ANBAN_API_URL": "<用户的服务地址>"
-  }
-}
-```
+如果用户使用的不是默认地址 `https://api.creator.anbanai.com`，优先让用户在插件配置中修改 `api_url`。旧环境变量兼容方式才写入 `ANBAN_API_URL`。
 
 ### 默认项目（可选）
 
@@ -129,21 +137,21 @@ API Key 设置完成后，提示用户进行项目级配置（写入项目本地
 
 告知用户：
 
-> 配置完成。**请退出并重新启动 Claude Code**，让 MCP 连接生效。重启后再次运行 `/anban-setup` 验证连接。
+> 配置完成。**请退出并重新启动 Claude Code**，让 MCP 连接生效。重启后再次运行 `/anban:anban-setup` 验证连接。
 
 ## 重启后验证
 
-用户重启 Claude Code 后，`/anban-setup` 的预检步骤应自动执行。预期结果：
+用户重启 Claude Code 后，`/anban:anban-setup` 的预检步骤应自动执行。预期结果：
 - `list_projects` 调用成功，返回可用项目列表
 - 输出每个项目的 platform、name 和 ID
 
 ## 常见问题
 
 **Q: 重启后 `list_projects` 仍然失败？**
-A: 检查 `~/.claude/settings.json` 中 `ANBAN_API_KEY` 是否正确写入（无多余空格或换行）。检查网络是否能访问 `https://api.creator.anbanai.com`（如使用自建服务器，检查 `ANBAN_API_URL` 是否正确）。
+A: 检查 Claude Code 的 Anban 插件配置是否已填写 `api_key`，以及网络是否能访问 `https://api.creator.anbanai.com`（如使用自建服务器，检查 `api_url` 是否正确）。
 
 **Q: 想切换到另一个 API 地址？**
-A: 编辑 `.claude/settings.local.json`，修改 `ANBAN_API_URL` 的值，然后重启 Claude Code。
+A: 优先在 Claude Code 的 Anban 插件配置中修改 `api_url`，然后重启 Claude Code。
 
 **Q: 已有 API Key 但忘了存在哪里？**
-A: 检查 `~/.claude/settings.json` 的 `env` 字段。项目级配置在 `.claude/settings.local.json`。
+A: Claude Code 会把敏感插件配置保存到安全存储。打开插件配置重新设置 `api_key` 即可。

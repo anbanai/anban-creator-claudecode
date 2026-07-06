@@ -2,13 +2,8 @@
 name: videoeditor
 description: 视频剪辑与后期专用 agent。处理素材剪辑、字幕、调色、overlay animation、Remotion 动画、CapCut 草稿和成片交付。
 model: inherit
-mcpServers:
-  - creator
 memory: project
 skills:
-  - music-to-video
-  - slideshow
-  - remotion-best-practices
   - video-use
   - hyperframes-video-overlays
   - remotion-video-overlays

@@ -17,6 +17,7 @@ Returns:
 - `video.policy`: allowed models, default model, auto-downgrade policy, max resolution, and max duration
 - `video.model_catalog`: server-configured and project-allowed video model keys and capabilities
 - `video.references`: task/plan `video_config.references` when `task_id` is supplied
+- `video.visual_anchor_generation`: capability hints for generated visual anchors, including `available`, `default_image_type`, `max_auto_anchors`, `verify_with_vision`, `register_tool`, and fallback guidance
 - `video.pricing.credits_per_cny`: billing conversion from real CNY model cost to base credits
 - `video.pricing.tier_multiplier`: current membership multiplier applied after base cost
 - `video.pricing.min_balance`: video creation/trigger balance gate, currently `100000`
@@ -27,6 +28,24 @@ Model visibility is fail-closed:
 - Only keys present in `video.model_catalog` are configured and usable.
 - `video.policy.allowed_models`, `video.policy.default_model`, task `video_config.model_key`, and plan `video_config.model_key` are valid only if the key exists in `video.model_catalog`.
 - If historical data contains a missing key, report “模型未配置或不可用” and stop. Do not show, save, estimate, trigger, or call the missing model.
+
+## generate_image for visual anchors
+
+Use this only for videocreator visual-anchor bootstrap when the user has not supplied enough image/video references for a stable subject, product, or first frame.
+
+Required input pattern:
+- `project_id`
+- `task_id`
+- `image_type`: `content`
+- `size`: normally `3:4`
+- `output_path`: `visual-anchors/<role>-anchor-NN.png`
+- `verify_with_vision`: `true`
+- `verification_prompt`: ask for JSON verification of required visible anchors
+- optional `ref_image_path`: required for second and third generated anchors; use the accepted main anchor path
+
+Accept only normalized verification with `passed=true`. If a score exists, it must be at least 0.75. If the tool is unavailable for the deployment, fall back according to `video.visual_anchor_generation.fallback`; do not bypass MCP or call image providers directly.
+
+After an anchor passes, call `register_video_reference` with `type="image_url"`, the returned/generated `file_path`, and the intended `reference_role`. Only registered references should be passed into `build_video_generation_plan` and `create_video_generation_job`.
 
 ## register_video_reference
 

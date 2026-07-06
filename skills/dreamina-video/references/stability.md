@@ -36,6 +36,15 @@ For a batch or retry series, keep these fixed unless the quality review explicit
 
 Changing many parameters at once destroys diagnosis. Change one class of variable per retry.
 
+## Visual Anchor Discipline
+
+Generated visual anchors are a stabilizer, not a substitute for user-provided real references. If the user supplies a `subject identity`, `product appearance`, or `first frame` reference, do not generate another anchor for the same role.
+
+- Main anchor: generate at most two attempts. Accept only `verification.passed=true`; when a score exists, require `score >= 0.75`.
+- Derived anchors: use the approved main anchor as `ref_image_path` so the identity is carried forward. Never independently regenerate the same character/product for the second or third anchor.
+- Count cap: auto-generate at most 3 anchors. More references usually fight each other and increase drift.
+- Failure rule: if the 主锚定图 fails twice and the task is high-consistency, stop and ask for user reference media. For ordinary single-segment work, fall back to text-only anchors and record the risk.
+
 ## Failure Diagnosis
 
 Subject drift:

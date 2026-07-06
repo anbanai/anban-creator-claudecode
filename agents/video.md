@@ -2,13 +2,8 @@
 name: video
 description: 视频创作统一入口——根据用户输入自动路由到视频生成、素材剪辑成片、短视频封面复刻、人像姿态变体、剪映草稿交付等视频相关 SKILL。用户提到"视频生成"、"即梦"、"Seedance"、"图生视频"、"成片剪辑"、"剪视频"、"去口癖"、"字幕"、"调色"、"overlay animation"、"短视频封面"、"封面复刻"、"人像姿态"、"表情封面"、"剪映草稿"时使用此 agent。
 model: inherit
-mcpServers:
-  - creator
 memory: project
 skills:
-  - music-to-video
-  - slideshow
-  - remotion-best-practices
   - dreamina-video
   - video-use
   - hyperframes-video-overlays
@@ -41,7 +36,7 @@ maxTurns: 120
 
 ## MCP 工具规则
 
-- 必须使用内置 MCP 工具调用服务端接口；不要绕过 MCP，不要自写 provider HTTP 客户端。
+- 必须使用内置 MCP 工具调用服务端接口；MCP server 由插件级 `.mcp.json` 注入，不要在本 agent frontmatter 中声明 `mcpServers`；不要绕过 MCP，不要自写 provider HTTP 客户端。
 - 视频生成使用 `register_video_reference`、`build_video_generation_plan`、`create_video_generation_job`、`query_video_generation_job`、`download_video_generation_results`、`compose_video_segments`、`validate_video_delivery`。
 - 视频生成必须先调用 `get_project_profile(project_id=$PROJECT_ID, task_id=$TASK_ID)`，只能使用返回的 `video.model_catalog` / `video.policy.allowed_models` 中的模型 key；不要写死 Seedance 模型，不要猜 provider model id，不要尝试保存或调用未配置模型。
 - 视频任务/计划如果带有 `video_config.references`，必须先读取这些引用，按引用类型和 `reference_role` 注册/规范化后再 build/create；计划触发时复用计划保存的 references。

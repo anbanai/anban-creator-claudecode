@@ -2,8 +2,6 @@
 name: ecommerce
 description: 电商出图全自动执行引擎——多张产品图输入，产出成体系电商素材（主图套/详情页商详/封面banner/分享图/SKU图），保证产品跨图一致。用户提到"电商出图"、"电商素材"、"商品图"、"产品图"、"主图"、"详情页"、"商详"、"商品详情"、"SKU图"、"电商封面"、"电商设计"、"ecommerce"时使用此 agent。
 model: inherit
-mcpServers:
-  - creator
 memory: project
 skills:
   - ecommerce

@@ -1,5 +1,65 @@
 # Prompt and Artifact Templates
 
+## anchor-strategy.md
+
+```markdown
+# Anchor Strategy
+
+existing_user_reference_roles:
+- source:
+- reference_role:
+- covered_axis:
+
+decision: skip | generate
+anchor_count: 0 | 1 | 2 | 3
+reason:
+fallback_if_generation_unavailable:
+
+planned_anchors:
+- file: visual-anchors/subject-anchor-01.png
+  reference_role: subject identity
+  generation_mode: main
+  prompt_focus: age impression, hairstyle, clothing color family, expression range, posture, role identity, environment, no random logo/text
+- file: visual-anchors/product-anchor-02.png
+  reference_role: product appearance
+  generation_mode: derived_from_main_ref_image_path
+  prompt_focus: product silhouette, material, color, use method
+```
+
+## visual-anchor-pack.md
+
+```markdown
+# Visual Anchor Pack
+
+## visual-anchors/subject-anchor-01.png
+- reference_role: subject identity
+- generate_image:
+  - image_type: content
+  - size: 3:4
+  - output_path:
+  - ref_image_path:
+  - verify_with_vision: true
+- prompt:
+- provider:
+- model:
+- revised_prompt:
+- verification:
+  - passed:
+  - score:
+  - missing_entities:
+  - notes:
+- registered_reference:
+  - type: image_url
+  - reference_role: subject identity
+  - url:
+  - task_file_id:
+
+## Failed Attempts
+- file:
+- reason:
+- next_change:
+```
+
 ## reference-anchors.md
 
 ```markdown
