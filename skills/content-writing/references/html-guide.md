@@ -186,7 +186,7 @@ AI 主题使用卡片式布局，确保使用内联样式：
 ### 1. 容器结构
 
 ```html
-<section style="max-width:677px;margin:0 auto;padding:20px;background-color:#FFFFFF;">
+<section style="max-width:none;margin:0 auto;padding:20px 14px;background-color:#FFFFFF;">
   <!-- 内容 -->
 </section>
 ```
@@ -195,7 +195,7 @@ AI 主题使用卡片式布局，确保使用内联样式：
 
 ```html
 <!-- 正确：使用微信 CDN 图片 -->
-<img src="https://mmbiz.qpic.cn/..." style="max-width:100%;height:auto;display:block;margin:20px auto;" />
+<img src="https://mmbiz.qpic.cn/..." style="max-width:100%;height:auto;display:block;margin:16px auto;" />
 
 <!-- 错误：外部图片不会显示 -->
 <img src="https://example.com/image.jpg" />
