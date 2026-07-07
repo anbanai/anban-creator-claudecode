@@ -1,5 +1,20 @@
 # Seedance 2.0 API and Platform Status
 
+## Contents
+
+- [Confirmed From Public Sources](#confirmed-from-public-sources)
+- [Overseas API Status — Copyright Suspension *(recorded 2026-06-13)*](#overseas-api-status-copyright-suspension-recorded-2026-06-13)
+- [Platform Safeguards — Now Live *(recorded 2026-06-14)*](#platform-safeguards-now-live-recorded-2026-06-14)
+- [Resolution — Model vs Surface *(recorded 2026-06-14)*](#resolution-model-vs-surface-recorded-2026-06-14)
+- [fal — Authorized Provider, Global *(added 2026-06-10; fields, resolution, and pricing re-verified 2026-06-11)*](#fal-authorized-provider-global-added-2026-06-10-fields-resolution-and-pricing-re-verified-2026-06-11)
+- [Seedance 2.0 Mini *(recorded 2026-06-20)*](#seedance-20-mini-recorded-2026-06-20)
+- [Additional Provider/Router Surfaces *(recorded 2026-06-20)*](#additional-providerrouter-surfaces-recorded-2026-06-20)
+- [China-Facing Provider Search *(recorded 2026-06-20)*](#china-facing-provider-search-recorded-2026-06-20)
+- [Operational Wording](#operational-wording)
+- [Model Naming Rule](#model-naming-rule)
+- [Claim Boundaries](#claim-boundaries)
+- [Known Limit Categories](#known-limit-categories)
+
 last_verified: 2026-06-20
 confidence: public-source snapshot as of the verification date; per-section dates apply where noted (Seedance 2.0 Mini, additional provider/router, and China-facing search recorded 2026-06-20, platform safeguards and resolution recorded 2026-06-14, overseas-API status and Replicate recorded 2026-06-13, fal section re-verified 2026-06-11, earlier surface sections verified 2026-05-30); not a guarantee of access, pricing, model IDs, upload limits, authorization behavior, or regional availability on every surface
 

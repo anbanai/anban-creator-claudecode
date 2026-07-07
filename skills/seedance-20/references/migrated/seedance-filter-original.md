@@ -1,5 +1,20 @@
 # Legacy body for `seedance-filter`
 
+## Contents
+
+- [The Problem: The source-required block-risk observation](#the-problem-the-source-required-block-risk-observation)
+- [How the Filter Thinks](#how-the-filter-thinks)
+- [The Four-Question Framework](#the-four-question-framework)
+- [High-Risk Word Categories](#high-risk-word-categories)
+- [Practical Techniques for Passing the Filter](#practical-techniques-for-passing-the-filter)
+  - [1. Image Upload Best Practices](#1-image-upload-best-practices)
+  - [2. The Chinese Prompt Trick](#2-the-chinese-prompt-trick)
+  - [3. Lead with Professionalism](#3-lead-with-professionalism)
+- [Diagnosing a Blocked Prompt](#diagnosing-a-blocked-prompt)
+- [Filter-Safe Cinematic Vocabulary Database v1.0](#filter-safe-cinematic-vocabulary-database-v10)
+  - [1. CAMERA — Shot Types](#1-camera-shot-types)
+  - [2. CAMERA — Movement](#2-camera-movement)
+
 Migrated on 2026-04-27 during v5.1.0. Treat platform, policy, API, and safety claims here as legacy unless confirmed in `references/api-status.md` or `references/source-registry.md`.
 
 ---

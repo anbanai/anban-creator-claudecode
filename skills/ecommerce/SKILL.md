@@ -1,6 +1,6 @@
 ---
 name: ecommerce
-description: 电商出图全自动创作。用户提到"电商出图"、"电商素材"、"商品图"、"产品图"、"主图"、"详情页"、"商详"、"SKU图"、"电商封面"、"电商设计"、"ecommerce"时使用此 skill。
+description: 'Use when 电商出图全自动创作。用户提到"电商出图"、"电商素材"、"商品图"、"产品图"、"主图"、"详情页"、"商详"、"SKU图"、"电商封面"、"电商设计"、"ecommerce"时使用此 skill。'
 ---
 
 # /ecommerce 电商出图命令

@@ -1,5 +1,13 @@
 # Chinese Vocabulary
 
+## Contents
+
+- [Compact Template](#compact-template)
+- [Timeline Template](#timeline-template)
+- [Sequence and Continuation Phrases](#sequence-and-continuation-phrases)
+- [Dialogue Notes (对白注意事项)](#dialogue-notes-对白注意事项)
+- [Slop Traps](#slop-traps)
+
 Use this reference for Chinese Seedance prompt wording, role binding, and compact prompt compression. Keep reference tags unchanged: `[Image1]`, `[Video1]`, and `[Audio1]` stay literal.
 
 | Function | Chinese | English meaning |

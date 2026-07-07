@@ -1,6 +1,6 @@
 ---
 name: article
-description: 微信公众号图文文章全自动创作。用户提到"写文章"、"写一篇"、"发文章"、"公众号文章"、"推文"时使用此 skill。
+description: 'Use when 微信公众号图文文章全自动创作。用户提到"写文章"、"写一篇"、"发文章"、"公众号文章"、"推文"时使用此 skill。'
 user-invocable: true
 ---
 

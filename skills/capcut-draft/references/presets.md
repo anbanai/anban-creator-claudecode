@@ -1,5 +1,20 @@
 # CapCut Draft Presets Reference (剪映预设参考)
 
+## Contents
+
+- [Canvas Presets (画布预设)](#canvas-presets-画布预设)
+- [Entry Animations (入场动画)](#entry-animations-入场动画)
+  - [Common Properties](#common-properties)
+  - [Available Entry Animations](#available-entry-animations)
+  - [Full JSON Example: Slide Up (向上滑动)](#full-json-example-slide-up-向上滑动)
+- [Exit Animations (出场动画)](#exit-animations-出场动画)
+  - [Common Properties](#common-properties)
+  - [Available Exit Animations](#available-exit-animations)
+- [Video Effects (视频特效)](#video-effects-视频特效)
+  - [Common Properties](#common-properties)
+  - [1. Monochrome Fill / 单色填充](#1-monochrome-fill-单色填充)
+  - [2. Pulse Beat / 脉搏跳动](#2-pulse-beat-脉搏跳动)
+
 ---
 
 ## Canvas Presets (画布预设)

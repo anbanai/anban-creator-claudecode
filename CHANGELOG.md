@@ -4,6 +4,13 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.37] - 2026-07-07
+
+### Changed
+
+- Normalized distributed Skill descriptions to start with explicit invocation conditions so Claude can decide when to load them from frontmatter.
+- Added contents sections to long Skill references and linked long top-level references directly from each Skill entrypoint for one-level progressive disclosure.
+
 ## [2.10.36] - 2026-07-07
 
 ### Changed

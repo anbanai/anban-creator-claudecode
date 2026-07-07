@@ -1,8 +1,7 @@
 ---
 name: humanizer
 version: 2.8.0
-description: |
-  去除文本中的 AI 生成痕迹（去 AI 味），使文章更自然、更像人类书写。基于维基百科《Signs of AI writing》指南（WikiProject AI Cleanup 维护），检测并修正 33 类 AI 写作模式。当写作流程需要去除 AI 痕迹，或用户提到「去 AI 味」「去痕」「humanize」「润色得像真人写的」时使用。由 content-writing / seednote-writing / ecommerce-copywriting 在写作流程中调用，对中文正文就地改写。
+description: 'Use when 去除文本中的 AI 生成痕迹（去 AI 味），使文章更自然、更像人类书写。基于维基百科《Signs of AI writing》指南（WikiProject AI Cleanup 维护），检测并修正 33 类 AI 写作模式。当写作流程需要去除 AI 痕迹，或用户提到「去 AI 味」「去痕」「humanize」「润色得像真人写的」时使用。由 content-writing / seednote-writing / ecommerce-copywriting 在写作流程中调用，对中文正文就地改写。'
 license: MIT
 compatibility: claude-code opencode
 allowed-tools:

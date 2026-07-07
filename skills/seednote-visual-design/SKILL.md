@@ -1,6 +1,6 @@
 ---
 name: seednote-visual-design
-description: Generates cover (封面), content pages (内容图), and tail pages (尾图) for Seednote (种草笔记) posts with 3:4 ratio design norms. Use when creating seednote visual content including covers, content pages, and tail pages. Also use when user mentions '种草笔记图片', '封面生成', '内容图', '尾图', '图片规划', or when the seednote pipeline calls for image generation.
+description: 'Use when creating seednote visual content including covers, content pages, and tail pages. Also use when user mentions ''种草笔记图片'', ''封面生成'', ''内容图'', ''尾图'', ''图片规划'', or when the seednote pipeline calls for image generation. Generates cover (封面), content pages (内容图), and tail pages (尾图) for Seednote (种草笔记) posts with 3:4 ratio design norms.'
 ---
 
 # 种草笔记图片生成

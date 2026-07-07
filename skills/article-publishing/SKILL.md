@@ -1,6 +1,6 @@
 ---
 name: article-publishing
-description: Creates and manages WeChat news article drafts (图文草稿) with HTML formatting. Use when creating or managing WeChat news article drafts. Also use when user mentions '发草稿', '发布文章', '创建草稿', 'publish draft', '草稿箱', or when the article pipeline reaches the draft publishing step.
+description: 'Use when creating or managing WeChat news article drafts. Also use when user mentions ''发草稿'', ''发布文章'', ''创建草稿'', ''publish draft'', ''草稿箱'', or when the article pipeline reaches the draft publishing step. Creates and manages WeChat news article drafts (图文草稿) with HTML formatting.'
 ---
 
 # 微信公众号图文文章发布

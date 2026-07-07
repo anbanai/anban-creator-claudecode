@@ -1,5 +1,20 @@
 # MCP Contract
 
+## Contents
+
+- [get_project_profile](#getprojectprofile)
+- [generate_image for visual anchors](#generateimage-for-visual-anchors)
+- [register_video_reference](#registervideoreference)
+- [analyze_video_reference](#analyzevideoreference)
+- [validate_video_generation_params](#validatevideogenerationparams)
+- [build_video_generation_plan](#buildvideogenerationplan)
+- [create_video_generation_job](#createvideogenerationjob)
+- [query_video_generation_job](#queryvideogenerationjob)
+- [download_video_generation_results](#downloadvideogenerationresults)
+- [compose_video_segments](#composevideosegments)
+- [validate_video_delivery](#validatevideodelivery)
+- [Anban MCP Contract](#anban-mcp-contract)
+
 Agents must use MCP tools for video generation. API keys and raw provider calls stay on the server.
 
 ## get_project_profile

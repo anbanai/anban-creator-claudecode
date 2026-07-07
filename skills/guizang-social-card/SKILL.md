@@ -1,6 +1,6 @@
 ---
 name: guizang-social-card
-description: Creates Anban-native rendered social-card visuals for 图文笔记 and 微信公众号, using HTML/CSS plus Playwright screenshots, then registers PNG assets through MCP. Use when visual_style or the task asks for 归藏, Guizang, social card, 小红书组图, Swiss, 瑞士, 杂志, or editorial card.
+description: 'Use when visual_style or the task asks for 归藏, Guizang, social card, 小红书组图, Swiss, 瑞士, 杂志, or editorial card. Creates Anban-native rendered social-card visuals for 图文笔记 and 微信公众号, using HTML/CSS plus Playwright screenshots, then registers PNG assets through MCP.'
 ---
 
 # Guizang Social Card / 归藏社交卡

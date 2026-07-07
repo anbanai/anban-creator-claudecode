@@ -1,5 +1,20 @@
 # Multilingual Community Examples
 
+## Contents
+
+- [Boundary](#boundary)
+- [What Works](#what-works)
+- [What To Avoid](#what-to-avoid)
+- [Chinese-English Patterns](#chinese-english-patterns)
+- [Japanese-English Patterns](#japanese-english-patterns)
+- [Korean-English Patterns](#korean-english-patterns)
+- [Spanish-English Patterns](#spanish-english-patterns)
+- [Russian-English Patterns](#russian-english-patterns)
+- [Multilingual Prompt Triage](#multilingual-prompt-triage)
+- [Global Production Handoff Patterns](#global-production-handoff-patterns)
+  - [Chinese-English client shot](#chinese-english-client-shot)
+  - [Japanese localization handoff](#japanese-localization-handoff)
+
 These are original, safety-screened examples distilled from public multilingual Seedance 2.0 practice. Use them as structures and vocabulary patterns, not copied community prompts.
 
 ## Boundary

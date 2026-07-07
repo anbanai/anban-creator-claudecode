@@ -1,5 +1,20 @@
 # Legacy body for `seedance-pipeline`
 
+## Contents
+
+- [Platform Access](#platform-access)
+- [Volcengine API](#volcengine-api)
+- [File Budget ("Rule of 12")](#file-budget-rule-of-12)
+- [ComfyUI Node Workflow](#comfyui-node-workflow)
+- [Post-Processing Chain](#post-processing-chain)
+  - [1 · Upscale](#1-upscale)
+  - [2 · Frame Interpolation](#2-frame-interpolation)
+  - [3 · Color Grade](#3-color-grade)
+  - [4 · Audio Mux](#4-audio-mux)
+  - [5 · Metadata Clean](#5-metadata-clean)
+  - [6 · Composite (optional)](#6-composite-optional)
+- [Output Specs](#output-specs)
+
 Migrated on 2026-04-27 during v5.1.0. Treat platform, policy, API, and safety claims here as legacy unless confirmed in `references/api-status.md` or `references/source-registry.md`.
 
 ---

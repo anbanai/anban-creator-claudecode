@@ -1,5 +1,20 @@
 # Directing Engine — Genre Worked-Example Library
 
+## Contents
+
+- [Worked Examples by Genre](#worked-examples-by-genre)
+  - [Product / commercial reveal](#product-commercial-reveal)
+  - [Music video beat](#music-video-beat)
+  - [Horror / suspense](#horror-suspense)
+  - [Anime / 2D power-up](#anime-2d-power-up)
+  - [Action / pursuit](#action-pursuit)
+  - [Comedy pratfall](#comedy-pratfall)
+  - [UGC / caught real moment](#ugc-caught-real-moment)
+  - [Transformation / VFX brand reveal](#transformation-vfx-brand-reveal)
+  - [Establishing / landscape](#establishing-landscape)
+  - [Beauty / cosmetics](#beauty-cosmetics)
+  - [Food / culinary](#food-culinary)
+
 On-demand companion to [`directing-engine.md`](directing-engine.md). Load this only when you want a fully worked example in a specific genre. The directing *method* - the Director's Read, the Coherence Principle, the Director's Voice, the long-form spine - lives in the core file; these entries simply apply it. Each runs the same read -> intention -> voice -> coherent setup -> performance -> compiled-prompt procedure, and the contrast across genres is the lesson: the voice and instruments change because the scene is doing something different.
 
 ## Worked Examples by Genre

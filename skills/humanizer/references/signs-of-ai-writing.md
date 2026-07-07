@@ -1,5 +1,20 @@
 # Humanizer detailed detection checklist
 
+## Contents
+
+- [中文适配说明（先读这段）](#中文适配说明先读这段)
+- [上游原文（blader/humanizer v2.8.0）](#上游原文bladerhumanizer-v280)
+- [Your Task](#your-task)
+- [Voice Calibration (Optional)](#voice-calibration-optional)
+  - [How to provide a sample](#how-to-provide-a-sample)
+- [PERSONALITY AND SOUL](#personality-and-soul)
+  - [Signs of soulless writing (even if technically "clean"):](#signs-of-soulless-writing-even-if-technically-clean)
+  - [How to add voice:](#how-to-add-voice)
+  - [Before (clean but soulless):](#before-clean-but-soulless)
+  - [After (has a pulse):](#after-has-a-pulse)
+- [CONTENT PATTERNS](#content-patterns)
+  - [1. Undue Emphasis on Significance, Legacy, and Broader Trends](#1-undue-emphasis-on-significance-legacy-and-broader-trends)
+
 **来源与许可证**：本 skill 内置自 [blader/humanizer](https://github.com/blader/humanizer) v2.8.0（MIT License），内容基于维基百科 [Wikipedia:Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing)（WikiProject AI Cleanup 维护）。完整上游检测清单移到 `references/signs-of-ai-writing.md`；请保留本署名与许可证信息。
 
 ## 中文适配说明（先读这段）

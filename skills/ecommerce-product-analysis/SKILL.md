@@ -1,6 +1,6 @@
 ---
 name: ecommerce-product-analysis
-description: 电商产品图分析——从多张产品图抽取电商转化相关属性，构建锁定规格「产品档案 Product Bible」，作为产品跨图一致性与卖点提炼的共同数据底座。当电商出图流程需要理解产品、构建产品档案时使用。
+description: 'Use when 电商产品图分析——从多张产品图抽取电商转化相关属性，构建锁定规格「产品档案 Product Bible」，作为产品跨图一致性与卖点提炼的共同数据底座。当电商出图流程需要理解产品、构建产品档案时使用。'
 ---
 
 # 电商产品图分析 → 产品档案 Product Bible

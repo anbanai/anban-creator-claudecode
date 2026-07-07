@@ -95,3 +95,8 @@ Report format:
 - 写作方法与示例：[writing-guide.md](references/writing-guide.md)
 - 内容合规规则：[content-compliance.md](references/content-compliance.md)
 - 违禁词：[prohibited-words.md](references/prohibited-words.md)
+
+## Reference Map
+
+Load these long references only when the current task needs that detail:
+- [references/html-guide.md](references/html-guide.md) - html guide.

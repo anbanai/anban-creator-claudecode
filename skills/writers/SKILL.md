@@ -1,6 +1,6 @@
 ---
 name: writers
-description: Guidance for adding and using custom writer-style YAML files in Anban Creator.
+description: 'Use when creating, editing, validating, or troubleshooting Anban custom writer-style YAML files or selecting writer voice guidance for content workflows.'
 ---
 
 # Custom Writer Styles

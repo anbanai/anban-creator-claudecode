@@ -1,5 +1,20 @@
 # Prompt Examples
 
+## Contents
+
+- [T2V Product Launch](#t2v-product-launch)
+- [I2V Product Preservation](#i2v-product-preservation)
+- [T2V Character Drama](#t2v-character-drama)
+- [I2V Portrait Micro-Performance](#i2v-portrait-micro-performance)
+- [V2V Motion Transfer Without Identity Transfer](#v2v-motion-transfer-without-identity-transfer)
+- [R2V Multi-Reference Product Ad](#r2v-multi-reference-product-ad)
+- [Dialogue and Lip-Sync](#dialogue-and-lip-sync)
+- [Two-Character Blocking](#two-character-blocking)
+- [Action Beat](#action-beat)
+- [Safe Original Animation](#safe-original-animation)
+- [Food Lifestyle](#food-lifestyle)
+- [Landscape Atmosphere](#landscape-atmosphere)
+
 Use these examples as patterns, not fixed scripts. Preserve reference tags exactly and keep final prompts under the verified active-surface prompt budget. Each example includes the mode and the reason the prompt is stable.
 
 ## T2V Product Launch

@@ -1,5 +1,16 @@
 # Sequence Project State
 
+## Contents
+
+- [Operating Model](#operating-model)
+- [Canonical State](#canonical-state)
+- [Scene Layer](#scene-layer)
+- [Required Project Fields](#required-project-fields)
+- [Visual State](#visual-state)
+- [Reconciliation](#reconciliation)
+- [Project State Capsule](#project-state-capsule)
+- [State Lifecycle](#state-lifecycle)
+
 Use this reference when a Seedance request becomes a multi-clip project. The project state is the source of truth; prompts are temporary compiled instructions for one generation.
 
 ## Operating Model

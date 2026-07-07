@@ -1,5 +1,20 @@
 # 种草笔记尾图设计规范
 
+## Contents
+
+- [尾图的唯一使命](#尾图的唯一使命)
+- [自动匹配规则](#自动匹配规则)
+- [类型一：关注引导（follow）](#类型一关注引导follow)
+- [类型二：评论引导（comment）](#类型二评论引导comment)
+- [类型三：引流引导（traffic）](#类型三引流引导traffic)
+- [Prompt 模板（v2 - 中文文字渲染优化）](#prompt-模板v2---中文文字渲染优化)
+  - [关注型 tail_type_specific_instructions](#关注型-tailtypespecificinstructions)
+  - [评论型 tail_type_specific_instructions](#评论型-tailtypespecificinstructions)
+  - [引流型 tail_type_specific_instructions](#引流型-tailtypespecificinstructions)
+- [生成方式](#生成方式)
+- [image-plan.md 尾图规划模板](#image-planmd-尾图规划模板)
+- [tail [尾部] 类型：{follow|comment|traffic}](#tail-尾部-类型followcommenttraffic)
+
 ## 尾图的唯一使命
 
 尾图是用户滑完所有内容后的最后一屏。它不做知识传递，只做一件事：**触发一个互动动作**（关注/评论/引流）。三类尾图策略完全不同，根据内容主题自动匹配。

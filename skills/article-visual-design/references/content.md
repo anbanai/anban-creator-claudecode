@@ -1,5 +1,20 @@
 # 公众号内容配图设计规范（新 schema + vision 校验）
 
+## Contents
+
+- [核心变化（相对旧版）](#核心变化相对旧版)
+- [参考链机制](#参考链机制)
+- [image-plan.md 升级 schema](#image-planmd-升级-schema)
+  - [旧 schema（已废弃）](#旧-schema已废弃)
+- [img_01 章节：{chapter title}](#img01-章节chapter-title)
+  - [新 schema（强制）](#新-schema强制)
+- [img_01 章节：{chapter title}](#img01-章节chapter-title)
+- [字段填写规范](#字段填写规范)
+  - [`visual_brief`（最关键）](#visualbrief最关键)
+  - [`required_entities`](#requiredentities)
+  - [`must_match_excerpts`](#mustmatchexcerpts)
+- [完整 image-plan.md 示例](#完整-image-planmd-示例)
+
 ## 核心变化（相对旧版）
 
 1. **新增 visual_brief**：1-2 句白话"这张图必须画什么"，替代抽象的 visual_subject

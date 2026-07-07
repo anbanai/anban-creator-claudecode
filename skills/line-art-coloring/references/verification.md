@@ -1,5 +1,20 @@
 # 结构化验证方法论
 
+## Contents
+
+- [验证原则](#验证原则)
+- [图像分析方法](#图像分析方法)
+- [三级验证](#三级验证)
+  - [Level 1 — 单图验证（每张上色图完成后）](#level-1-单图验证每张上色图完成后)
+  - [Level 2 — 跨图一致性审计（全部上完后）](#level-2-跨图一致性审计全部上完后)
+- [Entity: Little Girl](#entity-little-girl)
+- [Entity: Big Wolf](#entity-big-wolf)
+- [Summary](#summary)
+  - [Level 3 — 收敛修正后审计（每轮修正后）](#level-3-收敛修正后审计每轮修正后)
+- [Per-Entity Best Reference 追踪](#per-entity-best-reference-追踪)
+  - [追踪表格式](#追踪表格式)
+- [Entity: Little Girl](#entity-little-girl)
+
 ## 验证原则
 
 验证的目的是确保跨图颜色一致性。不是模糊的「看起来差不多」，而是逐实体逐部位的精确比对。

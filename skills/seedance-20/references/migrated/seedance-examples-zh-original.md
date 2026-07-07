@@ -1,5 +1,20 @@
 # Legacy body for `seedance-examples-zh`
 
+## Contents
+
+- [A. 剧情短剧 · Short Drama](#a-剧情短剧-short-drama)
+  - [1. 爆款"霸道总裁/爽剧"风格 (竖屏, 15s, Expert)](#1-爆款霸道总裁爽剧风格-竖屏-15s-expert)
+  - [2. 优雅的洗衣场景 (Beginner, 4-15s)](#2-优雅的洗衣场景-beginner-4-15s)
+  - [3. 维多利亚时代街景 (Intermediate, 8-12s)](#3-维多利亚时代街景-intermediate-8-12s)
+- [B. 广告 · Advertising](#b-广告-advertising)
+  - [4. 互动绘画角色 (Advanced, 10-15s)](#4-互动绘画角色-advanced-10-15s)
+  - [5. 脑洞大开的摩托车广告 (Creative Ad Extension)](#5-脑洞大开的摩托车广告-creative-ad-extension)
+  - [6. 反转零食广告 (Snack Ad with a Twist)](#6-反转零食广告-snack-ad-with-a-twist)
+- [C. 动漫与武打 · Animation & Action](#c-动漫与武打-animation-action)
+  - [7. 哪吒与敖丙冰火对决 (大动作一致性测试, 15s, Expert)](#7-哪吒与敖丙冰火对决-大动作一致性测试-15s-expert)
+  - [8. 多视频参考打斗场面 (Multi-Video Reference Fight Scene)](#8-多视频参考打斗场面-multi-video-reference-fight-scene)
+- [D. 产品展示 · Product Showcase](#d-产品展示-product-showcase)
+
 Migrated on 2026-04-27 during v5.1.0. Treat platform, policy, API, and safety claims here as legacy unless confirmed in `references/api-status.md` or `references/source-registry.md`.
 
 ---

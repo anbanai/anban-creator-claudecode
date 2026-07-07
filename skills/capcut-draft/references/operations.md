@@ -1,5 +1,20 @@
 # CapCut Draft CRUD Operations Reference / 剪映草稿 CRUD 操作参考
 
+## Contents
+
+- [Key Conventions / 关键约定](#key-conventions-关键约定)
+  - [Standard paths](#standard-paths)
+- [Operation 1: List All Drafts (列出所有草稿)](#operation-1-list-all-drafts-列出所有草稿)
+- [Operation 2: Create Draft (创建草稿)](#operation-2-create-draft-创建草稿)
+  - [Input Needed](#input-needed)
+  - [Steps](#steps)
+- [Operation 3: Read Draft Details (读取草稿详情)](#operation-3-read-draft-details-读取草稿详情)
+- [Operation 4: Modify Draft (修改草稿)](#operation-4-modify-draft-修改草稿)
+  - [4a. Add Video Segment (添加视频片段)](#4a-add-video-segment-添加视频片段)
+  - [4b. Add Subtitle (添加字幕)](#4b-add-subtitle-添加字幕)
+  - [4c. Add Effect (添加特效)](#4c-add-effect-添加特效)
+  - [4d. Add Transition (添加转场)](#4d-add-transition-添加转场)
+
 Step-by-step guides for CRUD operations on CapCut/JianYing (剪映) draft files.
 
 ## Key Conventions / 关键约定

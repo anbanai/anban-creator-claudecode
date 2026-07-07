@@ -1,6 +1,6 @@
 ---
 name: capcut-draft
-description: 操控剪映/CapCut 草稿文件——创建、读取、修改、删除剪映项目草稿。用户提到"剪映"、"剪映草稿"、"剪映项目"、"CapCut draft"、"JianYing draft"、"导出剪映"、"创建剪映草稿"、"修改剪映草稿"时使用此 skill。当用户需要批量操作剪映项目、自动化视频编辑工作流、或程序化管理剪映草稿时也应触发。
+description: 'Use when 操控剪映/CapCut 草稿文件——创建、读取、修改、删除剪映项目草稿。用户提到"剪映"、"剪映草稿"、"剪映项目"、"CapCut draft"、"JianYing draft"、"导出剪映"、"创建剪映草稿"、"修改剪映草稿"时使用此 skill。当用户需要批量操作剪映项目、自动化视频编辑工作流、或程序化管理剪映草稿时也应触发。'
 ---
 
 # CapCut Draft Manipulation (剪映草稿操控)

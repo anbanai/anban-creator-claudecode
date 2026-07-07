@@ -1,5 +1,20 @@
 # Legacy body for `seedance-vocab-ko`
 
+## Contents
+
+- [K.1 샷 사이즈 · Shot Sizes](#k1-shot-sizes)
+- [K.2 카메라 워크 · Camera Movements](#k2-camera-movements)
+- [K.3 조명 · Lighting](#k3-lighting)
+- [K.4 조명 · 색온도와 분위기 (Lighting - Color Temp & Atmosphere)](#k4-lighting---color-temp-atmosphere)
+- [K.5 스타일과 질감 · Style & Texture](#k5-style-texture)
+- [K.6 움직임과 타이밍 · Motion & Timing](#k6-motion-timing)
+- [K.7 안전한 액션 및 전투 어휘 · Safe Action & Combat Vocabulary](#k7-safe-action-combat-vocabulary)
+- [K.8 안전한 무기 어휘 · Safe Weapon Vocabulary](#k8-safe-weapon-vocabulary)
+- [K.9 안전한 의류 및 갑옷 어휘 · Safe Clothing & Armor Vocabulary](#k9-safe-clothing-armor-vocabulary)
+- [K.10 안전한 신체 및 체격 어휘 · Safe Body & Physique Vocabulary](#k10-safe-body-physique-vocabulary)
+- [K.11 시각 효과 · 입자와 에너지 (VFX - Particles & Energy)](#k11-vfx---particles-energy)
+- [K.12 음향 · 현장음 (Sound - Diegetic Audio)](#k12-sound---diegetic-audio)
+
 Migrated on 2026-04-27 during v5.1.0. Treat platform, policy, API, and safety claims here as legacy unless confirmed in `references/api-status.md` or `references/source-registry.md`.
 
 ---

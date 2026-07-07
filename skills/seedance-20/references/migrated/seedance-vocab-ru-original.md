@@ -1,5 +1,20 @@
 # Legacy body for `seedance-vocab-ru`
 
+## Contents
+
+- [R.1 Размер кадра · Shot Sizes](#r1-shot-sizes)
+- [R.2 Движение камеры · Camera Movements](#r2-camera-movements)
+- [R.3 Освещение · Lighting](#r3-lighting)
+- [R.4 Освещение · Цветовая температура и атмосфера (Lighting - Color Temp & Atmosphere)](#r4-lighting---color-temp-atmosphere)
+- [R.5 Стиль и текстура · Style & Texture](#r5-style-texture)
+- [R.6 Движение и время · Motion & Timing](#r6-motion-timing)
+- [R.7 Безопасная лексика для экшена и боя · Safe Action & Combat Vocabulary](#r7-safe-action-combat-vocabulary)
+- [R.8 Безопасная лексика для оружия · Safe Weapon Vocabulary](#r8-safe-weapon-vocabulary)
+- [R.9 Безопасная лексика для одежды и доспехов · Safe Clothing & Armor Vocabulary](#r9-safe-clothing-armor-vocabulary)
+- [R.10 Безопасная лексика для тела и телосложения · Safe Body & Physique Vocabulary](#r10-safe-body-physique-vocabulary)
+- [R.11 Визуальные эффекты · Частицы и энергия (VFX - Particles & Energy)](#r11-vfx---particles-energy)
+- [R.12 Звук · Внутрикадровый звук (Sound - Diegetic Audio)](#r12-sound---diegetic-audio)
+
 Migrated on 2026-04-27 during v5.1.0. Treat platform, policy, API, and safety claims here as legacy unless confirmed in `references/api-status.md` or `references/source-registry.md`.
 
 ---

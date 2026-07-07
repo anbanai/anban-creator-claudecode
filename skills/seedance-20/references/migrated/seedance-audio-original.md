@@ -1,5 +1,20 @@
 # Legacy body for `seedance-audio`
 
+## Contents
+
+- [⚠️ Critical Distinction: Two Separate Tools on the Jimeng Platform](#critical-distinction-two-separate-tools-on-the-jimeng-platform)
+- [Scope](#scope)
+- [Out of scope](#out-of-scope)
+- [How Seedance 2.0 Audio Works](#how-seedance-20-audio-works)
+- [Platform Audio Constraints (Hard Limits)](#platform-audio-constraints-hard-limits)
+- [Dialogue and Lip-Sync](#dialogue-and-lip-sync)
+- [⚠️ Multi-Character Lip-Sync: Officially Unsolved](#multi-character-lip-sync-officially-unsolved)
+- [Known Failure Modes and Fixes](#known-failure-modes-and-fixes)
+  - [Failure 1: Model rewrites or replaces uploaded audio (音频被乱改)](#failure-1-model-rewrites-or-replaces-uploaded-audio-音频被乱改)
+  - [Failure 2: Lip-sync desync / mouth misalignment](#failure-2-lip-sync-desync-mouth-misalignment)
+  - [Failure 3: Multi-character lip-sync broken](#failure-3-multi-character-lip-sync-broken)
+  - [Failure 4: Silent audio format failure](#failure-4-silent-audio-format-failure)
+
 Migrated on 2026-04-27 during v5.1.0. Treat platform, policy, API, and safety claims here as legacy unless confirmed in `references/api-status.md` or `references/source-registry.md`.
 
 ---

@@ -1,5 +1,14 @@
 # Outline Templates Reference
 
+## Contents
+
+- [模板类型](#模板类型)
+  - [1. authoritative — 权威揭秘型](#1-authoritative-权威揭秘型)
+  - [2. comparison — 对比评测型](#2-comparison-对比评测型)
+  - [3. cultural — 文化故事型](#3-cultural-文化故事型)
+  - [4. practical — 实用干货型](#4-practical-实用干货型)
+- [使用说明](#使用说明)
+
 大纲模板参考文档，供 Claude 代理在执行 `outline` 命令时生成有针对性的内容框架。
 
 ---

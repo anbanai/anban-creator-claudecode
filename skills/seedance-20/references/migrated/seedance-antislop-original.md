@@ -1,5 +1,20 @@
 # Legacy body for `seedance-antislop`
 
+## Contents
+
+- [What Is AI Slop?](#what-is-ai-slop)
+- [The One Test](#the-one-test)
+- [The Master Slop Blacklist](#the-master-slop-blacklist)
+  - [Superlative Boosters](#superlative-boosters)
+  - [Quality Assertions](#quality-assertions)
+  - [Resolution Theater](#resolution-theater)
+  - [Vague Aesthetic Claims](#vague-aesthetic-claims)
+  - [AI Self-Praise (Hum layer — remove entirely)](#ai-self-praise-hum-layer-remove-entirely)
+  - [Empty Atmosphere Words](#empty-atmosphere-words)
+  - [Redundant Emphasis](#redundant-emphasis)
+  - [Platform Safety Slop (new — Feb 2026)](#platform-safety-slop-new-feb-2026)
+- [Decomposition Patterns](#decomposition-patterns)
+
 Migrated on 2026-04-27 during v5.1.0. Treat platform, policy, API, and safety claims here as legacy unless confirmed in `references/api-status.md` or `references/source-registry.md`.
 
 ---

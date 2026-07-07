@@ -1,5 +1,20 @@
 # Directing Engine
 
+## Contents
+
+- [Why "cinematic" is not a decision](#why-cinematic-is-not-a-decision)
+- [Step 1 - The Director's Read](#step-1---the-directors-read)
+- [Step 2 - The Coherence Principle](#step-2---the-coherence-principle)
+- [Step 3 - Scene-Type Coverage](#step-3---scene-type-coverage)
+- [Step 4 - Directing the Performance](#step-4---directing-the-performance)
+- [Step 5 - Lighting and Color as Emotion](#step-5---lighting-and-color-as-emotion)
+- [Step 6 - The Director's Voice](#step-6---the-directors-voice)
+- [Step 7 - The Coherence Test](#step-7---the-coherence-test)
+- [Step 8 - The Long-Form Directorial Spine](#step-8---the-long-form-directorial-spine)
+- [Step 9 - Decision Procedure](#step-9---decision-procedure)
+- [Worked Example - A Single Scene](#worked-example---a-single-scene)
+- [Worked Example - A Three-Clip Spine](#worked-example---a-three-clip-spine)
+
 The difference between a prompt that asks for "a cinematic look" and a prompt a director would sign is motivation. A director does not pick a camera move, a light, or a performance from a menu. They decide what the scene must do to the audience, then make every craft choice serve that one decision - in a consistent personal voice, across the whole film. This reference is the reasoning layer above the lookup tables in `[skill:seedance-camera]`, `[skill:seedance-lighting]`, `[skill:seedance-motion]`, and `[skill:seedance-characters]`. Those skills answer "what phrase?"; this answers "why this, here, for this story."
 
 Load this whenever an idea is becoming a script or a shot, whenever scenes need different treatment from each other, or whenever a long story must hold one directorial hand across many short clips.

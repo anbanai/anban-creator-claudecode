@@ -131,3 +131,13 @@ Sequence invariants:
 | Why a rule works, or a novel case no rule covers | `[ref:model-mechanics]` |
 
 Preserve reference tags exactly, keep prompts short, and never convert field-observed community tricks into official platform guarantees. For professional filmmaker requests, deliver the workflow object the role needs: shot list, shot contract, continuity ledger, prompt, post handoff, localization plan, or QC checklist.
+
+## Reference Map
+
+Load these long references only when the current task needs that detail:
+- [references/directing-engine.md](references/directing-engine.md) - directing engine.
+- [references/directing-engine-genre-library.md](references/directing-engine-genre-library.md) - directing engine genre library.
+- [references/sequence-project-state.md](references/sequence-project-state.md) - sequence project state.
+- [references/multilingual-community-examples.md](references/multilingual-community-examples.md) - multilingual community examples.
+- [references/prompt-examples.md](references/prompt-examples.md) - prompt examples.
+- [references/api-status.md](references/api-status.md) - api status.

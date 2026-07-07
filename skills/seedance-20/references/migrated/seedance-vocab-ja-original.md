@@ -1,5 +1,20 @@
 # Legacy body for `seedance-vocab-ja`
 
+## Contents
+
+- [J.1 ショットサイズ · Shot Sizes](#j1-shot-sizes)
+- [J.2 カメラワーク · Camera Movements](#j2-camera-movements)
+- [J.3 照明 · Lighting](#j3-照明-lighting)
+- [J.4 照明 · 色温度と雰囲気 (Lighting - Color Temp & Atmosphere)](#j4-照明-色温度雰囲気-lighting---color-temp-atmosphere)
+- [J.5 スタイルと質感 · Style & Texture](#j5-質感-style-texture)
+- [J.6 動きとタイミング · Motion & Timing](#j6-動-motion-timing)
+- [J.7 安全なアクションと戦闘の語彙 · Safe Action & Combat Vocabulary](#j7-安全戦闘語彙-safe-action-combat-vocabulary)
+- [J.8 安全な武器の語彙 · Safe Weapon Vocabulary](#j8-安全武器語彙-safe-weapon-vocabulary)
+- [J.9 安全な服装と鎧の語彙 · Safe Clothing & Armor Vocabulary](#j9-安全服装鎧語彙-safe-clothing-armor-vocabulary)
+- [J.10 安全な身体と体格の語彙 · Safe Body & Physique Vocabulary](#j10-安全身体体格語彙-safe-body-physique-vocabulary)
+- [J.11 視覚効果 · 粒子とエネルギー (VFX - Particles & Energy)](#j11-視覚効果-粒子-vfx---particles-energy)
+- [J.12 音響 · 劇中音 (Sound - Diegetic Audio)](#j12-音響-劇中音-sound---diegetic-audio)
+
 Migrated on 2026-04-27 during v5.1.0. Treat platform, policy, API, and safety claims here as legacy unless confirmed in `references/api-status.md` or `references/source-registry.md`.
 
 ---

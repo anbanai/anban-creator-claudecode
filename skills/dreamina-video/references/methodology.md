@@ -1,5 +1,20 @@
 # Commercial Video Methodology
 
+## Contents
+
+- [Reference Anchor Method](#reference-anchor-method)
+- [Reference Role Assignment / 素材角色分配](#reference-role-assignment-素材角色分配)
+- [视觉锚定图 Method](#视觉锚定图-method)
+- [Business Goal Translation](#business-goal-translation)
+- [创作定位 / Creative Type Selection](#创作定位-creative-type-selection)
+- [完整视频创作流程](#完整视频创作流程)
+- [个人 IP Method](#个人-ip-method)
+- [高效段子 Method](#高效段子-method)
+- [参考视频复刻 Method](#参考视频复刻-method)
+  - [Planting / 种草](#planting-种草)
+  - [Ecommerce / 带货](#ecommerce-带货)
+  - [Lead Generation / 获客](#lead-generation-获客)
+
 ## Reference Anchor Method
 
 Before writing prompts, classify every reference as person, object, or scene.

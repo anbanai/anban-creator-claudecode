@@ -1,5 +1,20 @@
 # Prompt and Artifact Templates
 
+## Contents
+
+- [anchor-strategy.md](#anchor-strategymd)
+- [visual-anchor-pack.md](#visual-anchor-packmd)
+- [visual-anchors/subject-anchor-01.png](#visual-anchorssubject-anchor-01png)
+- [Failed Attempts](#failed-attempts)
+- [reference-anchors.md](#reference-anchorsmd)
+- [Person References](#person-references)
+- [Object References](#object-references)
+- [Scene References](#scene-references)
+- [creative-brief.md](#creative-briefmd)
+- [video-understanding.json](#video-understandingjson)
+- [script.md](#scriptmd)
+- [0-3s Hook](#0-3s-hook)
+
 ## anchor-strategy.md
 
 ```markdown

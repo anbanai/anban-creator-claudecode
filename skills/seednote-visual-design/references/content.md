@@ -1,5 +1,16 @@
 # 种草笔记内容图设计规范
 
+## Contents
+
+- [两类图片目标](#两类图片目标)
+- [内容页设计规范](#内容页设计规范)
+- [图片内容规划（image-plan.md）](#图片内容规划image-planmd)
+- [总体策略](#总体策略)
+- [cover 封面](#cover-封面)
+- [image_01 [内容] 主题：xxx](#image01-内容-主题xxx)
+- [tail [尾部] 类型：{follow|comment|traffic}（**仅当 `seednote_image_mode` 包含尾图时添加本节；不含尾图则整节省略**）](#tail-尾部-类型followcommenttraffic仅当-seednoteimagemode-包含尾图时添加本节不含尾图则整节省略)
+- [Prompt 模板（v2 - 中文文字渲染优化）](#prompt-模板v2---中文文字渲染优化)
+
 ## 两类图片目标
 
 | 图片类型 | 优化目标 | 内容策略 |

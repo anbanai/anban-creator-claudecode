@@ -1,6 +1,6 @@
 ---
 name: seednote-writing
-description: Writes and optimizes Seednote (种草笔记) content including titles, body text, hashtags, and viral note rewrites. Use when writing Seednote content, optimizing seednote titles, or rewriting viral notes. Also use when user mentions '写种草笔记', '笔记文案', '种草文案', '标题优化', '改写笔记', '爆款改写', '复刻文案', '合规检查', or when the seednote pipeline calls for content creation or text optimization.
+description: 'Use when writing Seednote content, optimizing seednote titles, or rewriting viral notes. Also use when user mentions ''写种草笔记'', ''笔记文案'', ''种草文案'', ''标题优化'', ''改写笔记'', ''爆款改写'', ''复刻文案'', ''合规检查'', or when the seednote pipeline calls for content creation or text optimization. Writes and optimizes Seednote (种草笔记) content including titles, body text, hashtags, and viral note rewrites.'
 ---
 
 # 种草笔记内容写作知识库

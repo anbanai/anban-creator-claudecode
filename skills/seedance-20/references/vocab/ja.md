@@ -1,5 +1,13 @@
 # Japanese Vocabulary
 
+## Contents
+
+- [Compact Template](#compact-template)
+- [Multimodal Template](#multimodal-template)
+- [Sequence and Continuation Phrases](#sequence-and-continuation-phrases)
+- [Dialogue Notes](#dialogue-notes)
+- [Slop Traps](#slop-traps)
+
 Use this reference for Japanese Seedance prompt wording, role binding, and compact prompt compression. Keep reference tags unchanged: `[Image1]`, `[Video1]`, and `[Audio1]` stay literal.
 
 | Function | Japanese | English meaning |

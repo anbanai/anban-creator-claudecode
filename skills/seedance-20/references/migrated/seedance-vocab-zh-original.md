@@ -1,5 +1,20 @@
 # Legacy body for `seedance-vocab-zh`
 
+## Contents
+
+- [D.1 景别 · Shot Sizes](#d1-景别-shot-sizes)
+- [D.2 运镜 · Camera Movements](#d2-运镜-camera-movements)
+- [D.3 灯光 · Lighting](#d3-灯光-lighting)
+- [D.4 灯光 · 色温与氛围 (Lighting - Color Temp & Atmosphere)](#d4-灯光-色温与氛围-lighting---color-temp-atmosphere)
+- [D.5 风格与质感 · Style & Texture](#d5-风格与质感-style-texture)
+- [D.6 运动与时序 · Motion & Timing](#d6-运动与时序-motion-timing)
+- [D.7 安全动作词汇 · Safe Action & Combat Vocabulary](#d7-安全动作词汇-safe-action-combat-vocabulary)
+- [D.8 安全武器词汇 · Safe Weapon Vocabulary](#d8-安全武器词汇-safe-weapon-vocabulary)
+- [D.9 安全服装与护甲词汇 · Safe Clothing & Armor Vocabulary](#d9-安全服装与护甲词汇-safe-clothing-armor-vocabulary)
+- [D.10 安全身体与体格词汇 · Safe Body & Physique Vocabulary](#d10-安全身体与体格词汇-safe-body-physique-vocabulary)
+- [D.11 视效 · 粒子与能量 (VFX - Particles & Energy)](#d11-视效-粒子与能量-vfx---particles-energy)
+- [D.12 音效 · 现场声 (Sound - Diegetic Audio)](#d12-音效-现场声-sound---diegetic-audio)
+
 Migrated on 2026-04-27 during v5.1.0. Treat platform, policy, API, and safety claims here as legacy unless confirmed in `references/api-status.md` or `references/source-registry.md`.
 
 ---

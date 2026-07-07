@@ -1,5 +1,20 @@
 # CapCut/JianYing (剪映) Draft File Structure Reference
 
+## Contents
+
+- [Disk Layout](#disk-layout)
+- [Key Constants](#key-constants)
+- [1. root_meta_info.json](#1-rootmetainfojson)
+  - [Top-Level Structure](#top-level-structure)
+  - [Draft Entry](#draft-entry)
+  - [Management Rules](#management-rules)
+- [2. draft_info.json](#2-draftinfojson)
+  - [Top-Level Structure](#top-level-structure)
+  - [CanvasConfig](#canvasconfig)
+  - [Config](#config)
+  - [Cover](#cover)
+  - [Materials](#materials)
+
 CapCut/JianYing drafts consist of 3 JSON files. This document describes every field.
 
 ## Disk Layout

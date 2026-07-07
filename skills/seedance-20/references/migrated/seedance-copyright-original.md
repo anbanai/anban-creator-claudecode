@@ -1,5 +1,20 @@
 # Legacy body for `seedance-copyright`
 
+## Contents
+
+- [⚠️ Feb 2026 Enforcement Context](#feb-2026-enforcement-context)
+- [The Core Principle](#the-core-principle)
+- [Hard Blocks (high-risk and should be rewritten)](#hard-blocks-high-risk-and-should-be-rewritten)
+- [Live Enforcement Examples (Feb 2026)](#live-enforcement-examples-feb-2026)
+- [Soft Blocks (Context-Dependent)](#soft-blocks-context-dependent)
+- [Safe Substitution Table](#safe-substitution-table)
+  - [Film & Screen Characters](#film-screen-characters)
+  - [Netflix / Streaming Original Characters](#netflix-streaming-original-characters)
+  - [Anime Characters](#anime-characters)
+  - [Game Characters](#game-characters)
+  - [Brand & Logo Substitutions](#brand-logo-substitutions)
+- [Real Person Policy](#real-person-policy)
+
 Migrated on 2026-04-27 during v5.1.0. Treat platform, policy, API, and safety claims here as legacy unless confirmed in `references/api-status.md` or `references/source-registry.md`.
 
 ---

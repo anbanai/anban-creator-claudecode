@@ -1,5 +1,20 @@
 # Legacy body for `seedance-vocab-es`
 
+## Contents
+
+- [E.1 Tamaño de Plano · Shot Sizes](#e1-tamao-de-plano-shot-sizes)
+- [E.2 Movimientos de Cámara · Camera Movements](#e2-movimientos-de-cmara-camera-movements)
+- [E.3 Iluminación · Lighting](#e3-iluminacin-lighting)
+- [E.4 Iluminación · Temperatura de Color y Atmósfera (Lighting - Color Temp & Atmosphere)](#e4-iluminacin-temperatura-de-color-y-atmsfera-lighting---color-temp-atmosphere)
+- [E.5 Estilo y Textura · Style & Texture](#e5-estilo-y-textura-style-texture)
+- [E.6 Movimiento y Ritmo · Motion & Timing](#e6-movimiento-y-ritmo-motion-timing)
+- [E.7 Vocabulario Seguro de Acción y Combate · Safe Action & Combat Vocabulary](#e7-vocabulario-seguro-de-accin-y-combate-safe-action-combat-vocabulary)
+- [E.8 Vocabulario Seguro de Armas · Safe Weapon Vocabulary](#e8-vocabulario-seguro-de-armas-safe-weapon-vocabulary)
+- [E.9 Vocabulario Seguro de Ropa y Armadura · Safe Clothing & Armor Vocabulary](#e9-vocabulario-seguro-de-ropa-y-armadura-safe-clothing-armor-vocabulary)
+- [E.10 Vocabulario Seguro de Cuerpo y Físico · Safe Body & Physique Vocabulary](#e10-vocabulario-seguro-de-cuerpo-y-fsico-safe-body-physique-vocabulary)
+- [E.11 Efectos Visuales · Partículas y Energía (VFX - Particles & Energy)](#e11-efectos-visuales-partculas-y-energa-vfx---particles-energy)
+- [E.12 Sonido · Sonido Dieléctrico (Sound - Diegetic Audio)](#e12-sonido-sonido-dielctrico-sound---diegetic-audio)
+
 Migrated on 2026-04-27 during v5.1.0. Treat platform, policy, API, and safety claims here as legacy unless confirmed in `references/api-status.md` or `references/source-registry.md`.
 
 ---

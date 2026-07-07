@@ -1,5 +1,20 @@
 # Color Bible 渐进式构建方法论
 
+## Contents
+
+- [什么是 Color Bible](#什么是-color-bible)
+- [渐进式构建流程](#渐进式构建流程)
+- [Color Bible 格式](#color-bible-格式)
+- [Characters](#characters)
+  - [Character: [简短描述名, 如 "Red Hood Girl"]](#character-简短描述名-如-red-hood-girl)
+  - [Character: [另一个角色]](#character-另一个角色)
+- [Objects](#objects)
+  - [Object: [名称, 如 "Picnic Basket"]](#object-名称-如-picnic-basket)
+- [Environment](#environment)
+  - [Environment: [场景描述]](#environment-场景描述)
+- [Color Relationships](#color-relationships)
+- [颜色定义最佳实践](#颜色定义最佳实践)
+
 ## 什么是 Color Bible
 
 Color Bible 是一份结构化文档，记录所有已识别实体的颜色规格。它是跨图颜色一致性的「绑定契约」——所有上色操作必须遵循 Color Bible 中定义的颜色。

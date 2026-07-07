@@ -1,6 +1,6 @@
 ---
 name: article-visual-design
-description: Manages images for WeChat article (公众号图文) content including template selection, visual rhythm planning, cover generation (封面), content illustration (配图) with vision verification, compression, and CDN upload. Use when generating or processing images for WeChat articles. Use when user mentions '封面', '配图', '插图', '视觉设计', '图片上传', 'generate cover', 'visual rhythm', 'template', or when the article pipeline calls for image planning, generation, verification, or uploading.
+description: 'Use when generating or processing images for WeChat articles. Use when user mentions ''封面'', ''配图'', ''插图'', ''视觉设计'', ''图片上传'', ''generate cover'', ''visual rhythm'', ''template'', or when the article pipeline calls for image planning, generation, verification, or uploading. Manages images for WeChat article (公众号图文) content including template selection, visual rhythm planning, cover generation (封面), content illustration (配图) with vision verification, compression, and CDN upload.'
 ---
 
 # 公众号图文图片管理（模板化 + 视觉校验）
