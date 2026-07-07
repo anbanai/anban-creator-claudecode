@@ -149,6 +149,25 @@ claude --verbose --agent anban:live-slicer ./live.mp4
 └── docs/            # 插件开发说明（不会被 Claude Code 作为运行时上下文加载）
 ```
 
+## Skill 上游来源与批量更新索引
+
+这张表记录哪些 skill 直接内置、改编或结构参考了开源 skill，方便后续让 AI 批量对齐上游。未在“上游/参考”中标为 copy 的内容，默认按 Anban 原创业务 workflow 维护。
+
+| 本地 skill | 上游/参考 | 本地改造 | 批量更新提示 |
+|------------|-----------|----------|--------------|
+| `humanizer` | 内置自 [blader/humanizer](https://github.com/blader/humanizer) v2.8.0（MIT），基于 [Wikipedia:Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing) | 中文正文去 AI 味、零交互流水线、`references/signs-of-ai-writing.md` 渐进加载 | 对比上游 humanizer 与维基页面；保留署名和许可证；同步 `claudecode/skills/humanizer`、`codex/skills/humanizer`、`openclaw/skills/humanizer` |
+| `seedance-20`、`seedance-20/skills/*` | 内置/改编自 [Emily2040/seedance-2.0](https://github.com/Emily2040/seedance-2.0)（MIT Skill OS） | 加入 Anban MCP 边界、`videocreator` agent 流程、商业 playbook、交付 QC、任务文件契约 | 更新根 skill、嵌套 `skills/*`、`references/` 与迁移材料；重新校验平台/API/价格类信息，不要绕过 Anban MCP |
+| `seedance-20` 的业务模式参考 | [songguoxs/seedance-prompt-skill](https://github.com/songguoxs/seedance-prompt-skill)、[ZeroLu/awesome-seedance](https://github.com/ZeroLu/awesome-seedance) | 只吸收模式路由、参考素材、修复循环等结构经验，不作为逐字复制来源 | 更新时当作 playbook 参考，不直接覆盖 Anban prompt、MCP 工具调用或交付文件格式 |
+| `dreamina-video` | 兼容别名，指向 `seedance-20` | 只保留旧提示/旧 agent 的入口兼容 | 除非 canonical `seedance-20` 路径变化，否则不要复制完整工作流到这里 |
+| `article*`、`seednote*`、`ecommerce*`、`live-slice`、`capcut-draft`、`video-use`、`*-video-overlays`、`line-art-coloring`、`portrait-pose-variants`、`anban-setup`、`config`、`writers`、`topic-research`、`seo-optimization`、`content-writing`、`short-video-cover` | Anban 原创业务 workflow；结构模式参考 [anthropics/skills](https://github.com/anthropics/skills)、[anthropics/claude-plugins-official](https://github.com/anthropics/claude-plugins-official)、[OthmanAdi/planning-with-files](https://github.com/OthmanAdi/planning-with-files)、[hesreallyhim/awesome-claude-code](https://github.com/hesreallyhim/awesome-claude-code)、[alirezarezvani/claude-skills](https://github.com/alirezarezvani/claude-skills) | 使用轻量 `SKILL.md` + 一层 `references/examples.md` 渐进披露；案例是 Anban 场景原创，不复制外部措辞或业务流程 | 从 Anban 产品、MCP、server contract 更新；如果改了共用 examples 或镜像 skill，同步 `claudecode` / `codex` / `openclaw`，除非测试明确记录发行差异 |
+
+批量更新规则：
+
+1. 先判断是“直接内置/改编上游”还是“结构参考”。直接内置必须保留许可证、署名和来源版本；结构参考不得把第三方提示词或业务流程原样复制进来。
+2. 同名 skill 同时存在于 `claudecode/skills`、`codex/skills`、`openclaw/skills` 时，默认三处分发同步更新；确实需要差异时，用测试或文档说明原因。
+3. 修改 `claudecode/`、`codex/`、`openclaw/` 下的 agents、skills、hooks、themes、writers、manifest、安装脚本或运行时文档时，同步 bump 对应插件 manifest patch version，并记录 changelog。
+4. 变更后至少跑相关契约测试：`go test ./server/agent ./server/mcp -count=1`；Claude Code 分发还要运行 `claude plugin validate ./claudecode/.claude-plugin/plugin.json --strict` 和 `claude plugin validate ./claudecode/.claude-plugin/marketplace.json --strict`。
+
 ## 开发与安全
 
 - 版本变更见 [CHANGELOG.md](CHANGELOG.md)

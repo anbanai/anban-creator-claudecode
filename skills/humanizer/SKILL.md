@@ -11,7 +11,6 @@ allowed-tools:
   - Edit
   - Grep
   - Glob
-  - AskUserQuestion
 ---
 
 # Humanizer：去除 AI 写作痕迹（去 AI 味）

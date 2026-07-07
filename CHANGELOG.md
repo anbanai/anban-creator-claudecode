@@ -4,6 +4,27 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.32] - 2026-07-07
+
+### Changed
+
+- Expanded the `videoeditor` agent workflow around file-based video transcripts, local `anban video` rendering, overlay/subtitle QC, and no nested agent delegation.
+- Added contract coverage that keeps the Claude Code plugin manifest version represented in this changelog.
+
+## [2.10.31] - 2026-07-07
+
+### Documentation
+
+- Added a Skill upstream-source and batch-update index to the README, covering copied/adapted open-source skills, structural references, mirror synchronization, and validation commands.
+
+## [2.10.30] - 2026-07-07
+
+### Changed
+
+- Added a human-readable Claude Code plugin display name for plugin UI surfaces.
+- Removed `AskUserQuestion` from the humanizer skill's preapproved tools so autonomous writing pipelines stay zero-interaction by default.
+- Added contract coverage for Claude Code plugin, agent, hook, and skill best-practice constraints.
+
 ## [2.10.27] - 2026-07-06
 
 ### Changed
