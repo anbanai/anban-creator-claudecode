@@ -4,6 +4,13 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.38] - 2026-07-07
+
+### Changed
+
+- Unified Studio video intake around `video_input` and the `video` agent, leaving business playbook, mode, subject, audience, and message decisions to the Seedance/video skills.
+- Documented that video task creation charges only the base task fee; `video_gen` provider costs are deducted by MCP execution.
+
 ## [2.10.37] - 2026-07-07
 
 ### Changed
@@ -42,7 +49,7 @@ This project follows semantic versioning for the plugin package. Patch releases 
 
 ### Changed
 
-- Expanded the `videoeditor` agent workflow around file-based video transcripts, local `anban video` rendering, overlay/subtitle QC, and no nested agent delegation.
+- Expanded the video editing workflow around file-based video transcripts, local `anban video` rendering, overlay/subtitle QC, and no nested agent delegation.
 - Added contract coverage that keeps the Claude Code plugin manifest version represented in this changelog.
 
 ## [2.10.31] - 2026-07-07

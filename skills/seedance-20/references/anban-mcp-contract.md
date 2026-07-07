@@ -30,7 +30,8 @@ Returns:
 - `video.defaults`: resolved purpose, model key, resolution, ratio, duration, watermark, and preflight defaults
 - `video.policy`: allowed models, default model, auto-downgrade policy, max resolution, and max duration
 - `video.model_catalog`: server-configured and project-allowed video model keys and capabilities
-- `video.references`: task/plan `video_config.references` when `task_id` is supplied
+- `video.input`: user-authored `video_input` intake (`brief`, `references`, `hard_constraints`) when `task_id` is supplied
+- `video.references`: convenience alias for `video.input.references`
 - `video.visual_anchor_generation`: capability hints for generated visual anchors, including `available`, `default_image_type`, `max_auto_anchors`, `verify_with_vision`, `register_tool`, and fallback guidance
 - `video.pricing.credits_per_cny`: billing conversion from real CNY model cost to base credits
 - `video.pricing.tier_multiplier`: current membership multiplier applied after base cost
@@ -46,7 +47,7 @@ Model visibility is fail-closed:
 
 ## generate_image for visual anchors
 
-Use this only for videocreator visual-anchor bootstrap when the user has not supplied enough image/video references for a stable subject, product, or first frame.
+Use this only for video-agent visual-anchor bootstrap when the user has not supplied enough image/video references for a stable subject, product, or first frame.
 
 Required input pattern:
 - `project_id`
@@ -75,11 +76,11 @@ Input:
 - `file_path`: optional temporary agent/server-local media path; MCP uploads it to OSS/storage and returns `ark_url`
 - `text`: required for text references
 - `reference_role`: subject identity, product appearance, scene background, first frame, last frame, action, camera movement, rhythm, voice tone, BGM, or typography
-- optional metadata from task/plan `video_config.references`: `file_name`, `mime_type`, `file_size`, `input_duration_seconds`
+- optional metadata from `video_input.references` / `video.input.references`: `file_name`, `mime_type`, `file_size`, `input_duration_seconds`
 
 Media URLs must be OSS/CDN-backed public HTTPS URLs. Localhost, private IPs, relative storage URLs, and local filesystem paths are not Ark-accessible. If storage is local or has no public HTTPS CDN/OSS URL, the tool returns an explicit OSS/CDN hint instead of submitting an unusable reference. Claude workspace files are temporary; persistent platform files must be registered as task files.
 
-When a task or plan has `video_config.references`, consume those references first. Preserve `reference_role` and server-measured `input_duration_seconds`; for raw video references, never invent or overwrite duration client-side.
+When a task or plan has `video_input.references` (profile `video.input.references`), consume those references first. Preserve `reference_role` and server-measured `input_duration_seconds`; for raw video references, never invent or overwrite duration client-side.
 
 ## analyze_video_reference
 

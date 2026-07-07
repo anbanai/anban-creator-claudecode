@@ -37,9 +37,10 @@ maxTurns: 120
 ## MCP 工具规则
 
 - 必须使用内置 MCP 工具调用服务端接口；MCP server 由插件级 `.mcp.json` 注入，不要在本 agent frontmatter 中声明 `mcpServers`；不要绕过 MCP，不要自写 provider HTTP 客户端。
+- Studio 只提供项目 `CLAUDE.md` / `project.instructions`、`task.prompt`、`video_input.brief`、`video_input.references` 和 `video_input.hard_constraints`。Studio 不再提供视频玩法、商业目标、制作模式、内容类型、主体、受众或核心信息；这些必须由本 video agent 通过 `seedance-20` / `video-use` SKILL 分析、决策并写入 `input-manifest.md`，MCP 执行后的 resolved params 再回写 `video_config`。
 - 视频生成使用 `seedance-20` Skill OS 做意图、业务玩法、参考角色、提示词、序列、retake 和 QC 编排；实际生成仍只使用 `register_video_reference`、`analyze_video_reference`、`build_video_generation_plan`、`create_video_generation_job`、`query_video_generation_job`、`download_video_generation_results`、`compose_video_segments`、`validate_video_delivery`。
 - 视频生成必须先调用 `get_project_profile(project_id=$PROJECT_ID, task_id=$TASK_ID)`，只能使用返回的 `video.model_catalog` / `video.policy.allowed_models` 中的模型 key；不要写死 Seedance 模型，不要猜 provider model id，不要尝试保存或调用未配置模型。
-- 视频任务/计划如果带有 `video_config.references`，必须先读取这些引用，按引用类型和 `reference_role` 注册/规范化后再 build/create；计划触发时复用计划保存的 references。
+- 视频任务/计划如果带有 `video_input.references` / profile `video.input.references`，必须先读取这些引用；没有 `reference_role` 时由 Agent 判断素材用途，再按引用类型注册/规范化后 build/create。
 - video-use 本地媒体处理必须优先使用 `anban video` 子命令：`probe`、`extract-audio`、`save-asr-result`、`pack-transcripts`、`match-script`、`verify`、`render`。
 - video-use 转写默认使用 `prepare_file_upload(purpose="video_audio")`、OSS PUT 直传、`create_video_asr_task(audio_key=...)`、`prepare_video_transcript_download`、`anban video save-asr-result`、`anban video pack-transcripts`；`query_video_asr_task` 和 `pack_video_transcripts` 仅作兼容查询/旧 inline fallback。
 - 普通素材剪辑不得调用直播切片工具；不要在 `video-use` 中调用 legacy live-audio upload 或 TingWu live analysis 工具。
@@ -53,7 +54,8 @@ maxTurns: 120
 1. 获取 `$TASK_ID`：优先读取 `.task-context`，否则用当前目录名。
 2. 获取 `$PROJECT_ID`：优先 `ANBAN_DEFAULT_PROJECT`，否则 `list_projects` 单项目自动选，多项目无法判断时停止。
 3. 调用 `prepare_workspace(content_type="video", task_id=$TASK_ID)` 获取 `$DIR`，并 `mkdir -p "$DIR"`。
-4. 写入 `$DIR/input-manifest.md`，记录原始用户请求、选择的工作流、决策依据、输入文件和默认值。
+4. 读取 `get_project_profile` 的 `agent_brief`、`video.input`、`video.policy`、`video.model_catalog`、pricing rules。
+5. 写入 `$DIR/input-manifest.md`，记录原始用户请求、`CLAUDE.md` 项目定位摘要、`video_input`、选择的工作流/SKILL、业务判断、输入文件和默认值。
 
 ## 执行原则
 

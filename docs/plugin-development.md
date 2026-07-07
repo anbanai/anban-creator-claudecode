@@ -32,9 +32,7 @@ Do not add `mcpServers` to plugin agent frontmatter. Plugin subagents receive MC
 | `seednote` | "种草笔记", "种草", "复刻" | Research → Viral analysis (replicate) → Content → Image plan → Cover + Content images → Compliance → Archive |
 | `live-slicer` | "直播切片", "剪直播", "听悟" | ffmpeg prep → TingWu transcription → Invalid sentence filter → Segment/subject planning → Batch cuts/concat → CapCut export → Report |
 | `designer` | "上色", "填色", "线稿", "color consistency", "designer" | Init → Progressive coloring (single-candidate by default, optional 2-candidate) → Full audit → Best-effort correction/backtracking → Report with `needs_img2img` where strict line preservation is impossible |
-| `videocreator` | "视频生成", "即梦", "Seedance" | seedance-20 → MCP provider task → download/register MP4 → Quality review |
-| `videoeditor` | "剪视频", "去口癖", "字幕", "调色", "overlay animation", "剪映草稿" | video-use → transcript/EDL → render preview/final → Quality review |
-| `video` | legacy explicit video router | Compatibility entry for older manual invocations; server defaults use `videocreator` / `videoeditor` |
+| `video` | "视频生成", "即梦", "Seedance", "剪视频", "字幕", "剪映草稿" | Unified intake → Agent chooses seedance-20, video-use, cover, pose, or CapCut workflow |
 | `ecommerce` | "电商出图", "电商素材", "商品图", "产品图", "主图", "详情页", "商详", "SKU图", "电商封面" | Product Bible (analyze product photos) → Selling points (FABE) → Asset plan → Anchor-first generation with provider-adaptive ref strategy (image_model from task) + vision self-check (max 3 rounds) → Compliance (广告法极限词) → Archive + manifest |
 
 Agents use TaskCreate/TaskUpdate for progress tracking and report progress as `[N/M] step complete → path (detail)`.
