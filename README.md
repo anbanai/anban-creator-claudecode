@@ -153,9 +153,14 @@ claude --verbose --agent anban:live-slicer ./live.mp4
 
 这张表记录哪些 skill 直接内置、改编或结构参考了开源 skill，方便后续让 AI 批量对齐上游。未在“上游/参考”中标为 copy 的内容，默认按 Anban 原创业务 workflow 维护。
 
+维护本表和所有 `SKILL.md` 时，先按本仓库 `docs/claude/` 中的 Claude Skills 指南检查：frontmatter 触发描述、`SKILL.md` 体量、渐进式披露、一层 `references/`、无 skill 内辅助 README、MCP 边界、错误处理和测试/验证记录。
+
 | 本地 skill | 上游/参考 | 本地改造 | 批量更新提示 |
 |------------|-----------|----------|--------------|
+| `agent-reach` | 边界封装 [Panniantong/agent-reach](https://github.com/Panniantong/agent-reach) CLI 与安装文档 | 只记录 Seednote/Xiaohongshu 外部真实数据采集的 doctor、active backend、证据归档和失败停机规则，不复制上游代码 | 更新 Agent-Reach CLI/安装流程时同步 `claudecode/skills/agent-reach`、`codex/skills/agent-reach`、`openclaw/skills/agent-reach`；保留“不伪造数据、不绕过 Agent-Reach”的边界 |
+| `guizang-social-card` | 结构和视觉方法参考 [op7418/guizang-social-card-skill](https://github.com/op7418/guizang-social-card-skill)（AGPL-3.0，另有商业许可说明） | Anban 原生 HTML/CSS + Playwright 渲染和 `register_rendered_image` MCP 注册；不复制上游模板、脚本、WebGL、校验器或素材 | 更新时只对照公开方法和规格；若要直接 vendoring 上游资产，必须先处理商业/法务许可并同步三处分发 |
 | `humanizer` | 内置自 [blader/humanizer](https://github.com/blader/humanizer) v2.8.0（MIT），基于 [Wikipedia:Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing) | 中文正文去 AI 味、零交互流水线、`references/signs-of-ai-writing.md` 渐进加载 | 对比上游 humanizer 与维基页面；保留署名和许可证；同步 `claudecode/skills/humanizer`、`codex/skills/humanizer`、`openclaw/skills/humanizer` |
+| `moments` | 内容拆解方法参考 [Caihui0127/caihui-moments-skill](https://github.com/Caihui0127/caihui-moments-skill) 的公开框架 | 产出 Anban 朋友圈素材包；不默认使用“彩卉”人设，不复制私有素材，不把参考 repo 作为运行时依赖 | 更新时只同步公开方法层；保持 `material-analysis.md`、`content.md`、`quality-review.md` 三件套和不伪造案例/数据红线 |
 | `seedance-20`、`seedance-20/skills/*` | 内置/改编自 [Emily2040/seedance-2.0](https://github.com/Emily2040/seedance-2.0)（MIT Skill OS） | 加入 Anban MCP 边界、`videocreator` agent 流程、商业 playbook、交付 QC、任务文件契约 | 更新根 skill、嵌套 `skills/*`、`references/` 与迁移材料；重新校验平台/API/价格类信息，不要绕过 Anban MCP |
 | `seedance-20` 的业务模式参考 | [songguoxs/seedance-prompt-skill](https://github.com/songguoxs/seedance-prompt-skill)、[ZeroLu/awesome-seedance](https://github.com/ZeroLu/awesome-seedance) | 只吸收模式路由、参考素材、修复循环等结构经验，不作为逐字复制来源 | 更新时当作 playbook 参考，不直接覆盖 Anban prompt、MCP 工具调用或交付文件格式 |
 | `dreamina-video` | 兼容别名，指向 `seedance-20` | 只保留旧提示/旧 agent 的入口兼容 | 除非 canonical `seedance-20` 路径变化，否则不要复制完整工作流到这里 |

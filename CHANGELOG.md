@@ -4,6 +4,27 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.35] - 2026-07-07
+
+### Changed
+
+- Moved auxiliary skill README content into `references/` files so shipped skills follow Agent Skills progressive-disclosure packaging guidance.
+- Added a mirrored `agent-reach` boundary skill and tightened plugin agent skill-path contracts so Seednote research uses real Agent-Reach backends without missing local skill references.
+
+## [2.10.34] - 2026-07-07
+
+### Added
+
+- Added the independent `moments` Agent and mirrored `moments` skill for WeChat Moments / 朋友圈素材包 generation.
+- Documented the Caihui public-method reference boundary, fixed required artifacts, and optional `guizang-social-card` visual handoff.
+
+## [2.10.33] - 2026-07-07
+
+### Changed
+
+- Added the Anban-native `guizang-social-card` skill and routed Seednote/WeChat visual workflows to opt-in rendered social-card assets through `register_rendered_image`.
+- Documented the upstream AGPL-3.0 adapter posture without vendoring upstream templates, scripts, validators, or assets.
+
 ## [2.10.32] - 2026-07-07
 
 ### Changed

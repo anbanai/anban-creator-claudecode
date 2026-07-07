@@ -11,6 +11,7 @@ skills:
   - seednote-writing
   - humanizer
   - seednote-visual-design
+  - guizang-social-card
 maxTurns: 20
 ---
 
@@ -51,6 +52,8 @@ maxTurns: 20
 ## 创作流程
 
 > **图片构成以结构化运行控制 `seednote_image_mode` 为准（覆盖本 agent 与 seednote-visual-design skill 的默认数量规则）**。缺失时按 `cover_content`。四种模式：`cover_only`（仅封面）、`cover_content`（封面 + 1~3 张内容图）、`cover_tail`（封面 + 尾图）、`full`（封面 + 1~3 张内容图 + 尾图）。未包含尾图的模式禁止生成 `tail.png`，`image-plan.md` 不得含 `## tail` 节；未包含内容图的模式禁止生成 `image_0N.png`。内容图张数由信息点分组决定（1~3 张）。
+
+> **Guizang Social Card 路由**：当用户 prompt 或项目/任务 `visual_style` 包含 `归藏`、`Guizang`、`social card`、`小红书组图`、`Swiss`、`瑞士`、`杂志`、`editorial card` 时，步骤 7/复刻图片生成 using the `guizang-social-card` skill。该 skill 用原创 HTML/CSS + Playwright 渲染卡片，并通过 `register_rendered_image` 登记 PNG；仍严格遵守 `seednote_image_mode`，只生成允许的 `cover.png`、`image_01.png`...、`tail.png`。不要绕过 MCP，不要自写 HTTP 上传客户端。
 
 ### 公共前置流程
 

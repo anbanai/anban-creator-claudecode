@@ -81,10 +81,8 @@ REQUIRED_REFERENCES = [
 ]
 
 REQUIRED_FILES = [
-    "README.md",
     "SKILL.md",
-    "CHANGELOG.md",
-    "V6_SEQUENCE_PROMPT_COMPILER_MANIFEST.md",
+    "references/migrated/index.md",
     "scripts/validate_skills.py",
     "scripts/content_audit.py",
     "scripts/eval_schema_check.py",
@@ -100,8 +98,6 @@ REQUIRED_FILES = [
     "scripts/sequence_eval_check.py",
     "scripts/generation_run_check.py",
     "scripts/extract_last_frame.py",
-    ".github/workflows/validate-skills.yml",
-    "agents/openai.yaml",
     "evals/evals.json",
     "evals/generation-benchmark.json",
     "data/sources.seedance-2026-05-30.json",
@@ -132,6 +128,12 @@ REQUIRED_FILES = [
     "examples/golden-prompts/continuation-observed-deviation.md",
     "examples/golden-prompts/first-last-frame-transition.md",
     "examples/golden-prompts/video-edit-one-layer.md",
+]
+
+FULL_PACKAGE_ONLY_FILES = [
+    "V6_SEQUENCE_PROMPT_COMPILER_MANIFEST.md",
+    ".github/workflows/validate-skills.yml",
+    "agents/openai.yaml",
     "assets/hero-command-center.png",
     "assets/hero-global-filmmaker-mode.png",
     "assets/infographic-skill-capabilities.png",
@@ -254,7 +256,11 @@ def main() -> int:
     errors: list[str] = []
     warnings: list[str] = []
 
-    for rel in REQUIRED_FILES + REQUIRED_REFERENCES:
+    required_files = list(REQUIRED_FILES)
+    if args.strict:
+        required_files.extend(FULL_PACKAGE_ONLY_FILES)
+
+    for rel in required_files + REQUIRED_REFERENCES:
         if not (root / rel).exists():
             errors.append(f"missing required file: {rel}")
 
@@ -318,7 +324,7 @@ def main() -> int:
     if installer.exists():
         installer_text = installer.read_text(encoding="utf-8")
         if re.search(r"IGNORE_NAMES\s*=\s*{[^}]*[\"']docs[\"']", installer_text, re.S):
-            errors.append("scripts/install_codex_skill.py must include docs/ because README links native zh/ja/ko guides")
+            errors.append("scripts/install_codex_skill.py must include docs/ because native zh/ja/ko guides are active references")
 
     openai_yaml = root / "agents" / "openai.yaml"
     if openai_yaml.exists():

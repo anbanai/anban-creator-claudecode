@@ -20,7 +20,7 @@ description: Guidance for adding and using custom writer-style YAML files in Anb
 
 Use this skill as the entry point for custom writer YAML guidance. The detailed
 schema, examples, lookup order, and troubleshooting notes live in
-`README.md` in this directory.
+[references/writer-style-schema.md](references/writer-style-schema.md).
 
 Writer files define writing voice only. They must not carry visual identity or
 image style fields; visual style is resolved separately from project/task
