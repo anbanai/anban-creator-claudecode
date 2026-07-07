@@ -4,6 +4,12 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.36] - 2026-07-07
+
+### Changed
+
+- Added the `moments` completion review hook so 朋友圈素材包 runs verify required artifacts, evidence boundaries, optional social-card registration, and feedback submission.
+
 ## [2.10.35] - 2026-07-07
 
 ### Changed
