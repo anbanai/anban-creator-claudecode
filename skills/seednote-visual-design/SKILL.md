@@ -28,8 +28,6 @@ description: 'Use when creating seednote visual content including covers, conten
 - **图片内所有可见文字必须是简体中文**（用户使用中文时），禁止英文/拼音/乱码/伪词
 - **prompt 中文字必须用全角引号「」或书名号《》包裹**，让模型识别为"文字内容"而非视觉描述
 
-> **AIGC 标识提醒（2026 强制，非机械闸门、属合规义务）**：本 skill 产出的封面 / 内容图 / 尾图均由 `generate_image` 生成，属 AI 生成合成内容——发布方须按平台规则声明 AI 生成（未标识→限流/封号）。在 Step 6 的 `image-review.md` 末尾标注「图片均为 AI 生成，建议发布时声明」，与 seednote-writing §9.5 的标识建议联动。
-
 ---
 
 ## MCP 工具
@@ -217,7 +215,6 @@ description: 'Use when creating seednote visual content including covers, conten
 - [ ] 图片内文字为简体中文，无英文、拼音、乱码、伪词或错别字
 - [ ] 茶类/产品/数字参数准确，不出现误导性内容（例如"10 秒出汤"不得写成"焖泡10秒"）
 - [ ] 封面、内容图（、尾图，仅当生成）视觉风格一致，内容图之间有视觉多样性
-- [ ] **AIGC 标识提醒（2026 强制）**：图片均为 `generate_image` 生成的 AI 内容，在 `image-review.md` 末尾标注「图片均为 AI 生成，建议发布时声明」（未声明→限流/封号）
 
 任一图片低于 4/5 或命中硬性错误时，使用更具体的 prompt 重试一次，并在 `image-review.md` 记录失败原因、重试 prompt 和最终结果。封面重试后仍不合格时停止并报告，不要继续生成后续图片。重试必须覆盖同一个 output_path（禁止新增 `image_03_v2.png` 之类的候选文件）；归档前检查目录，仅保留 image-plan.md 中列出的 N 张图（cover/image_01..03/tail），删除任何多余候选/旧版文件，避免交付目录残留重复图。
 

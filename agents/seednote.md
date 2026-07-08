@@ -34,7 +34,7 @@ maxTurns: 20
 | **模式选择** | 用户提供笔记 ID/链接/xsec_token/复刻关键词 → 复刻模式；否则 → 原创模式 |
 | **选题** | 按互动率、时效性和新颖度评分，自动选 Top 1 |
 | **视觉风格** | 账号有参考图 → 用 `--ref`；否则 → 动态设计 `$STYLE`，封面确立基准 |
-| **错误处理** | 自动重试 + 降级，不中断流程；封面失败两次后请求用户协助 |
+| **错误处理** | 研究和写作按对应 skill 重试；图片 API 或质量验证失败时记录可恢复失败态并停止在图片阶段，修复后从该阶段重试 |
 
 决策过程和失败原因透明记录在 `$DIR/*.md` 文件中。
 
@@ -98,7 +98,7 @@ maxTurns: 20
 
 #### 步骤 7：生成图片
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="image_generation", title="图片生成", description="规划并生成封面、内容图和尾图")`。using the `seednote-visual-design` skill，传入 `$DIR/content.md`。账号画像有可用参考图时优先使用参考图；否则动态设计 `$STYLE`，以封面确立基准风格。技能内部按 `seednote_image_mode` 完成图片内容规划（`$DIR/image-plan.md`）和全部图片生成：封面 `$DIR/cover.png`、内容图 `$DIR/image_01.png` ... `$DIR/image_03.png`（仅含内容图的模式）、尾图 `$DIR/tail.png`（仅含尾图的模式）。单张内容图失败时重试一次，仍失败则跳过并在最终报告标注；封面失败时重试两次，仍失败则请求用户协助。图片质量和风格一致性由 `seednote-visual-design` skill 内部验证流程保证。
+调用 `update_task_progress(task_id=$TASK_ID, stage="image_generation", title="图片生成", description="规划并生成封面、内容图和尾图")`。using the `seednote-visual-design` skill，传入 `$DIR/content.md`。账号画像有可用参考图时优先使用参考图；否则动态设计 `$STYLE`，以封面确立基准风格。技能内部按 `seednote_image_mode` 完成图片内容规划（`$DIR/image-plan.md`）和全部图片生成：封面 `$DIR/cover.png`、内容图 `$DIR/image_01.png` ... `$DIR/image_03.png`（仅含内容图的模式）、尾图 `$DIR/tail.png`（仅含尾图的模式）。每张应生成图片都通过 `generate_image` 生成并记录到 `$DIR/image-prompts.md`；若 API 返回 `error`、超时或质量验证重试后仍不合格，在 `$DIR/image-review.md` 记录 `provider`、`model`、`output_path`、`error` 和`下一步建议`，保留已成功产物，任务停止在图片阶段作为可恢复失败态，修复模型、额度、网络或配置后从同一阶段重试并覆盖同名 `output_path`。图片质量和风格一致性由 `seednote-visual-design` skill 内部验证流程保证。
 
 **产出**：`$DIR/image-plan.md`、`$DIR/cover.png`、内容图（按 `seednote_image_mode`）、尾图（按 `seednote_image_mode`）
 
@@ -154,7 +154,7 @@ maxTurns: 20
 
 #### 步骤 12：最终报告
 
-向用户交付可复核的结果摘要，包含：模式（原创/复刻）、标题、成果目录（`$ARCHIVE_DIR`）、图片数量（封面/内容图/尾图分别统计；尾图按 `seednote_image_mode`，未包含则 0）、合规状态（复刻模式报告 `compliance-report.md`；原创模式说明已按写作规则规避诱导互动）、失败或降级项。进度报告格式：`[N/M] description → $DIR/ (detail)`。
+向用户交付可复核的结果摘要，包含：模式（原创/复刻）、标题、成果目录（`$ARCHIVE_DIR`）、图片数量（封面/内容图/尾图分别统计；尾图按 `seednote_image_mode`，未包含则 0）、合规状态（复刻模式报告 `compliance-report.md`；原创模式说明已按写作规则规避诱导互动）、失败态或需要恢复的步骤。进度报告格式：`[N/M] description → $DIR/ (detail)`。
 
 ---
 
@@ -178,8 +178,7 @@ maxTurns: 20
 |------|----------|
 | 选题评分无高分候选 | 自动选择最高分选题，在 `topic-analysis.md` 记录评分分布 |
 | 参考图配置无效 | 降级为动态设计 `$STYLE`，首图确立风格基准 |
-| 单张内容图生成失败 | 重试一次，仍失败则跳过并在最终报告标注 |
-| 封面生成失败 | 重试两次，仍失败则请求用户协助 |
+| 图片 API 或质量验证失败 | 记录 provider/model/output_path/error/下一步建议，任务停止在图片阶段作为可恢复失败态，修复后从同一阶段重试 |
 | 源笔记获取失败 | 重新获取 token 后重试一次，仍失败则停止 |
 | 爆款拆解证据不足 | 写入 missing_data，降低 confidence，默认推荐 `style-only` |
 | 复刻模板置信度低或视觉证据不足 | 记录原因并按 `style-only` 处理 |
