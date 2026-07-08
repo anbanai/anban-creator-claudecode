@@ -4,6 +4,7 @@
 
 - [get_project_profile](#getprojectprofile)
 - [generate_image for visual anchors](#generateimage-for-visual-anchors)
+- [prepare_video_generation_inputs](#preparevideogenerationinputs)
 - [register_video_reference](#registervideoreference)
 - [analyze_video_reference](#analyzevideoreference)
 - [validate_video_generation_params](#validatevideogenerationparams)
@@ -63,6 +64,27 @@ Accept only normalized verification with `passed=true`. If a score exists, it mu
 
 After an anchor passes, call `register_video_reference` with `type="image_url"`, the returned/generated `file_path`, and the intended `reference_role`. Only registered references should be passed into `build_video_generation_plan` and `create_video_generation_job`.
 
+## prepare_video_generation_inputs
+
+Use this before `validate_video_generation_params`, `build_video_generation_plan`, or `create_video_generation_job` on every Studio video task, and always when `video.input.references` exists.
+
+Input:
+- `project_id`
+- `task_id`
+
+Returns:
+- `video-input-contract.json` as an OSS-backed task file
+- normalized `references[]` with inferred `reference_role`
+- owned Studio upload URLs materialized under `video-inputs/` with `task_file_id`; pass these `normalized_references` exactly to validate/build/create
+- required reference roles, including `full remake reference` and `joke timeline`
+- measured video durations and `target_duration_source`
+- `inferred_mode`, such as `strict_remake`
+- optional `video-understanding.json` when native video analysis is available
+
+Strict remake triggers include `主体不变`, `完全一样`, `同款`, `复刻`, `参考视频`, and `照着这个段子`. In strict remake mode, write `reference-timeline.json` from the native video understanding output before prompt writing, then compile a segment-aware `shot-plan.md`. If the user did not give a target duration and a measured reference video exists, match that reference duration subject to project policy.
+
+Fail closed: every user-supplied image/video from `video_input.references` is a mandatory constraint. If the contract cannot validate a public HTTPS URL, cannot preserve measured video duration, or cannot find the reference in final generation `references[]`, stop. Generated visual anchors can supplement user media but cannot replace it.
+
 ## register_video_reference
 
 Use for uploading or validating references before planning.
@@ -84,7 +106,7 @@ When a task or plan has `video_input.references` (profile `video.input.reference
 
 ## analyze_video_reference
 
-Use this after `register_video_reference` for every input video before writing `reference-anchors.md`, `script.md`, or `shot-plan.md`.
+Use this after `prepare_video_generation_inputs` / `register_video_reference` for every input video before writing `reference-anchors.md`, `reference-timeline.json`, `script.md`, or segment-aware `shot-plan.md`.
 
 Input:
 - `project_id`
@@ -137,6 +159,8 @@ Returns:
 
 The server estimates credits dynamically from `model_prices.video_generation`, `billing.credits_per_cny`, membership/user multipliers, the server-resolved model key, output resolution, ratio, duration, whether an input video is present, and server-measured input video duration. Real model cost stays separate from billing multipliers. Do not trust agent-supplied input video duration. Video task/plan creation charges only the base task service fee. The actual video provider cost is deducted later as an independent `video_gen` MCP operation when the provider job is submitted. If the balance cannot cover `video_gen` at execution time, stop and ask the user to recharge.
 
+If `video-input-contract.json` says a video reference is required, `pricing_breakdown.input_video` must be true. If it is `input_video=false`, stop; the request has lost the user reference and must not spend credits.
+
 ## build_video_generation_plan
 
 Use before submitting. It validates the request and returns:
@@ -162,12 +186,17 @@ Important inputs:
 
 Do not pass a model key. The server resolves the generation model from task/project configuration. You may read provider/model details from `get_project_profile` or tool responses to adapt reference strategy, but never choose or pass model keys.
 
+The generation plan must include all required `video-input-contract.json` references. Missing user media, unmeasured video duration, private URLs, missing prepared `video-input-contract.json`, or generated-anchor-only substitutions are hard failures. A visual anchor is only allowed as an additional reference after the required user references are present.
+
 ## create_video_generation_job
 
 Use only after artifacts and plan are written. The server:
 - resolves target deliverable duration and duration source
 - splits the job into legal provider-bounded `segments`
 - deducts total dynamic credits once, or reuses the existing video task deduction when `task_id` was already charged
+- submits one provider job per segment when the target duration exceeds the provider segment cap
+
+If the plan has multiple segments, do not report completion after the first segment. Call `download_video_generation_results` for all succeeded segments, compose the final MP4 locally with ffmpeg, call `compose_video_segments`, and then call `validate_video_delivery`.
 - calls Volcengine Ark `CreateContentGenerationTask` once per segment
 - records `video_generation_id`, segment provider task IDs, segment duration, and segment credits
 

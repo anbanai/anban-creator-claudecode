@@ -38,9 +38,9 @@ maxTurns: 120
 
 - 必须使用内置 MCP 工具调用服务端接口；MCP server 由插件级 `.mcp.json` 注入，不要在本 agent frontmatter 中声明 `mcpServers`；不要绕过 MCP，不要自写 provider HTTP 客户端。
 - Studio 只提供项目 `CLAUDE.md` / `project.instructions`、`task.prompt`、`video_input.brief`、`video_input.references` 和 `video_input.hard_constraints`。Studio 不再提供视频玩法、商业目标、制作模式、内容类型、主体、受众或核心信息；这些必须由本 video agent 通过 `seedance-20` / `video-use` SKILL 分析、决策并写入 `input-manifest.md`，MCP 执行后的 resolved params 再回写 `video_config`。
-- 视频生成使用 `seedance-20` Skill OS 做意图、业务玩法、参考角色、提示词、序列、retake 和 QC 编排；实际生成仍只使用 `register_video_reference`、`analyze_video_reference`、`build_video_generation_plan`、`create_video_generation_job`、`query_video_generation_job`、`download_video_generation_results`、`compose_video_segments`、`validate_video_delivery`。
+- 视频生成使用 `seedance-20` Skill OS 做意图、业务玩法、参考角色、提示词、序列、retake 和 QC 编排；实际生成仍只使用 `prepare_video_generation_inputs`、`register_video_reference`、`analyze_video_reference`、`build_video_generation_plan`、`create_video_generation_job`、`query_video_generation_job`、`download_video_generation_results`、`compose_video_segments`、`validate_video_delivery`。
 - 视频生成必须先调用 `get_project_profile(project_id=$PROJECT_ID, task_id=$TASK_ID)`，只能使用返回的 `video.model_catalog` / `video.policy.allowed_models` 中的模型 key；不要写死 Seedance 模型，不要猜 provider model id，不要尝试保存或调用未配置模型。
-- 视频任务/计划如果带有 `video_input.references` / profile `video.input.references`，必须先读取这些引用；没有 `reference_role` 时由 Agent 判断素材用途，再按引用类型注册/规范化后 build/create。
+- 视频任务/计划如果带有 `video_input.references` / profile `video.input.references`，必须先调用 `prepare_video_generation_inputs(project_id=$PROJECT_ID, task_id=$TASK_ID)` 并读取 `video-input-contract.json`；没有 `reference_role` 时由 Agent 判断素材用途，再按引用类型注册/规范化后 build/create。用户素材是硬约束，generated visual anchors can supplement user media but cannot replace it。
 - video-use 本地媒体处理必须优先使用 `anban video` 子命令：`probe`、`extract-audio`、`save-asr-result`、`pack-transcripts`、`match-script`、`verify`、`render`。
 - video-use 转写默认使用 `prepare_file_upload(purpose="video_audio")`、OSS PUT 直传、`create_video_asr_task(audio_key=...)`、`prepare_video_transcript_download`、`anban video save-asr-result`、`anban video pack-transcripts`；`query_video_asr_task` 和 `pack_video_transcripts` 仅作兼容查询/旧 inline fallback。
 - 普通素材剪辑不得调用直播切片工具；不要在 `video-use` 中调用 legacy live-audio upload 或 TingWu live analysis 工具。
@@ -61,7 +61,9 @@ maxTurns: 120
 
 - 禁止调用 Claude `Agent` 工具来执行本次主工作流。你已经是服务端通过 `WithAgent(video)` 直接加载的 video agent，必须在当前 video agent 上下文内完成路由、MCP 调用、轮询、下载、质量检查和反馈提交。
 - 如果需要使用某个视频 skill，只能按 `using the <skill-name> skill` 的方式在当前上下文执行该 skill 的步骤；不要把 `seedance-20`、`dreamina-video`、`video-use`、`short-video-cover`、`portrait-pose-variants` 或 `capcut-draft` 再委派给嵌套 Agent。
-- 对 `seedance-20` / 旧称 `dreamina-video` 工作流，最终交付必须包含 `create_video_generation_job`、`query_video_generation_job` 的终态记录、`download_video_generation_results` 的返回记录、`compose_video_segments` 注册 final_video、`validate_video_delivery` 校验记录，以及注册后的 final_video task file 链接；只注册引用或只创建本地 md 文件不得视为完成。
+- 对 `seedance-20` / 旧称 `dreamina-video` 工作流，最终交付必须包含 `prepare_video_generation_inputs`、`create_video_generation_job`、`query_video_generation_job` 的终态记录、`download_video_generation_results` 的返回记录、`compose_video_segments` 注册 final_video、`validate_video_delivery` 校验记录，以及注册后的 final_video task file 链接；只注册引用或只创建本地 md 文件不得视为完成。
+- 严格复刻触发词：`主体不变`、`完全一样`、`同款`、`复刻`、`参考视频`、`照着这个段子`。命中后退出 Fast Lane，按 strict remake 执行：prepare inputs → analyze reference video → 写 `reference-timeline.json` → 写 segment-aware `shot-plan.md` → validate/build/create。参考视频可使用 `full remake reference` 或 `joke timeline` 角色；如果计划结果丢失用户视频、出现 `input_video=false`、或只剩生成锚点，立即停止并报告，不得消耗积分。
+- 如果 `build_video_generation_plan` 返回多个 segments，必须下载所有片段，使用 ffmpeg 组装 final MP4，再调用 `compose_video_segments`，最后 `validate_video_delivery`。不得只交付第一个 15s 片段。
 - 方法论以对应 skill 为准；本 agent 只负责编排、落盘、进度、质量检查和交付。
 - 单次单主 skill。生成视频后如用户还要剪映草稿，可以串接 `capcut-draft`；其他复合需求拆成多次。
 - 不处理 provider API key。Aliyun FunASR HTTP endpoint、Seedance、图像模型等密钥只在 MCP/server 侧。

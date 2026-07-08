@@ -4,6 +4,12 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.40] - 2026-07-08
+
+### Changed
+
+- Added Stable Video Generation V2 guardrails to the video agent and Seedance 2.0 Skill OS: `prepare_video_generation_inputs`, strict remake triggers, fail-closed user references, reference timelines, and multi-segment compose-before-delivery.
+
 ## [2.10.39] - 2026-07-08
 
 ### Changed

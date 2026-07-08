@@ -2,17 +2,35 @@
 
 Use this reference when a Seedance 2.0 request becomes a long story, connected clips, continuation, extension, repair-tail, re-anchor, campaign sequence, dense storyboard, or multi-generation commercial.
 
+## Contents
+
+- [Sequence Gate](#sequence-gate)
+- [Project State Files](#project-state-files)
+- [Project State Capsule](#project-state-capsule)
+- [prompt compiler](#prompt-compiler)
+- [Continuation Handoff](#continuation-handoff)
+- [Retake Protocol](#retake-protocol)
+
 ## Sequence Gate
 
 Classify the request before prompt writing:
 - `standalone_clip`: one generation can carry the idea.
 - `sequence_project`: the idea needs connected clips, a story spine, campaign variants, long duration, or continuity across generations.
+- `strict_remake`: the user asked for 主体不变, 完全一样, 同款, 复刻, 参考视频, 照着这个段子, or a full reference-video remake.
 - `seamless_continuation`: the next generation continues accepted footage inside the same scene.
 - `intentional_next_shot`: editorial cut; open from canonical references and reset continuity chain.
 - `repair_tail`: only the final seconds or one layer failed.
 - `reanchor_after_drift`: extension_depth or visible drift makes source-output chaining fragile.
 
 Do not write the next prompt until the accepted clip, accepted final frame, or exact observed end state is known.
+
+Strict remake sequence:
+1. Call `prepare_video_generation_inputs` and read `video-input-contract.json`.
+2. Run native `analyze_video_reference` for every required video reference.
+3. Write `reference-timeline.json` with time ranges, beats, camera, action, expression, rhythm, must_keep, can_change, and must_not_change.
+4. Build a segment-aware `shot-plan.md` that maps the reference timeline onto the target duration. If no user duration exists, use the measured reference-video duration subject to project policy.
+5. Validate/build/create only with all required references present. If the plan says `input_video=false`, stop.
+6. For multi-segment plans, download all segment MP4s, compose final MP4, call `compose_video_segments`, then call `validate_video_delivery`.
 
 ## Project State Files
 
