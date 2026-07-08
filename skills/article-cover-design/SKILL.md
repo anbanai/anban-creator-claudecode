@@ -32,14 +32,6 @@ description: 'Use when 微信公众号封面图（公众号头图）专用设计
 
 ---
 
-## Guizang Social Card 路由
-
-当任务 prompt 或项目/任务 `visual_style` 包含 `归藏`、`Guizang`、`social card`、`小红书组图`、`Swiss`、`瑞士`、`杂志`、`editorial card` 时，封面生成委托 `guizang-social-card` skill：用原创 HTML/CSS + Playwright 渲染 `wechat-21x9-cover.png`、`wechat-1x1-cover.png`、`wechat-cover-pair-preview.png`，并把 21:9 图映射为 `$DIR/cover.png`。随后调用 `register_rendered_image(name="wechat-21x9-cover.png", role="cover", upload_to_cdn=true)` 取得 `media_id` / `wechat_url` 作为 `thumb_media_id`。
-
-这一路径只替代封面图生成，不改变 `article_image_mode` 跳过条件；不要绕过 MCP，不要自写 HTTP 上传客户端。
-
----
-
 本 skill 是公众号文章封面（`thumb_media_id`）的**唯一权威设计入口**，也是全篇内容配图的**风格锚点**（产物 `$DIR/cover.png` 供后续内容图 `ref_image_path` 继承）。它不是「随便生成一张横图」，而是一套多层方法论，确保封面达成：订阅号列表抓眼球（CTR）、转发卡主体完整、微信零裁剪、一眼传达主题、品牌调性统一。
 
 ## 核心规格（写死，不可改）

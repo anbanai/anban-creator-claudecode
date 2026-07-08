@@ -41,14 +41,6 @@ description: 'Use when creating seednote visual content including covers, conten
 
 ---
 
-## Guizang Social Card 路由
-
-当任务 prompt 或项目/任务 `visual_style` 包含 `归藏`、`Guizang`、`social card`、`小红书组图`、`Swiss`、`瑞士`、`杂志`、`editorial card` 时，使用 `guizang-social-card` skill 生成原创 HTML/CSS + Playwright 渲染卡片，而不是本 skill 的默认 `generate_image` 路径。仍必须遵守 `seednote_image_mode`：按模式产出 `cover.png`、`image_01.png`...、可选 `tail.png`，并写 `image-plan.md` / `image-review.md`。
-
-渲染 PNG 必须逐张调用 `register_rendered_image` 登记为 task_file；不要绕过 MCP，不要自写 HTTP 上传客户端。图文笔记默认不上传微信 CDN，除非上游项目明确需要发布侧 CDN。
-
----
-
 ## 平台 Gotcha
 
 种草笔记图片是 **3:4 竖版**，强视觉驱动。封面决定点击率，内容图决定完读率，尾图决定互动率。三类图片目标不同，prompt 构建方式也不同。

@@ -45,7 +45,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "moments agent 已完成执行。请检查工作目录或归档目录下的朋友圈素材包，生成结构化交付摘要：\n\n1. **必需产物**：确认 material-analysis.md、content.md、quality-review.md 均存在且非空。\n2. **素材分析**：material-analysis.md 是否包含主类型/辅助类型、四层提炼、证据清单和不得编造项。\n3. **正文交付**：content.md 是否包含主版本、备选开头、备选结尾和发布建议；正文是否避免伪造客户案例、成交数据、用户反馈。\n4. **质量复盘**：quality-review.md 是否检查真实感、诱导互动、空泛营销、证据不足、隐私与合规。\n5. **可选社交卡片**：如果生成图片，确认 social-card/cover/image PNG 已登记为 task file，image-review.md 或最终摘要含 task_file_id、download_url、尺寸和人工复核点。\n6. **问题检查**：列出缺失文件、证据不足、强营销口号、诱导互动、隐私泄露或未登记图片。\n\n如发现问题请明确指出并建议从哪个步骤继续修复。\n\n最后，调用 submit_agent_feedback(task_id=$TASK_ID, agent_name=\"moments\", scores={quality:N, completeness:N, efficiency:N}, errors=\"<errors>\", optimizations=\"<optimizations>\", summary=\"<brief summary>\") 提交本次 agent 执行反馈。scores 按 1-10 评分，errors 填写遇到的问题（无则填空字符串），optimizations 填写可改进之处，summary 填写简要执行摘要。"
+            "prompt": "moments agent 已完成执行。请检查工作目录或归档目录下的朋友圈素材包，生成结构化交付摘要：\n\n1. **必需产物**：确认 material-analysis.md、content.md、quality-review.md 均存在且非空。\n2. **素材分析**：material-analysis.md 是否包含主类型/辅助类型、四层提炼、证据清单和不得编造项。\n3. **正文交付**：content.md 是否包含主版本、备选开头、备选结尾和发布建议；正文是否避免伪造客户案例、成交数据、用户反馈。\n4. **质量复盘**：quality-review.md 是否检查真实感、诱导互动、空泛营销、证据不足、隐私与合规。\n5. **问题检查**：列出缺失文件、证据不足、强营销口号、诱导互动或隐私泄露。\n\n如发现问题请明确指出并建议从哪个步骤继续修复。\n\n最后，调用 submit_agent_feedback(task_id=$TASK_ID, agent_name=\"moments\", scores={quality:N, completeness:N, efficiency:N}, errors=\"<errors>\", optimizations=\"<optimizations>\", summary=\"<brief summary>\") 提交本次 agent 执行反馈。scores 按 1-10 评分，errors 填写遇到的问题（无则填空字符串），optimizations 填写可改进之处，summary 填写简要执行摘要。"
           }
         ]
       },

@@ -9,7 +9,6 @@ skills:
   - humanizer
   - article-visual-design
   - article-cover-design
-  - guizang-social-card
   - topic-research
   - seo-optimization
   - article-publishing
@@ -63,8 +62,6 @@ maxTurns: 300 # 公众号 10 步 + 7 图 + HTML + 草稿，实测需 120-175 tur
 | `text_only` | 纯文字文章 | 跳过 6d/6e/7；不生成任何图片；步骤 10 不带 `thumb_media_id`，并在 `final-review.md` 记录「未生成封面，公众号后台可能不显示封面/需手动设置」 |
 
 **封面关·配图开**时，正文配图因无封面作 `ref_image_path` 风格锚点，改为各自独立生成（不传 `ref_image_path`，或链到首张已生成图），**严禁**把 `ref_image_path` 指向不存在的 `$DIR/cover.png`。下方步骤 6d/6e/7/7e/9/10 及质量标准/成功标准/红旗清单中，凡"图片相关"硬性项均以本模式为前置条件——模式关闭对应产物时跳过且不计为失败。
-
-**Guizang Social Card 路由**：当用户 prompt 或项目/任务 `visual_style` 包含 `归藏`、`Guizang`、`social card`、`小红书组图`、`Swiss`、`瑞士`、`杂志`、`editorial card` 时，步骤 6d/7 using the `guizang-social-card` skill。该 skill 用原创 HTML/CSS + Playwright 渲染 `wechat-21x9-cover.png`、`wechat-1x1-cover.png`、`wechat-cover-pair-preview.png` 和正文卡，并通过 `register_rendered_image` 登记 PNG；21:9 图映射为 `cover.png` / `thumb_media_id`，正文卡必须各自取得独立 `wechat_url`。不要绕过 MCP，不要自写 HTTP 上传客户端。
 
 ## MCP 工具使用规则
 

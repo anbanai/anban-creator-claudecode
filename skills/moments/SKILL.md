@@ -30,8 +30,6 @@ description: Use when generating WeChat Moments / 朋友圈 content packages fro
 2. `content.md`：朋友圈正文、备选开头/结尾、发布建议。
 3. `quality-review.md`：真实感、诱导互动、空泛营销、证据不足检查。
 
-可选图片：当用户 prompt、项目 `visual_style` 或交付需要适合社交卡片时，可 using the `guizang-social-card` skill 生成卡片图。图片是 Agent 根据语境决定的交付增强，不存在 `moments_with_image` 开关。
-
 ## 输入理解
 
 把用户给出的资料先归入六类素材，可多选但必须确定主类型：
@@ -77,12 +75,11 @@ description: Use when generating WeChat Moments / 朋友圈 content packages fro
 
 ## 写作流程
 
-1. 读取项目画像：优先使用 `get_project_profile(scope="moments", task_id=$TASK_ID)` 返回的 `instructions`、`keywords`、`visual_style`、`author`、`moments` block。
+1. 读取项目画像：优先使用 `get_project_profile(scope="moments", task_id=$TASK_ID)` 返回的 `instructions`、`keywords`、`author`、`moments` block。
 2. 归纳素材：在 `material-analysis.md` 写明主类型、辅助类型、四层提炼、证据清单、缺口。
 3. 生成正文：在 `content.md` 写 1 条主版本，2-3 个备选开头，2 个备选结尾，发布时间/配图建议。
 4. 去 AI 味：必要时 using the `humanizer` skill，减少空泛升华、套话、过度营销词。
-5. 可选社交卡片：若触发 `guizang-social-card`，卡片必须服务主观点或关键证据，默认 3:4；不要为了有图而造图。
-6. 质量复盘：在 `quality-review.md` 检查真实感、诱导互动、空泛营销、证据不足、隐私与合规。
+5. 质量复盘：在 `quality-review.md` 检查真实感、诱导互动、空泛营销、证据不足、隐私与合规。
 
 ## `material-analysis.md` 模板
 

@@ -4,6 +4,13 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.39] - 2026-07-08
+
+### Changed
+
+- Removed the experimental rendered-card visual route from Claude, Codex, and OpenClaw distributions so image workflows use the standard platform visual-design skills.
+- Simplified the moments workflow contract around the three required text artifacts: `material-analysis.md`, `content.md`, and `quality-review.md`.
+
 ## [2.10.38] - 2026-07-07
 
 ### Changed
@@ -22,7 +29,7 @@ This project follows semantic versioning for the plugin package. Patch releases 
 
 ### Changed
 
-- Added the `moments` completion review hook so 朋友圈素材包 runs verify required artifacts, evidence boundaries, optional social-card registration, and feedback submission.
+- Added the `moments` completion review hook so 朋友圈素材包 runs verify required artifacts, evidence boundaries, and feedback submission.
 
 ## [2.10.35] - 2026-07-07
 
@@ -36,14 +43,14 @@ This project follows semantic versioning for the plugin package. Patch releases 
 ### Added
 
 - Added the independent `moments` Agent and mirrored `moments` skill for WeChat Moments / 朋友圈素材包 generation.
-- Documented the Caihui public-method reference boundary, fixed required artifacts, and optional `guizang-social-card` visual handoff.
+- Documented the Caihui public-method reference boundary and fixed required artifacts.
 
 ## [2.10.33] - 2026-07-07
 
 ### Changed
 
-- Added the Anban-native `guizang-social-card` skill and routed Seednote/WeChat visual workflows to opt-in rendered social-card assets through `register_rendered_image`.
-- Documented the upstream AGPL-3.0 adapter posture without vendoring upstream templates, scripts, validators, or assets.
+- Added an experimental rendered-card skill for Seednote/WeChat visual workflows.
+- Documented the upstream adapter posture without vendoring external templates, scripts, validators, or assets.
 
 ## [2.10.32] - 2026-07-07
 

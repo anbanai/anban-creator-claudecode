@@ -68,14 +68,6 @@ description: 'Use when generating or processing images for WeChat articles. Use 
 
 ---
 
-## Guizang Social Card 路由
-
-当任务 prompt 或项目/任务 `visual_style` 包含 `归藏`、`Guizang`、`social card`、`小红书组图`、`Swiss`、`瑞士`、`杂志`、`editorial card` 时，使用 `guizang-social-card` skill 生成原创 HTML/CSS + Playwright 渲染卡片，而不是默认 `generate_image` 配图路径。仍按 `article_image_mode` 执行：封面开启时生成 `wechat-21x9-cover.png`、`wechat-1x1-cover.png`、`wechat-cover-pair-preview.png`，并把 21:9 图映射为发布用 `cover.png` / `thumb_media_id`；正文配图开启时，每张正文卡独立写入 `images.json`。
-
-所有渲染 PNG 必须通过 `register_rendered_image` 登记；微信公众号项目正文卡使用 `upload_to_cdn=true` 取得各自 `wechat_url`，严禁复用封面 CDN URL。不要绕过 MCP，不要自写 HTTP 上传客户端。
-
----
-
 ## 五阶段流程
 
 ```
