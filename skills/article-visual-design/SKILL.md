@@ -236,6 +236,7 @@ generate_image(
 **关键**：
 - `size`：必须显式传入，普通正文配图/信息图用 `size="4:3"`，段内细节图用 `size="1:1"`；不得依赖项目级/任务级 image ratio。
 - `ref_image_path`：**封面开关开启时**用 `$DIR/cover.png`（风格锚点）；**封面关·配图开时**不传（或链到首张已生成图），**严禁**指向不存在的 `$DIR/cover.png`。
+- `ref_image_path` 只传递"风格语言"，不得复刻封面主体；正文图必须按章节 `visual_brief` / `required_entities` 独立表达。
 - `upload_to_cdn=true` 让**生成与上传原子化**：同一调用内完成生成→保存→校验→压缩→上传微信 CDN。校验通过才上传（不浪费素材位），返回值直接带 `wechat_url` + `media_id`；校验失败则不上传，结果无 `wechat_url`。**不再有独立的 `upload_image` 阶段**——每张图生成的瞬间即持久化到 CDN。
 
 **旧版 server 兼容**：若 server 不支持 `verify_with_vision` / `upload_to_cdn` 参数，去掉这两个参数生成图后，单独调用 `analyze_image` 做校验 + `upload_image` 上传，并按 `references/content.md` 的容错解析规则处理返回文本：
@@ -321,6 +322,7 @@ analyze_image(
 - [ ] **文件完整性**：所有图片文件存在且可访问
 - [ ] **风格一致性**：封面+配图均开启时，`images.json` 中所有内容图 `ref_image_path="$DIR/cover.png"`；封面关·配图开时无 `ref_image_path` 或链首图，且不得指向不存在的 `$DIR/cover.png`
 - [ ] **视觉多样性**：3 张以上配图使用 3 种以上不同 `composition_type`（清单模板可豁免，因要求统一构图）
+- [ ] **反同质化**：不得连续 3 张正文图复用同主体/同远近景/同色调重心；正文图不得复刻封面主体
 - [ ] **Vision 校验通过率**：至少 80% 的内容图 `verification.passed=true`
 - [ ] **审计完整性**：`images.json` 每条含 `visual_brief` / `required_entities` / `must_match_excerpts` / `verification` / `slot_id` / `section_index` / `wechat_url` / `media_id`
 - [ ] **CDN 持久化**：`images.json` 每条都有非空 `wechat_url`（每张图生成即上 CDN）；缺 URL 的 slot 用 `generate_image(upload_to_cdn=true)` 补或 `upload_image` 重传

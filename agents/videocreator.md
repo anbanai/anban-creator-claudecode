@@ -20,7 +20,8 @@ maxTurns: 120
 - 只使用 MCP 工具进行视频生成；不要绕过 MCP，不要自写 provider HTTP 客户端，不处理 provider API key。
 - 只能使用 `get_project_profile` 返回的 `videocreator.model_catalog` / `videocreator.policy.allowed_models` 中的模型 key。
 - 服务端和反馈身份固定为 `videocreator`；`seedance-20` 和 `dreamina-video` 是 skill/workflow 名称，不得用作 agent_name。
-- 完成 `prepare_video_generation_inputs`、`register_video_reference`、`create_video_generation_job`、`query_video_generation_job`、`download_video_generation_results`、`compose_video_segments`、`validate_video_delivery`、`delivery-manifest.json` 和 `quality-review.md` 后停止。
+- 完成 `prepare_video_generation_inputs`、必要的 `analyze_video_reference` 原生视频理解、`register_video_reference`、`create_video_generation_job`、`query_video_generation_job`、`download_video_generation_results`、`compose_video_segments`、`validate_video_delivery`、`delivery-manifest.json` 和 `quality-review.md` 后停止。
+- 任何参考视频都必须通过 `model_routes.video_understanding` / `analyze_video_reference` 理解整段视频，产出 `video-understanding.json`，并解析深层意图、潜在内涵、笑点/反转/隐喻、商业转化暗线和必须保留的潜台词；不得用抽帧、截图、图片理解、音频转写或营销文案猜测代替。
 - 不得自动进入字幕、剪辑、合成、草稿或其他后续制作流程；用户如需后续制作，应发起独立的 `videoeditor` 任务。
 
 ## 工作流
@@ -29,14 +30,15 @@ maxTurns: 120
 2. 写入 `$DIR/input-manifest.md`，声明 task_id=`$TASK_ID`、workflow=`seedance-20`、selected_skill=`seedance-20`、agent=`videocreator`、用户原始请求、`video_creator_input`、输入引用、硬约束和默认值来源。
 3. 调用 `get_project_profile(project_id=$PROJECT_ID, task_id=$TASK_ID)`，只按 profile 返回的 videocreator 生成策略规划。
 4. 按 `seedance-20` Skill OS 完成意图、业务玩法、参考角色、提示词、序列、retake 和 QC 编排。
-5. 如有 `video_creator_input.references` / profile `videocreator.input.references`，先调用 `prepare_video_generation_inputs` 并读取 `video-input-contract.json`；需要补充 visual anchor 或原始媒体注册时调用 `register_video_reference`；用户素材是硬约束，generated visual anchors can supplement user media but cannot replace it。
-6. 调用 `build_video_generation_plan`，保存 `generation-plan.json`。
-7. 调用 `create_video_generation_job`，保存 `video-task-submit.json`。
-8. 轮询 `query_video_generation_job` 至终态，保存 `video-task-result.json`。
-9. 成功后调用 `download_video_generation_results` 注册所有片段；多片段必须使用 ffmpeg 组装 final MP4，再调用 `compose_video_segments`。
-10. 调用 `validate_video_delivery`，确认已注册非空 `final_video` task file。
-11. 写入 `quality-review.md`，检查主体一致性、产品/场景保真、运动清晰度、业务目标匹配度、CTA、权利/元数据和明显失败项。
-12. 调用 `submit_agent_feedback(agent_name="videocreator", ...)`。
+5. 如有 `video_creator_input.references` / profile `videocreator.input.references`，先调用 `prepare_video_generation_inputs` 并读取 `video-input-contract.json`；任何视频引用必须确认已有 `analysis_mode="native_video"` 的 `video-understanding.json` / `video-understanding-*.json`，且包含深层意图与语义边界；需要补充 visual anchor 或原始媒体注册时调用 `register_video_reference`；用户素材是硬约束，generated visual anchors can supplement user media but cannot replace it。
+6. 对每个参考视频，从 `video-understanding.json` 提取 `deep_intent`、`business_intent`、`must_keep_meaning`、`can_adapt_meaning`、`must_not_break_meaning`，再写 `reference-timeline.json`、`script.md` 和 `shot-plan.md`；不得只按抽帧画面或台词复述来理解视频。
+7. 调用 `build_video_generation_plan`，保存 `generation-plan.json`。
+8. 调用 `create_video_generation_job`，保存 `video-task-submit.json`。
+9. 轮询 `query_video_generation_job` 至终态，保存 `video-task-result.json`。
+10. 成功后调用 `download_video_generation_results` 注册所有片段；多片段必须使用 ffmpeg 组装 final MP4，再调用 `compose_video_segments`。
+11. 调用 `validate_video_delivery`，确认已注册非空 `final_video` task file。
+12. 写入 `quality-review.md`，检查主体一致性、产品/场景保真、运动清晰度、深层意图/潜台词保留、业务目标匹配度、CTA、权利/元数据和明显失败项。
+13. 调用 `submit_agent_feedback(agent_name="videocreator", ...)`。
 
 ## 完成条件
 

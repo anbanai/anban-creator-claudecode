@@ -86,30 +86,35 @@
 
 ```
 A 2.35:1 horizontal image for a WeChat article cover. {VISUAL_STYLE}.
-{COLOR_PALETTE}. {CONTENT_SUBJECT} — {VISUAL_METAPHOR_FROM_ARTICLE}.
+Cover hook: {COVER_HOOK}. {COLOR_PALETTE}. {CONTENT_SUBJECT} — {VISUAL_METAPHOR_FROM_ARTICLE}.
+Thumbnail strategy: {THUMBNAIL_STRATEGY}. Avoid generic visuals: {ANTI_GENERIC_CONSTRAINTS}.
 {MOOD_TONE}. {COMPOSITION_GUIDANCE}.
-Photographic quality, no text overlays, no watermarks, no logo.
+Photographic quality, {TEXT_POLICY_FROM_ARTICLE_COVER_DESIGN}, no watermarks, no logo.
 ```
 
 ### Prompt 构建要点
 
 1. **VISUAL_STYLE**：由三维分析确定的视觉风格（如 "warm natural photography, soft morning light, organic textures"）
 2. **COLOR_PALETTE**：与账号定位匹配的色彩（如 "warm earth tones with soft green and gold accents"）
-3. **CONTENT_SUBJECT**：文章主题的视觉化表达（如 "a serene lotus flower blooming at dawn"）
-4. **VISUAL_METAPHOR_FROM_ARTICLE**：从文章内容中提取的视觉隐喻（使用文章中已有的比喻或意象）
-5. **MOOD_TONE**：与内容情绪匹配的氛围（如 "contemplative and peaceful atmosphere"）
-6. **COMPOSITION_GUIDANCE**：构图指导（如 "generous negative space, rule of thirds"）
+3. **COVER_HOOK**：最终标题和 digest 前半句共同指向的点击钩子
+4. **CONTENT_SUBJECT**：文章主题的视觉化表达（如 "a serene lotus flower blooming at dawn"）
+5. **VISUAL_METAPHOR_FROM_ARTICLE**：从文章内容中提取的视觉隐喻（使用文章中已有的比喻或意象）
+6. **THUMBNAIL_STRATEGY**：缩略图靠什么被看见（主体大小、明暗对比、色块或短文字）
+7. **ANTI_GENERIC_CONSTRAINTS**：禁止通用养生水墨背景、无主体山水、与标题无关的摆拍素材
+8. **MOOD_TONE**：与内容情绪匹配的氛围（如 "contemplative and peaceful atmosphere"）
+9. **COMPOSITION_GUIDANCE**：构图指导（如 "generous negative space, rule of thirds"）
+10. **TEXT_POLICY_FROM_ARTICLE_COVER_DESIGN**：按 `article-cover-design` 的受控文字策略决定：需要时写精确 2-8 字短文字，否则写 `NO text`
 
 ### 好的封面 prompt 示例
 
 **养生账号，文章关于"慢下来的力量"**：
 ```
-A 2.35:1 horizontal image for a WeChat article cover. Warm natural photography, soft morning light filtering through translucent leaves, organic textures. Warm earth tones with soft sage green and golden accents. A single lotus bud slowly opening at dawn, dewdrops on petals, mist rising from still water. Serene and meditative atmosphere. Generous negative space, the bud placed at the left third. Photographic quality, no text overlays, no watermarks, no logo.
+A 2.35:1 horizontal image for a WeChat article cover. Warm natural photography, soft morning light filtering through translucent leaves, organic textures. Cover hook: slow but visible recovery. Warm earth tones with soft sage green and golden accents. A single lotus bud slowly opening at dawn, dewdrops on petals, mist rising from still water. Thumbnail strategy: one large high-contrast lotus bud, visible at 200px. Avoid generic visuals: no empty ink-wash mountains, no tea cup still life. Serene and meditative atmosphere. Generous negative space, the bud placed in the center safe zone. Photographic quality, NO text, no watermarks, no logo.
 ```
 
 **文化账号，文章关于"文字的温度"**：
 ```
-A 2.35:1 horizontal image for a WeChat article cover. Traditional Chinese aesthetic, subtle ink wash texture blending with warm photography. Ink black, warm brown, and celadon tones. An ancient calligraphy brush resting on handmade paper, a single character partially written, warm golden light from a window. Contemplative and elegant atmosphere. Shallow depth of field, paper texture in foreground. Photographic quality, no text overlays, no watermarks, no logo.
+A 2.35:1 horizontal image for a WeChat article cover. Traditional Chinese aesthetic, subtle ink wash texture blending with warm photography. Cover hook: words can still carry warmth. Ink black, warm brown, and celadon tones. An ancient calligraphy brush resting on handmade paper, a single character partially written, warm golden light from a window. Thumbnail strategy: one large brush tip and glowing paper texture, high contrast against the background. Avoid generic visuals: no empty study room, no random book stack. Contemplative and elegant atmosphere. Shallow depth of field, paper texture in foreground. Photographic quality, NO text, no watermarks, no logo.
 ```
 
 ---
@@ -119,6 +124,8 @@ A 2.35:1 horizontal image for a WeChat article cover. Traditional Chinese aesthe
 **必须**：
 - 摄影级或绘画级质感，与账号领域匹配
 - 与文章内容有视觉隐喻关联（不是通用素材图）
+- 与最终标题、digest 前半句强化同一个钩子
+- 主体大、对比强，缩成 200px 仍可读
 - 温暖/积极的情感基调（适合大多数中文内容账号）
 - **2.35:1 横版（900×383px 标准）**：生成用 `size="21:9"`（Volcengine 支持的最近比），服务端按 `platform=article + image_type=cover` 精确中心裁剪到 900×383 并像素断言——微信零裁剪，告别「需要手动裁剪的纯图」
 - **主体居中安全区**：主体落在画面中央 ≈1:1 区域，转发卡 1:1 自动裁切后仍完整；避开底部 20%（微信会在底部叠加文章标题）
@@ -127,9 +134,10 @@ A 2.35:1 horizontal image for a WeChat article cover. Traditional Chinese aesthe
 - 3D 渲染 / 合成感
 - 卡通 / 动漫 / 剪纸风格
 - 暗黑 / 恐怖 / 压抑意象（除非账号定位明确要求）
-- 文字叠层 / 水印 / logo 占位
+- 违背受控文字策略的文字叠层 / 水印 / logo 占位
 - 纯色 / 渐变背景（无内容实体）
 - 对称 PPT 式布局
+- 通用养生水墨背景、无主体山水、只放茶盏/莲花/药材摆拍导致每篇看起来一样
 
 ---
 
@@ -139,10 +147,12 @@ A 2.35:1 horizontal image for a WeChat article cover. Traditional Chinese aesthe
 
 - **比例**：公众号 `2.35:1`（900×383px 标准）
 - **账号视觉风格来源**：`$VISUAL_STYLE` / `$COLOR_PALETTE` / `$MOOD`，以及三维分析依据（账号定位 / 内容主题 / 目标受众 各自如何决定视觉方向）
-- **文章核心隐喻**：封面要表达的文章最强视觉隐喻
+- **标题协同字段**：`final_title`、`digest_hook`、`cover_hook`
+- **文章核心隐喻**：`visual_metaphor`，即封面要表达的文章最强视觉隐喻
+- **缩略图与反同质化**：`thumbnail_strategy`、`anti_generic_constraints`
 - **`required_entities`**：封面必须出现的具体物体列表（vision 校验依据）
 - **最终 prompt**：实际传给 `generate_image` 的完整 prompt
-- **vision 校验**：校验 prompt + 结果（passed / score / missing_entities）
+- **封面质量评分卡**：`visual_quality_scorecard` + 校验 prompt + 结果（passed / score / missing_entities）
 
 封面图**必须 vision 校验通过后**才可作为发布草稿的 `thumb_media_id`；未通过则重试或请求用户协助，不得用未通过 vision 的封面发布。
 

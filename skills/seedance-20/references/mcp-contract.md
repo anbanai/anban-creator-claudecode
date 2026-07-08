@@ -124,6 +124,9 @@ Returns:
 - `video_understanding.usage`: token counts from the native video-understanding model
 - `video_understanding.credits_charged`: final charged credits after tier/user multipliers
 - `video_understanding.visual_summary`
+- `video_understanding.surface_facts`: people, visuals, actions, expressions, scenes, camera, and rhythm observed across the whole video
+- `video_understanding.deep_intent`: creator intent, latent subtext, emotional arc, audience expectation, joke/twist mechanism, metaphor or social context
+- `video_understanding.business_intent`: trust-building cues, pain points, conversion triggers, and CTA subtext
 - `video_understanding.timeline`
 - `video_understanding.subjects`
 - `video_understanding.people`
@@ -135,16 +138,20 @@ Returns:
 - `video_understanding.must_keep`
 - `video_understanding.can_change`
 - `video_understanding.must_not_change`
+- `video_understanding.must_keep_meaning`: meaning, punchline, emotional promise, or business subtext that must survive rewriting
+- `video_understanding.can_adapt_meaning`
+- `video_understanding.must_not_break_meaning`
 - `video_understanding.planning_hints`
 - `task_file` / `task_file_id` when `task_id` is supplied
 
-The model is not hardcoded by the skill. The server uses `model_routes.video_understanding`, resolved through `model_providers`, with `require_native_video=true` and `require_usage=true`. Deployments may configure a video-capable large model such as Kimi through the OpenAI-compatible SDK path. If the provider cannot understand the whole video natively, the tool fails immediately. Never fall back to frame sampling, screenshot analysis, image understanding, transcript/audio-only analysis, or marketing copy when a visual reference video exists.
+The model is not hardcoded by the skill. The server uses `model_routes.video_understanding`, resolved through `model_providers`, with `require_native_video=true` and `require_usage=true`. Deployments may configure a video-capable large model such as Kimi through the OpenAI-compatible SDK path. If the provider cannot understand the whole video natively, or if the response lacks `deep_intent` / `must_keep_meaning`, the tool fails immediately. Never fall back to frame sampling, screenshot analysis, image understanding, transcript/audio-only analysis, or marketing copy when a visual reference video exists.
 
 Save or read the registered `video-understanding.json`. It is a planning source of truth:
-- `reference-anchors.md` must cite must_keep / can_change / must_not_change
-- `script.md` must use rhythm and creative function, not merely copied text
-- `shot-plan.md` must use visual, action, expression, scene, and camera facts
-- `quality-review.md` must check the generated result against these anchors
+- `reference-anchors.md` must cite must_keep / can_change / must_not_change and must_keep_meaning / can_adapt_meaning / must_not_break_meaning
+- `reference-timeline.json` must preserve deep_intent, emotional arc, joke/reversal mechanism, metaphor, social context, and business intent, not just visible beats
+- `script.md` must use rhythm, creative function, latent subtext, and audience expectation, not merely copied text
+- `shot-plan.md` must use visual, action, expression, scene, camera, and semantic intention facts
+- `quality-review.md` must check the generated result against both surface anchors and deep meaning anchors
 
 ## validate_video_generation_params
 

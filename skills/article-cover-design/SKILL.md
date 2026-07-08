@@ -1,6 +1,6 @@
 ---
 name: article-cover-design
-description: 'Use when 微信公众号封面图（公众号头图）专用设计——硬编码官方比例 900×383（2.35:1），中心安全区构图保证转发卡 1:1 主体完整，受控文字策略（按真实场景决定是否带短文字），从文章核心隐喻推导视觉概念，生成后 vision 6 维评分卡把关。用户提到「封面」「公众号封面」「头图」「cover」「封面设计」「封面图」时，或 article 流水线到达封面生成步骤时使用。'
+description: 'Use when 微信公众号封面图（公众号头图）专用设计——硬编码官方比例 900×383（2.35:1），中心安全区构图保证转发卡 1:1 主体完整，受控文字策略（按真实场景决定是否带短文字），从文章核心隐喻和标题钩子推导视觉概念，生成后用封面质量评分卡把关。用户提到「封面」「公众号封面」「头图」「cover」「封面设计」「封面图」时，或 article 流水线到达封面生成步骤时使用。'
 ---
 
 # 公众号封面图设计（效果与用途保障方法论）
@@ -53,11 +53,24 @@ description: 'Use when 微信公众号封面图（公众号头图）专用设计
 | 转发卡 1:1 主体完整 | 主体置于**居中 1:1 安全区**（≈383×383），避开底部 20% | 评分卡 `safe_zone_centered` |
 | 避免低质文字干扰 | 按受控文字策略：需要时只放短文字；不需要时无字；始终禁止乱码/水印/logo/密集排版 | 评分卡 `text_policy_ok` + `hard_no_watermark_logo`（硬维度） |
 | 缩略图 0.5 秒抓眼球（CTR） | 主体大、高对比、强焦点 | 评分卡 `subject_thumbnail_readability` |
-| 一眼传达主题 | 视觉概念 = 文章核心论点/最强隐喻的具象化 | 评分卡 `content_metaphor_relevance` + `required_entities` |
+| 一眼传达主题 | 视觉概念 = 标题钩子 + 文章核心论点/最强隐喻的具象化 | 评分卡 `title_cover_digest_alignment` + `content_metaphor_relevance` + `required_entities` |
 | 品牌调性统一 | 视觉风格 = `get_project_profile` 的 `visual_style`（配置优先） | 评分卡 `style_consistency` |
 | 视觉质感达标 | 摄影级/绘画级；禁 3D 合成/卡通/纯色底/对称 PPT | 评分卡 `composition_quality` |
 
 ---
+
+## 封面质量闸门
+
+生成前先从 `$DIR/seo-result.md`、digest 和 `$DIR/04-article-final.md` 提炼并写入 `cover-prompt.md`：
+
+- `final_title`：最终标题
+- `digest_hook`：摘要前半句的利益点/悬念/反差
+- `cover_hook`：封面唯一要放大的点击钩子
+- `visual_metaphor`：能被画出来的核心隐喻
+- `thumbnail_strategy`：缩到 200px 时靠什么被看见（主体大小、对比、色块、短文字）
+- `anti_generic_constraints`：明确禁止的泛化画面，例如"通用养生水墨背景"、无主体山水、只放茶盏/莲花/药材摆拍、与标题无关的人像
+
+封面必须先服务 `cover_hook`，再服务品牌风格。品牌统一不等于每篇都用同一张浅色水墨背景；同一批文章中，主体、隐喻、构图或色彩重心必须能区分。
 
 ## 受控文字策略
 
@@ -73,19 +86,21 @@ description: 'Use when 微信公众号封面图（公众号头图）专用设计
 
 封面**必须从文章内容推导**，不是随机图：
 
-1. 读 `$DIR/04-article-final.md`，提取**核心论点**与**最强视觉隐喻**（文章已有的比喻/意象/案例/场景）。
+1. 读 `$DIR/seo-result.md` 和 `$DIR/04-article-final.md`，提取**最终标题**、digest 前半句、**核心论点**与**最强视觉隐喻**（文章已有的比喻/意象/案例/场景）。
 2. 取视觉锚点 `$VISUAL_STYLE`：
    - `get_project_profile` 的 `visual_style` 非空 → 以它为**权威锚点**，三维分析只做**细化**（配色/情绪/构图），不得偏离。
    - 为空 → 按账号定位 + 内容主题 + 受众三维分析兜底（方向见下方「三维方向参考」）。
    - **绝不**从 writer YAML 推视觉（writer 只管文字；切断 dan-koe→维多利亚版画 bug）。
-3. 合成封面概念：`{VISUAL_STYLE} × {COLOR_PALETTE} × {内容隐喻具象} × {宽银幕叙事构图 + 主体居中安全区}`。
-4. 提炼 `required_entities`（封面必须出现的具体物体，vision 校验依据）。
+3. 合成封面概念：`{cover_hook} × {VISUAL_STYLE} × {COLOR_PALETTE} × {内容隐喻具象} × {thumbnail_strategy} × {宽银幕叙事构图 + 主体居中安全区}`。
+4. 提炼 `required_entities`（封面必须出现的具体物体，vision 校验依据）和 `anti_generic_constraints`（必须避免的同质化画面）。
 
 ## 第二步：构建封面 prompt
 
 ```
 A cinematic 2.35:1 wide banner for a WeChat article cover. {VISUAL_STYLE}.
-{COLOR_PALETTE}. {CONCRETE_METAPHOR_FROM_ARTICLE — 具象化的核心隐喻}.
+Cover hook: {COVER_HOOK}. {COLOR_PALETTE}.
+{CONCRETE_METAPHOR_FROM_ARTICLE — 具象化的核心隐喻}.
+Thumbnail strategy: {THUMBNAIL_STRATEGY}. Avoid generic visuals: {ANTI_GENERIC_CONSTRAINTS}.
 {MOOD_TONE}. Main subject centered within the middle safe zone (works for both
 the 2.35:1 hero and the 1:1 forward-card crop), large and high-contrast for
 thumbnail readability, generous negative space, avoid the bottom 20% (WeChat
@@ -106,10 +121,29 @@ NO logo.
 
 ```
 这是文章《$ARTICLE_TITLE》的公众号封面（将用于订阅号列表 2.35:1 + 转发卡 1:1）。
+digest 钩子：$DIGEST_HOOK；封面钩子：$COVER_HOOK。
 文章核心论点：$CORE_THESIS；核心隐喻：$METAPHOR；账号视觉风格锚点：$VISUAL_STYLE。
+反同质化约束：$ANTI_GENERIC_CONSTRAINTS。
 请按 JSON 评分（软维度 high/medium/low；hard_* 为硬性布尔）：
 {
-  "subject_thumbnail_readability": "...",   // 主体大且高对比，缩成 200px 列表缩略图能否 0.5s 抓住？
+  "final_title": "$ARTICLE_TITLE",
+  "digest_hook": "$DIGEST_HOOK",
+  "cover_hook": "$COVER_HOOK",
+  "visual_metaphor": "$METAPHOR",
+  "thumbnail_strategy": "$THUMBNAIL_STRATEGY",
+  "anti_generic_constraints": "$ANTI_GENERIC_CONSTRAINTS",
+  "visual_quality_scorecard": {
+    "title_cover_digest_alignment": "...", // 标题、封面、digest 是否强化同一个利益点/悬念？
+    "thumbnail_readability": "...",        // 缩成 200px 时主体是否仍大、清楚、高对比？
+    "contrast_focus": "...",               // 主体与背景是否有明确明度/色彩/轮廓对比？
+    "specificity_not_generic": "...",      // 是否不是通用养生水墨背景/无主体山水/摆拍素材？
+    "series_distinctiveness": "...",       // 与同批文章是否能凭主体/隐喻/构图区分？
+    "safe_zone_centered": "...",           // 主体是否落在居中 1:1 安全区？
+    "text_policy_ok": true/false,          // 文字策略是否正确：短、清晰、准确或无字
+    "hard_no_forbidden_cues": true/false,  // 无水印/logo/二维码/联系方式/外链 URL/扫码提示/加群/加微信
+    "overall_pass": true/false             // 所有硬项 true，且 alignment/readability/contrast/specificity/distinctiveness 不低于 medium
+  },
+  "subject_thumbnail_readability": "...",   // 兼容旧字段：主体大且高对比，缩成 200px 列表缩略图能否 0.5s 抓住？
   "safe_zone_centered": "...",             // 主体是否落在居中 1:1 安全区？转发卡裁切后是否完整？
   "content_metaphor_relevance": "...",     // 与文章核心论点/隐喻的语义相关度
   "style_consistency": "...",              // 是否与账号视觉风格锚点一致
@@ -118,7 +152,7 @@ NO logo.
   "hard_no_watermark_logo": true/false,  // 硬性：无水印/logo/密集排版
   "hard_aspect_ok": true/false,            // 硬性：宽银幕横版（非竖图/方图错比）
   "missing_or_forbidden": "...",           // 缺失实体或违禁元素（文字水印、二维码、联系方式、外链 URL、扫码提示、加群、加微信等）
-  "overall_pass": true/false,              // text_policy_ok=true、所有 hard_* 为 true 且 4 个软维度≥medium 才 true
+  "overall_pass": true/false,              // visual_quality_scorecard.overall_pass=true 且 text_policy_ok=true、所有 hard_* 为 true
   "sharper_prompt_hint": "..."             // 不通过时的锐化建议
 }
 ```
@@ -151,6 +185,7 @@ generate_image(
 - `passed=false` → 按 `notes` / `sharper_prompt_hint` 锐化 prompt 重试，**最多 3 次**（共 3 次尝试）。锐化策略：
   - 在 prompt 开头加 `MAIN SUBJECT: <具体物体>`，强化主体权重；
   - 把隐喻改得更具体（材质/颜色/方位/数量）；
+  - 若失败原因是"通用养生水墨背景"、低对比、标题/封面/digest 不协同或系列辨识度低，必须先改 `cover_hook` / `visual_metaphor` / `thumbnail_strategy`，不要只换风格形容词；
   - 收紧「主体居中安全区 + 避开底部 20%」；
   - 按受控文字策略修正：文字乱码/过密则改为无字或缩短为精确短词；始终强化 `NO watermark, NO logo`。
 - 3 次仍不过 → **暂停并请求用户协助**，**不得**用未通过 vision 的封面发布。
@@ -161,10 +196,12 @@ generate_image(
 
 - **比例**：公众号 2.35:1（900×383px 标准；服务端强制裁剪）。
 - **账号视觉风格来源**：`$VISUAL_STYLE` / `$COLOR_PALETTE` / `$MOOD` + 三维分析依据（账号定位/内容主题/受众），或配置锚点来源（`visual_style_source`）。
-- **文章核心隐喻**：封面要表达的最强视觉隐喻。
+- **标题协同字段**：`final_title`、`digest_hook`、`cover_hook`。
+- **文章核心隐喻**：`visual_metaphor`，即封面要表达的最强视觉隐喻。
+- **缩略图策略与反同质化约束**：`thumbnail_strategy`、`anti_generic_constraints`。
 - **`required_entities`**：封面必须出现的具体物体列表。
 - **最终 prompt**：实际传给 `generate_image` 的完整 prompt。
-- **vision 6 维评分卡**：评分 prompt + 结果（passed/score/各维度/missing_or_forbidden）。
+- **封面质量评分卡**：`visual_quality_scorecard` + vision prompt + 结果（passed/score/各维度/missing_or_forbidden）。
 
 **产出**：`$DIR/cover.png`、`media_id`、`$COVER_CDN_URL`、`$DIR/cover-prompt.md`。
 
