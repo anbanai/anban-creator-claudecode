@@ -22,7 +22,7 @@ For progressive examples and compatibility cases, read [references/examples.md](
 
 Do not maintain separate Dreamina-only workflow logic here. Do not copy the full workflow into this alias.
 
-When submitting feedback or writing manifests, use `agent_name="video"`. `dreamina-video` and `seedance-20` are skills/workflows, not the unified executing agent identity.
+When submitting feedback or writing manifests, use `agent_name="videocreator"`. `dreamina-video` and `seedance-20` are skills/workflows, not the executing agent identity.
 
 ## Reference Map
 

@@ -35,7 +35,7 @@ Returns:
 - `video.visual_anchor_generation`: capability hints for generated visual anchors, including `available`, `default_image_type`, `max_auto_anchors`, `verify_with_vision`, `register_tool`, and fallback guidance
 - `video.pricing.credits_per_cny`: billing conversion from real CNY model cost to base credits
 - `video.pricing.tier_multiplier`: current membership multiplier applied after base cost
-- `video.pricing.base_task_fee_rule`: video task/plan creation charges only `credits.task_costs.video` as the base service fee
+- `video.pricing.base_task_fee_rule`: videocreator task/plan creation charges only `credits.task_costs.videocreator` as the base service fee
 - `video.pricing.operation_billing_rule`: `create_video_generation_job` and `create_video_generation_task` deduct `video_gen` operation credits independently when the provider job is submitted
 
 Do not hardcode a default model, resolution, duration, watermark, or fixed credit number in the skill. Project profile is the source of truth; plan/task overrides are snapshots and must not rewrite project defaults unless the user explicitly asks to save them.

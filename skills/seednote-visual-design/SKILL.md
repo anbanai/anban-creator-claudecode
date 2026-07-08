@@ -47,6 +47,21 @@ description: 'Use when creating seednote visual content including covers, conten
 
 ---
 
+## Seednote 视觉方法论
+
+本 skill 的目标是把内容蒸馏成大模型可执行的高质量图像指令，再通过 `generate_image` MCP 生成图片。流程不追求“凑齐文件”，而是让每张图都有明确的信息职责和审美秩序。
+
+1. **内容蒸馏**：从 `$DIR/content.md` 提取主题、卖点、情绪、证据、关键短句、目标受众和每页承载的信息密度。
+2. **视觉策略**：先确定统一色彩、画面主体、标题层级、信息密度、镜头/场景方向和内容页节奏，再写入 `$DIR/image-plan.md`。
+3. **社交图文视觉原则**：用 `editorial 信息层级` 安排主标题、辅助信息、证据点和视觉主体；用 `Swiss/magazine 秩序感` 控制留白、对齐、分组和对比；用 `图文节奏` 保证封面负责点击，内容图负责理解，尾图负责收束。
+4. **Prompt 蓝图**：每张图都明确角色、可见文案、视觉主体、构图层级、风格延续和验收标准；prompt 只描述要得到的画面效果和内容关系。
+5. **生成记录**：每次调用 `generate_image` 后，把实际 prompt、`provider`、`model`、`output_path`、返回字段和修订信息追加到 `$DIR/image-prompts.md`。
+6. **质量复盘**：逐图写 `$DIR/image-review.md`，检查主题相关度、文字准确性、移动端可读性、风格一致性、文件可访问性和 `seednote_image_mode` 一致性。
+
+如果图片 API 返回 `error` 或超时，记录 `provider`、`model`、`output_path`、`error` 和`下一步建议` 到 `$DIR/image-review.md`，并把图片阶段作为可恢复失败态报告；修复模型、额度、网络或配置后，从图片生成阶段继续。
+
+---
+
 ## 视觉风格设计原则
 
 风格无固定预设，每次根据账号定位和内容动态设计：
@@ -96,7 +111,7 @@ description: 'Use when creating seednote visual content including covers, conten
 - 改写模式信息（如适用：`style-only` / `medium` / `tight`）
 - `$DIR/viral-template.json`（仅复刻模式，如适用）：读取 `cover_template`、`do_not_copy`、`recommended_clone_depth`
 
-### 步骤 1：内容分析
+### 步骤 1：内容蒸馏
 
 读取 `content.md`，提取：
 - 核心主题和内容类型（干货/情感/测评/教程/...）
@@ -104,6 +119,7 @@ description: 'Use when creating seednote visual content including covers, conten
 - 正文总字数和段落数
 - 目标受众和内容调性
 - 用户锁定字段：若 `content.md` 标明用户指定封面标题、正文或标签，图片文案必须优先使用这些字段
+- 可直接入图的关键短句、证据点、情绪钩子和每页信息密度
 
 ### 步骤 2：信息点提取与分组
 
@@ -114,7 +130,7 @@ description: 'Use when creating seednote visual content including covers, conten
 - 标记每组的关键词和推荐布局类型（参考 [references/content.md](references/content.md) 的 6 种布局模式）
 - 优先级排序：最重要的信息 → 首张内容图
 
-### 步骤 3：图片构成与布局选择
+### 步骤 3：视觉策略与布局选择
 
 **图片构成严格按结构化运行控制 `seednote_image_mode` 执行**。缺失时按 `cover_content`。四种组合：
 
@@ -131,7 +147,9 @@ description: 'Use when creating seednote visual content including covers, conten
 
 **image-plan.md 必须在「计划图片数量」字段写入实际生成的总张数**（1~5），机械闸门按此校验。
 
-### 步骤 4：生成 image-plan.md
+每张图在规划阶段先定义视觉策略：统一色彩、画面主体、标题层级、构图层级、信息密度和图文节奏。社交图文视觉原则用于组织画面：`editorial 信息层级` 让标题、辅助信息、证据点和主体互不抢戏；`Swiss/magazine 秩序感` 用留白、对齐、分组和对比提高移动端可读性；`图文节奏` 让封面、内容图和尾图各自完成不同传播任务。
+
+### 步骤 4：生成 image-plan.md 与 Prompt 蓝图
 
 按以下模板生成 `$DIR/image-plan.md`：
 
@@ -188,6 +206,7 @@ description: 'Use when creating seednote visual content including covers, conten
 2. **内容图**：使用 [references/content.md](references/content.md) 的 Prompt 模板逐张生成（1~3 张），每张独立调用 `generate_image`（不传 ref_image_path，纯文生图），传入对应分组的信息点和布局，并在 prompt 中显式写明本页独立场景/视觉主体；通过共享「风格延续：{style}」文本块保持调性统一，多张内容图之间保证视觉多样性（不同实景背景 / 构图角度）
 3. **尾图（仅当 `seednote_image_mode` 包含尾图时）**：使用 [references/tail.md](references/tail.md) 的 Prompt 模板单独生成；不含尾图则跳过此步，不调用 generate_image 生成尾图
 4. **Prompt 备份**：每次调用 `generate_image` 后，必须把实际 prompt、`image_type`、`size`、`output_path`、`ref_image_path`、返回的 `provider`、`model`、`response_type`、`revised_prompt`、`output_mime` 追加写入 `$DIR/image-prompts.md`
+5. **API 失败记录**：如果 `generate_image` 返回 `error` 或超时，立即在 `$DIR/image-review.md` 记录 `provider`、`model`、`output_path`、`error` 和`下一步建议`，并报告可恢复失败态
 
 ### 步骤 6：质量验证
 
