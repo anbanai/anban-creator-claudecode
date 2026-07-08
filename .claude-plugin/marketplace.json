@@ -10,7 +10,7 @@
       "name": "anban",
       "source": "./",
       "displayName": "Anban Creator",
-      "version": "2.10.48",
+      "version": "2.10.50",
       "description": "Anban Creator plugin for WeChat, Seednote, videocreator, videoeditor, ecommerce, and agent-assisted publishing workflows.",
       "author": {
         "name": "anbanai"

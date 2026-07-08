@@ -37,7 +37,6 @@ maxTurns: 300 # 公众号 10 步 + 7 图 + HTML + 草稿，实测需 120-175 tur
 | **封面质量闸门** | 封面生成前提炼 `cover_hook` / `visual_metaphor` / `thumbnail_strategy` / `anti_generic_constraints`，生成后把 `visual_quality_scorecard` 写入 `cover-prompt.md`；`final-review.md` 的 `cover_quality_gate` 与 `viral-audit.md` 必须读取该结果 |
 | **HTML 渲染** | 用 `render_template`（带 `layout_plan`）确定性渲染，不再用 `convert_markdown` 自由发挥 |
 | **SEO 优化** | 自动提取关键词，生成标题/摘要/标签，结果用于草稿发布 |
-| **封面质量门禁** | `cover_quality_gate` 必须把 `final_title`、digest、`cover_hook`、`visual_metaphor`、`thumbnail_strategy` 和 `anti_generic_constraints` 写入 `cover-prompt.md`，并在 `final-review.md` / `viral-audit.md` 复核标题-封面-摘要协同 |
 | **去 AI 味** | 用 `humanizer` skill 扫描 33 类 AI 写作模式并按 draft→audit→final 改写（不改原意） |
 | **爆款互动** | 用 `article-viral-strategy` skill 在选题/写作/标题/验收四个环节注入完读率+转发率+收藏率+评论率四大驱动力（合规前提下，全程自动） |
 | **文章预检** | 用 SKILL/Agent 自审导流风险、内容完整性、标题摘要一致性和互动合规；审阅未通过即待调整，自动修订后复审 |
@@ -252,7 +251,7 @@ using the article-visual-design skill 完成以下五个子步骤。详细规范
 
 > **封面开关守卫**：当 article_image_mode 为 `content_only` 或 `text_only`（见「图片生成模式」），**整个 6d 跳过**——不调 `generate_image`、不写 `cover.png`/`cover-prompt.md`、不取 `$COVER_MEDIA_ID`/`$COVER_CDN_URL`。6c 三维风格分析与 6b 节奏规划仍执行（hero slot 的 `image_url=null`）。封面关时 `$COVER_MEDIA_ID` 视为不存在，步骤 7/10 不得引用它。
 
-**封面设计已独立成稿——完整方法论（官方比例 900×383/2.35:1、中心安全区、受控文字策略、概念推导、6 维评分卡、迭代闭环、cover-prompt.md 审计）见 `article-cover-design` skill**。下方为本步骤关键调用要点。
+**封面设计已独立成稿——完整方法论（官方比例 900×383/2.35:1、中心安全区、受控文字策略、概念推导、封面质量评分卡、迭代闭环、cover-prompt.md 审计）见 `article-cover-design` skill**。下方为本步骤关键调用要点。
 
 基于 6c 的风格分析与文章核心隐喻构建封面 prompt（**主体居中安全区、避开底部 20%、按受控文字策略决定是否带短文字**）：
 
@@ -270,7 +269,7 @@ using the article-visual-design skill 完成以下五个子步骤。详细规范
      task_id=$TASK_ID,
      size="21:9",  # 生成提示比；服务端按 platform=article+cover 精确裁到 900×383（微信零裁剪）
      verify_with_vision=true,
-     verification_prompt=<6 维评分卡>,
+     verification_prompt=<公众号封面质量评分卡>,
      upload_to_cdn=true
    )
    ```
@@ -321,7 +320,7 @@ generate_image(
 )
 ```
 
-**关键**：公众号正文配图不依赖项目级/任务级 image ratio；每次 `generate_image` 必须显式传 `size`（section_opener/信息图用 `size="4:3"`，inline_detail 用 `size="1:1"`）。`ref_image_path` 在**封面开关开启时**始终用 `$DIR/cover.png`（**风格锚点/参考输入，不是把封面图当作正文图复用**）；**封面关·配图开**时不传 `ref_image_path`（或链到首张已生成图），**严禁**指向不存在的 `$DIR/cover.png`。每张正文图的 `<img src>` 必须是**该图独立生成并上 CDN 后得到的 `wechat_url`**——**严禁**把封面 `$COVER_CDN_URL` 直接填入正文任何 `<img src>`，也**严禁**多张正文图共用同一个 `wechat_url`；否则会触发服务端"正文全图相同"硬拦截导致发布失败。**不再有独立的批量 `upload_image` 阶段**——每张图生成的瞬间即上 CDN。
+**关键**：公众号正文配图不依赖项目级/任务级 image ratio；每次 `generate_image` 必须显式传 `size`（section_opener/信息图用 `size="4:3"`，inline_detail 用 `size="1:1"`）。`ref_image_path` 在**封面开关开启时**始终用 `$DIR/cover.png`（**只传递"风格语言"，不是把封面图当作正文图复用，也不得复刻封面主体/构图/核心物件**）；**封面关·配图开**时不传 `ref_image_path`（或链到首张已生成图），**严禁**指向不存在的 `$DIR/cover.png`。每张正文图的 `<img src>` 必须是**该图独立生成并上 CDN 后得到的 `wechat_url`**——**严禁**把封面 `$COVER_CDN_URL` 直接填入正文任何 `<img src>`，也**严禁**多张正文图共用同一个 `wechat_url`；否则会触发服务端"正文全图相同"硬拦截导致发布失败。**不再有独立的批量 `upload_image` 阶段**——每张图生成的瞬间即上 CDN。
 
 ##### 7b：vision 校验与失败重试
 
@@ -361,8 +360,8 @@ generate_image(
 - [ ] **节奏完整性**：`visual-rhythm-plan.md` 中每个 `##` 都映射到一个 slot
 - [ ] **模板一致性**：所选模板的 rhythm 规则被遵守（listicle 的 inline_detail 必须为空、tutorial 的 footer 必填等）
 - [ ] **文件完整性**：所有图片文件存在且可访问
-- [ ] **风格一致性**：`images.json` 中所有内容图 `ref_image_path="$DIR/cover.png"`
-- [ ] **视觉多样性**：3+ 配图使用 3+ 种不同 `composition_type`（`listicle` 模板豁免）
+- [ ] **风格一致性**：`images.json` 中所有内容图 `ref_image_path="$DIR/cover.png"`（仅作风格语言参考，不得复刻封面主体）
+- [ ] **视觉多样性/反同质化**：3+ 配图使用 3+ 种不同 `composition_type`（`listicle` 模板豁免）；不得连续 3 张正文图复用同主体/同远近景/同色调重心
 - [ ] **Vision 校验通过率**：至少 80% 的内容图 `verification.passed=true`
 - [ ] **审计完整性**：`images.json` 每条含 `visual_brief` / `required_entities` / `must_match_excerpts` / `verification` / `slot_id` / `section_index` / `wechat_url` / `media_id`
 - [ ] **CDN 持久化**：`images.json` 每条都有非空 `wechat_url`（即每张图已上微信 CDN）；缺 `wechat_url` 的 slot 必须补 `generate_image(upload_to_cdn=true)` 或 `upload_image` 重传
@@ -457,12 +456,13 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 - **模板驱动节奏**（硬性要求）：从 `claudecode/templates/article/*.yaml` 加载模板，不得临时编造节奏
 - **节奏规划完整**（硬性要求）：`visual-rhythm-plan.md` 存在且每个 `##` 都映射到 slot
 - 封面图必须成功生成并上传（硬性要求，**仅封面开关开启时**）
+- **封面质量闸门**（硬性要求，**仅封面开关开启时**）：`cover-prompt.md` 必须含 `final_title`、`digest_hook`、`cover_hook`、`visual_metaphor`、`thumbnail_strategy`、`anti_generic_constraints`、`visual_quality_scorecard`，且 `visual_quality_scorecard.overall_pass=true`
 - **账号风格匹配**（硬性要求）：图片视觉风格与账号定位匹配，不使用 writer YAML 的 cover_style/cover_prompt（三维分析本身不受开关影响）
 - **配图内容贴切**（硬性要求，**仅配图开关开启时**）：`image-plan.md` 每张图含 `visual_brief` + `required_entities` + `must_match_excerpts`，prompt 必须引用章节具体物体/比喻/案例（非通用描述）
 - **Vision 校验闭环**（硬性要求，**仅配图开关开启时**）：每张内容图经过 `analyze_image`（或 `generate_image` 带 `verify_with_vision`）校验；至少 80% `verification.passed=true`
-- **参考链一致**（硬性要求，**仅封面+配图均开启时**）：所有内容配图使用 `ref_image_path="$DIR/cover.png"` 保持视觉一致（封面关·配图开时不传或链首图）
+- **参考链一致**（硬性要求，**仅封面+配图均开启时**）：所有内容配图使用 `ref_image_path="$DIR/cover.png"` 传递风格语言，但不得复刻封面主体/构图/核心物件（封面关·配图开时不传或链首图）
 - **图文并茂**（硬性要求，**仅配图开关开启时**）：每个 `##` 章节至少一张配图（按模板 rhythm 规则）
-- **视觉多样性**（硬性要求，**仅配图开关开启时**）：3 张以上配图时使用 3 种以上不同构图类型（`listicle` 模板可豁免）
+- **视觉多样性**（硬性要求，**仅配图开关开启时**）：3 张以上配图时使用 3 种以上不同构图类型（`listicle` 模板可豁免），且不得连续 3 张同主体/同远近景/同色调重心
 - **结构化渲染**（硬性要求）：HTML 由 `render_template`（带 `layout_plan`）生成，不得用 `convert_markdown` 自由发挥
 - **发布前总验收**（硬性要求）：`final-review.md` 全部通过后才能创建草稿
 - **爆款策略锚定**（硬性要求）：`context-brief.md` 含「爆款策略」段（社交货币类型/核心情绪/转发潜力/收藏潜力/时效借势）
@@ -517,15 +517,15 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 - [ ] **`visual-rhythm-plan.md` 存在**，记录所选模板、slot 分配表、`layout_plan` JSON
 - [ ] 封面图 `$DIR/cover.png` 存在且可访问，视觉风格与账号定位匹配，**vision 校验通过**
 - [ ] 封面图已上传，获得有效 `media_id`
-- [ ] `$DIR/cover-prompt.md` 存在，含 `2.35:1` 比例、三维风格来源、核心隐喻、`required_entities`、vision 校验结果
+- [ ] `$DIR/cover-prompt.md` 存在，含 `2.35:1` 比例、三维风格来源、`final_title`、`digest_hook`、`cover_hook`、`visual_metaphor`、`thumbnail_strategy`、`anti_generic_constraints`、`required_entities`、`visual_quality_scorecard`、vision 校验结果
 - [ ] `image-plan.md` 存在，每张图含 `slot_id` + `section_index` + `chapter_title` + `core_point` + `composition_type` + `source_excerpt` + **`visual_brief` + `required_entities` + `must_match_excerpts`** + `prompt_strategy`
 - [ ] `images.json` 每条记录含 `slot_id` + `section_index` + `chapter_title` + `composition_type` + **`visual_brief` + `required_entities` + `must_match_excerpts`** + `prompt` + **`verification`** + `ref_image_path` + `image_type` + `quality_status`
-- [ ] 封面+配图均开启时，所有内容配图使用了 `ref_image_path="$DIR/cover.png"` 生成并记录；封面关·配图开时所有内容图未指向不存在的 `$DIR/cover.png`
+- [ ] 封面+配图均开启时，所有内容配图使用了 `ref_image_path="$DIR/cover.png"` 生成并记录，且只继承风格语言、不复刻封面主体；封面关·配图开时所有内容图未指向不存在的 `$DIR/cover.png`
 - [ ] 所有正文内容图的 `wechat_url` 两两不同，且无一张复用封面 `$COVER_CDN_URL`
 - [ ] **至少 80% 的内容图 `verification.passed=true`**
 - [ ] `04-article-final.md` 中每个 `##` 章节都有 CDN 图片链接（按模板 rhythm 规则）
 - [ ] 每个配图提示词包含对应章节的具体物体/比喻/案例（非通用描述）
-- [ ] 3 张以上配图使用了 3 种以上不同构图类型（`listicle` 模板豁免）
+- [ ] 3 张以上配图使用了 3 种以上不同构图类型（`listicle` 模板豁免），且无连续 3 张同主体/同远近景/同色调重心
 - [ ] 所有章节配图生成并上传成功
 - [ ] `images.json` 包含所有配图的 CDN 链接
 - [ ] **`05-article.html` 由 `render_template` 生成**，`final-review.md` 中记录 `render_audit`
@@ -558,19 +558,19 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 - [ ] 章节缺少配图（且模板要求该 slot 必填）→ 需在步骤 7 补充
 - [ ] 封面视觉风格与账号定位不匹配 → 检查三维分析是否正确执行
 - [ ] 封面 prompt 参考了 writer YAML 的 cover_prompt → 应从零构建
-- [ ] **封面 vision 校验未通过** → 重试一次，仍失败请求用户协助
+- [ ] **封面质量评分卡未通过**（`visual_quality_scorecard.overall_pass=false`，或低对比、泛水墨模板感、标题/封面/digest 不协同、系列辨识度低）→ 先改 `cover_hook` / `visual_metaphor` / `thumbnail_strategy` 再重试
 - [ ] `image-plan.md` 缺失或字段不完整 → 步骤 6e 必须按新 schema 创建
 - [ ] **`visual_brief` 是抽象描述**（"商务场景"、"科技感"）→ 重写为具体画面
 - [ ] **`required_entities` 是抽象词**（"美感"、"氛围"）→ 重写为可识别的物体
 - [ ] **`must_match_excerpts` 是论点而非原句** → 从章节中摘真实段落
-- [ ] 封面+配图均开启时，内容配图未使用 `ref_image_path="$DIR/cover.png"` → 风格不一致风险；封面关·配图开时，内容配图指向不存在的 `$DIR/cover.png` → 必须移除或链到首张已生成图
+- [ ] 封面+配图均开启时，内容配图未使用 `ref_image_path="$DIR/cover.png"` → 风格不一致风险；正文图复刻封面主体/构图/核心物件 → 必须重写章节 `visual_brief` / `required_entities`；封面关·配图开时，内容配图指向不存在的 `$DIR/cover.png` → 必须移除或链到首张已生成图
 - [ ] **正文 `<img src>` 出现封面 `$COVER_CDN_URL`，或多张正文图共用同一 `wechat_url`** → 服务端 `publish_draft` 会拒绝发布；回步骤 7 为缺失 slot 独立生成，不得用封面/他图顶替
-- [ ] **`$DIR/cover-prompt.md` 缺失** → 步骤 6d 第 8 步必须原子写入
+- [ ] **`$DIR/cover-prompt.md` 缺失或无 `visual_quality_scorecard`** → 步骤 6d 第 9 步必须原子写入
 - [ ] `images.json` 缺少 `verification` 字段 → vision 校验未执行，回步骤 7b
 - [ ] **Vision 校验通过率 < 80%** → 回到步骤 6e 检查 prompt 构建逻辑
 - [ ] 配图提示词为通用描述（如"美丽风景"、"商务场景"）→ 需重写为章节具体内容
 - [ ] 配图提示词未引用章节中的比喻或案例 → 需加强关联
-- [ ] 连续 3 张配图视觉雷同 → 需更换构图类型
+- [ ] 连续 3 张配图视觉雷同（同主体/同构图/同色调，或反复复刻封面主体）→ 需更换章节实体、远近景和构图类型
 - [ ] 封面图包含马赛克/播放标记 → 需重新生成
 - [ ] 标题使用省略号隐藏关键信息 → 需补全信息
 - [ ] 文章字数过短（<500 字）→ 需扩展内容
@@ -662,7 +662,7 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 4. **视觉风格由账号决定**：图片风格由账号定位+内容主题+受众三维分析确定，不使用 writer YAML 的 cover_style/cover_prompt
 5. **配图内容三件套**：每张图必须有 `visual_brief`（具体画面）+ `required_entities`（必须物体）+ `must_match_excerpts`（章节原句）——这是 vision 校验的前提
 6. **vision 校验闭环**：每张图生成后必须用 `analyze_image`（或 `generate_image` 带 `verify_with_vision`）校验，失败锐化 prompt 重试，最多 3 次
-7. **参考链保持风格一致**：封面+配图均开启时，所有内容配图使用 `ref_image_path="$DIR/cover.png"`（用封面防止风格漂移）；封面关·配图开时不传 `ref_image_path` 或链首图，严禁指向不存在的 `$DIR/cover.png`
+7. **参考链保持风格一致**：封面+配图均开启时，所有内容配图使用 `ref_image_path="$DIR/cover.png"` 只继承风格语言，不得复刻封面主体/构图/核心物件；封面关·配图开时不传 `ref_image_path` 或链首图，严禁指向不存在的 `$DIR/cover.png`
 8. **结构化 HTML 渲染**：步骤 8 用 `render_template`（带 `layout_plan`）确定性渲染，不用 `convert_markdown` 自由发挥
 9. **审计记录可复盘**：`images.json` 必须记录 `verification`、`required_entities`、`slot_id`、`composition_type`、`chapter_title` 等字段
 10. **发布前总验收**：`final-review.md` 全部通过后才能创建草稿

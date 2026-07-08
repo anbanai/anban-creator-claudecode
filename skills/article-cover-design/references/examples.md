@@ -59,7 +59,7 @@ Read the closest case before executing the skill when the user input is ambiguou
 - Artifacts: cover-prompt.md 记录 `style_consistency` 失败原因和重试 prompt。
 - Quality gate: 与账号风格或标题主题无关的人像判为“黑白人像风格漂移”，不得进入发布。
 
-### Case 4: 截图暴露的封面质量问题
+### Case 8: 截图暴露的封面质量问题
 
 - Input: 同批文章截图里出现泛水墨模板感，三伏贴重复，绿豆汤主题不清，黑白人像风格漂移。
 - Recommended path: 每篇先写 `cover_hook`、`visual_metaphor`、`thumbnail_strategy` 和 `anti_generic_constraints`，明确禁止上一批失败画面再次出现。

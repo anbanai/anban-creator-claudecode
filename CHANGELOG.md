@@ -4,6 +4,18 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.50] - 2026-07-08
+
+### Changed
+
+- Renamed cover scoring references to the WeChat cover quality scorecard across article visual design skill docs.
+
+## [2.10.49] - 2026-07-08
+
+### Changed
+
+- Strengthened WeChat article cover quality gates with title/digest alignment, thumbnail readability, anti-generic constraints, screenshot-derived failure cases, and final review / viral audit enforcement.
+
 ## [2.10.48] - 2026-07-08
 
 ### Changed
