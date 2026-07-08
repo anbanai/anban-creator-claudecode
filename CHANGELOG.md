@@ -4,6 +4,13 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.42] - 2026-07-08
+
+### Changed
+
+- Synchronized the Seednote visual methodology contract across Claude and Codex distributions, including content distillation, visual strategy, Prompt blueprints, generation records, quality review, and recoverable image API failure reporting.
+- Kept `videocreator` scoped to Seedance generation by removing post-production draft tooling from the creator agent.
+
 ## [2.10.41] - 2026-07-08
 
 ### Changed
