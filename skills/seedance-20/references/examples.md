@@ -8,7 +8,7 @@
 
 ## How To Use These Cases
 
-Read the closest case before choosing a branch when the task involves visual anchors, sequence work, business conversion, or quality recovery. Adapt the case to the current project profile, `video.model_catalog`, task video config, registered references, available MCP tools, and billing estimate. Keep all artifacts file-backed and record downgrades in `quality-review.md` or `take-log.md`.
+Read the closest case before choosing a branch when the task involves visual anchors, sequence work, business conversion, or quality recovery. Adapt the case to the current project profile, `videocreator.model_catalog`, task video_creator_config, registered references, available MCP tools, and billing estimate. Keep all artifacts file-backed and record downgrades in `quality-review.md` or `take-log.md`.
 
 ### Case 1: Seednote Product Seed Video
 

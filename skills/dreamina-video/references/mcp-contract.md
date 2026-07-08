@@ -27,22 +27,22 @@ Input:
 Returns:
 - `resolved_profile`: project name, platform, positioning/instructions, keywords, creative constraints, source metadata, and whether a task snapshot is in use
 - `agent_brief`: server-formatted project context and video creation constraints that the agent can read directly
-- `video.defaults`: resolved purpose, model key, resolution, ratio, duration, watermark, and preflight defaults
-- `video.policy`: allowed models, default model, auto-downgrade policy, max resolution, and max duration
-- `video.model_catalog`: server-configured and project-allowed video model keys and capabilities
-- `video.input`: user-authored `video_input` intake (`brief`, `references`, `hard_constraints`) when `task_id` is supplied
-- `video.references`: convenience alias for `video.input.references`
-- `video.visual_anchor_generation`: capability hints for generated visual anchors, including `available`, `default_image_type`, `max_auto_anchors`, `verify_with_vision`, `register_tool`, and fallback guidance
-- `video.pricing.credits_per_cny`: billing conversion from real CNY model cost to base credits
-- `video.pricing.tier_multiplier`: current membership multiplier applied after base cost
-- `video.pricing.base_task_fee_rule`: videocreator task/plan creation charges only `credits.task_costs.videocreator` as the base service fee
-- `video.pricing.operation_billing_rule`: `create_video_generation_job` and `create_video_generation_task` deduct `video_gen` operation credits independently when the provider job is submitted
+- `videocreator.defaults`: resolved purpose, model key, resolution, ratio, duration, watermark, and preflight defaults
+- `videocreator.policy`: allowed models, default model, auto-downgrade policy, max resolution, and max duration
+- `videocreator.model_catalog`: server-configured and project-allowed video model keys and capabilities
+- `videocreator.input`: user-authored `video_creator_input` intake (`brief`, `references`, `hard_constraints`) when `task_id` is supplied
+- `videocreator.references`: convenience alias for `videocreator.input.references`
+- `videocreator.visual_anchor_generation`: capability hints for generated visual anchors, including `available`, `default_image_type`, `max_auto_anchors`, `verify_with_vision`, `register_tool`, and fallback guidance
+- `videocreator.pricing.credits_per_cny`: billing conversion from real CNY model cost to base credits
+- `videocreator.pricing.tier_multiplier`: current membership multiplier applied after base cost
+- `videocreator.pricing.base_task_fee_rule`: videocreator task/plan creation charges only `credits.task_costs.videocreator` as the base service fee
+- `videocreator.pricing.operation_billing_rule`: `create_video_generation_job` and `create_video_generation_task` deduct `video_gen` operation credits independently when the provider job is submitted
 
 Do not hardcode a default model, resolution, duration, watermark, or fixed credit number in the skill. Project profile is the source of truth; plan/task overrides are snapshots and must not rewrite project defaults unless the user explicitly asks to save them.
 
 Model visibility is fail-closed:
-- Only keys present in `video.model_catalog` are configured and usable.
-- `video.policy.allowed_models`, `video.policy.default_model`, task `video_config.model_key`, and plan `video_config.model_key` are valid only if the key exists in `video.model_catalog`.
+- Only keys present in `videocreator.model_catalog` are configured and usable.
+- `videocreator.policy.allowed_models`, `videocreator.policy.default_model`, task `video_creator_config.model_key`, and plan `video_creator_config.model_key` are valid only if the key exists in `videocreator.model_catalog`.
 - If historical data contains a missing key, report “模型未配置或不可用” and stop. Do not show, save, estimate, trigger, or call the missing model.
 
 ## generate_image for visual anchors
@@ -59,7 +59,7 @@ Required input pattern:
 - `verification_prompt`: ask for JSON verification of required visible anchors
 - optional `ref_image_path`: required for second and third generated anchors; use the accepted main anchor path
 
-Accept only normalized verification with `passed=true`. If a score exists, it must be at least 0.75. If the tool is unavailable for the deployment, fall back according to `video.visual_anchor_generation.fallback`; do not bypass MCP or call image providers directly.
+Accept only normalized verification with `passed=true`. If a score exists, it must be at least 0.75. If the tool is unavailable for the deployment, fall back according to `videocreator.visual_anchor_generation.fallback`; do not bypass MCP or call image providers directly.
 
 After an anchor passes, call `register_video_reference` with `type="image_url"`, the returned/generated `file_path`, and the intended `reference_role`. Only registered references should be passed into `build_video_generation_plan` and `create_video_generation_job`.
 
@@ -76,11 +76,11 @@ Input:
 - `file_path`: optional temporary agent/server-local media path; MCP uploads it to OSS/storage and returns `ark_url`
 - `text`: required for text references
 - `reference_role`: subject identity, product appearance, scene background, first frame, last frame, action, camera movement, rhythm, voice tone, BGM, or typography
-- optional metadata from `video_input.references` / `video.input.references`: `file_name`, `mime_type`, `file_size`, `input_duration_seconds`
+- optional metadata from `video_creator_input.references` / `videocreator.input.references`: `file_name`, `mime_type`, `file_size`, `input_duration_seconds`
 
 Media URLs must be OSS/CDN-backed public HTTPS URLs. Localhost, private IPs, relative storage URLs, and local filesystem paths are not Ark-accessible. If storage is local or has no public HTTPS CDN/OSS URL, the tool returns an explicit OSS/CDN hint instead of submitting an unusable reference. Claude workspace files are temporary; persistent platform files must be registered as task files.
 
-When a task or plan has `video_input.references` (profile `video.input.references`), consume those references first. Preserve `reference_role` and server-measured `input_duration_seconds`; for raw video references, never invent or overwrite duration client-side.
+When a task or plan has `video_creator_input.references` (profile `videocreator.input.references`), consume those references first. Preserve `reference_role` and server-measured `input_duration_seconds`; for raw video references, never invent or overwrite duration client-side.
 
 ## analyze_video_reference
 

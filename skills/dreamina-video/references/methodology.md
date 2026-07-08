@@ -7,7 +7,7 @@
 - [视觉锚定图 Method](#视觉锚定图-method)
 - [Business Goal Translation](#business-goal-translation)
 - [创作定位 / Creative Type Selection](#创作定位-creative-type-selection)
-- [完整视频创作流程](#完整视频创作流程)
+- [完整 AI 视频生成流程](#完整-ai-视频生成流程)
 - [个人 IP Method](#个人-ip-method)
 - [高效段子 Method](#高效段子-method)
 - [参考视频复刻 Method](#参考视频复刻-method)
@@ -79,7 +79,7 @@ Start by separating content format from business purpose. `purpose` tells the co
 - 品牌推广: Use when memory, event awareness, or brand association matters more than immediate conversion. Usually `purpose=promotion`.
 - 自定义: Use only when none of the above fits; still write one audience, one subject, one message, and one CTA.
 
-## 完整视频创作流程
+## 完整 AI 视频生成流程
 
 1. Intent lock: write the user's real outcome in one sentence. If the user gives many ideas, choose the strongest single message instead of stuffing all into 15s.
 2. Reference understanding: run `analyze_video_reference` for input videos and read `video-understanding.json`. Extract visual facts: who appears, how they move, how the camera behaves, how cuts and beats work, and which details define consistency.
