@@ -60,10 +60,17 @@ if [[ -z "$VIDEO_DIR" || ! -f "$VIDEO_DIR/input-manifest.md" ]]; then
 fi
 
 MISSING=()
-[[ ! -s "$VIDEO_DIR/edit/edl.json" ]] && MISSING+=("edit/edl.json")
-if [[ ! -s "$VIDEO_DIR/final.mp4" && ! -s "$VIDEO_DIR/preview.mp4" ]] &&
-   ! find "$VIDEO_DIR" -type f \( -path "*/capcut/*.json" -o -path "*/capcut-draft/*.json" \) -size +0c -print 2>/dev/null | grep -q .; then
-  MISSING+=("final.mp4、preview.mp4 或剪映草稿 JSON")
+HAS_RENDERED_DELIVERY=0
+if [[ -s "$VIDEO_DIR/edit/edl.json" && ( -s "$VIDEO_DIR/final.mp4" || -s "$VIDEO_DIR/preview.mp4" ) ]]; then
+  HAS_RENDERED_DELIVERY=1
+fi
+HAS_DRAFT_PACKAGE=0
+if find "$VIDEO_DIR" -type f -name "draft_info.json" -size +0c -print 2>/dev/null | grep -Eq '/capcut(-draft)?(/|$)' &&
+   find "$VIDEO_DIR" -type f -name "draft_meta_info.json" -size +0c -print 2>/dev/null | grep -Eq '/capcut(-draft)?(/|$)'; then
+  HAS_DRAFT_PACKAGE=1
+fi
+if [[ "$HAS_RENDERED_DELIVERY" != "1" && "$HAS_DRAFT_PACKAGE" != "1" ]]; then
+  MISSING+=("edit/edl.json + final.mp4/preview.mp4，或包含 draft_info.json 与 draft_meta_info.json 的剪映草稿包")
 fi
 
 if [[ ${#MISSING[@]} -gt 0 ]]; then

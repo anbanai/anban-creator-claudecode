@@ -93,7 +93,7 @@
           },
           {
             "type": "prompt",
-            "prompt": "videoeditor agent 已完成执行。请检查 input-manifest.md、edit/edl.json、edit/media-manifest.json、preview.mp4/final.mp4、剪映草稿 JSON、render-report.md 或 quality-review.md；确认未调用视频生成主链路。最后调用 submit_agent_feedback(task_id=$TASK_ID, agent_name=\"videoeditor\", scores={quality:N, completeness:N, efficiency:N}, errors=\"<errors>\", optimizations=\"<optimizations>\", summary=\"<brief summary>\")。"
+            "prompt": "videoeditor agent 已完成执行。请检查 input-manifest.md、edit/media-manifest.json、edit/edl.json + preview.mp4/final.mp4，或包含 draft_info.json 与 draft_meta_info.json 的剪映草稿包，以及 render-report.md 或 quality-review.md；确认未调用视频生成主链路。最后调用 submit_agent_feedback(task_id=$TASK_ID, agent_name=\"videoeditor\", scores={quality:N, completeness:N, efficiency:N}, errors=\"<errors>\", optimizations=\"<optimizations>\", summary=\"<brief summary>\")。"
           }
         ]
       },

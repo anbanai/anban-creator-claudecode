@@ -32,8 +32,8 @@ maxTurns: 160
 
 - `input-manifest.md`：记录 task_id=`$TASK_ID`、workflow=`video-use`、agent=`videoeditor`、输入素材和剪辑目标。
 - `edit/media-manifest.json`：由 `anban video probe` 生成。
-- `edit/edl.json`：最终剪辑决策。
-- `preview.mp4` 或 `final.mp4`：至少一个非空视频产物；正式交付优先 `final.mp4`。
+- 渲染交付：`edit/edl.json`（最终剪辑决策）加 `preview.mp4` 或 `final.mp4`；正式交付优先 `final.mp4`。
+- 草稿交付：如果任务目标是剪映/CapCut 草稿，可交付包含 `draft_info.json` 与 `draft_meta_info.json` 的 `capcut/` 或 `capcut-draft/` 草稿包，不需要同时渲染 MP4。
 - `quality-review.md` 或 `render-report.md`：记录字幕、切点、音频、画幅和 overlay 自检。
 
 ## 工作流
@@ -47,6 +47,6 @@ maxTurns: 160
 7. 在渲染前用自然语言确认剪辑策略，确认后写 `edit/edl.json`。
 8. 需要 overlay 时调用最具体的 overlay skill，并把包含 `file/start/end/x/y/width/height` 的返回项写入 `edl.json` 的 `overlays[]`。
 9. 运行 `$ANBAN_BIN video verify --edl "$DIR/edit/edl.json"`。
-10. 按阶段渲染：先 draft，再 preview，最终输出 `final.mp4`；字幕字体默认 Source Han Sans / 思源黑体。
+10. 如果交付成片，按阶段渲染：先 draft，再 preview，最终输出 `final.mp4`；字幕字体默认 Source Han Sans / 思源黑体。如果交付剪映/CapCut 草稿，使用 `capcut-draft` skill 生成可打开的草稿包并保留关键 JSON。
 11. 自检切点、字幕遮挡、overlay timing、音频 pop、display rotation、最终时长和文件大小。
 12. 调用 `submit_agent_feedback(agent_name="videoeditor", ...)`。

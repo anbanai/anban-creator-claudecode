@@ -4,6 +4,12 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.45] - 2026-07-08
+
+### Changed
+
+- Clarified videoeditor delivery gates so rendered MP4 output and CapCut draft packages are validated as separate acceptable delivery modes.
+
 ## [2.10.44] - 2026-07-08
 
 ### Changed
