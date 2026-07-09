@@ -1,6 +1,6 @@
 {
   "name": "anbanai",
-  "description": "Official Anban Creator Claude Code plugins for Chinese social content creation, publishing, OpenMontage, videocreator, videoeditor, and ecommerce workflows.",
+  "description": "Official Anban Creator Claude Code plugins for Chinese social content creation, publishing, Montage, videocreator, videoeditor, and ecommerce workflows.",
   "owner": {
     "name": "anbanai",
     "email": "hello@anban.ai"
@@ -10,8 +10,8 @@
       "name": "anban",
       "source": "./",
       "displayName": "Anban Creator",
-      "version": "2.10.52",
-      "description": "Anban Creator plugin for WeChat, Seednote, OpenMontage, videocreator, videoeditor, ecommerce, and agent-assisted publishing workflows.",
+      "version": "2.10.53",
+      "description": "Anban Creator plugin for WeChat, Seednote, Montage, videocreator, videoeditor, ecommerce, and agent-assisted publishing workflows.",
       "author": {
         "name": "anbanai"
       },
@@ -30,7 +30,7 @@
         "seednote",
         "种草笔记",
         "cover-image",
-        "OpenMontage"
+        "Montage"
       ]
     }
   ]

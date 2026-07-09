@@ -4,11 +4,17 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.53] - 2026-07-09
+
+### Changed
+
+- Renamed the Anban Montage agent and skill distribution to the canonical Montage product name.
+
 ## [2.10.52] - 2026-07-09
 
 ### Added
 
-- Added OpenMontage agent and skill distribution contracts for Claude Code, Codex, and OpenClaw plugins.
+- Added Montage agent and skill distribution contracts for Claude Code, Codex, and OpenClaw plugins.
 
 ## [2.10.51] - 2026-07-09
 

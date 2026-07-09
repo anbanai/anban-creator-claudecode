@@ -1,11 +1,11 @@
 ---
-name: openmontage
-description: Use when handling Anban OpenMontage tasks that convert openmontage-input.json into an OpenMontage adapter manifest, run the upstream OpenMontage pipeline, and register normalized Anban deliverables.
+name: montage
+description: Use when handling Anban Montage tasks that convert montage-input.json into an Montage adapter manifest, run the upstream Montage pipeline, and register normalized Anban deliverables.
 ---
 
-# OpenMontage Skill
+# Montage Skill
 
-Use this skill only for Anban `openmontage` tasks.
+Use this skill only for Anban `montage` tasks.
 
 遇到素材映射、pipeline 选择或交付格式不确定时，先读 [references/examples.md](references/examples.md)。
 
@@ -22,28 +22,28 @@ Use this skill only for Anban `openmontage` tasks.
 
 - `$TASK_ID`
 - `$PROJECT_ID`
-- `openmontage-input.json`
+- `montage-input.json`
 - project profile from Anban MCP
-- configured OpenMontage submodule or runner path
+- configured Montage submodule or runner path
 
 ## Required Files
 
-- `openmontage-project.json`: adapter manifest sent to OpenMontage
+- `montage-project.json`: adapter manifest sent to Montage
 - `delivery-manifest.json`: normalized Anban delivery manifest
 - `final.mp4`: final video when the pipeline succeeds
 - `failure-diagnosis.md`: required when the pipeline cannot complete
 
 ## Rules
 
-- Keep OpenMontage independent from existing Anban video generation and video editing flows.
+- Keep Montage independent from existing Anban video generation and video editing flows.
 - Do not call `create_video_generation_job`, `validate_video_delivery`, Seedance skills, Dreamina skills, or `video-use`.
-- Do not expose raw OpenMontage pipeline internals as Anban stable schema.
+- Do not expose raw Montage pipeline internals as Anban stable schema.
 - Do not modify files under `third_party/OpenMontage`.
 - Use Anban MCP tools for project profile, workspace preparation, progress, uploads, task files, and feedback.
 
 ## Adapter Manifest
 
-Write `openmontage-project.json` with:
+Write `montage-project.json` with:
 
 ```json
 {
@@ -54,8 +54,8 @@ Write `openmontage-project.json` with:
   "assets": [],
   "preferences": {},
   "limits": {},
-  "output_dir": "output/openmontage/$TASK_ID"
+  "output_dir": "output/montage/$TASK_ID"
 }
 ```
 
-The adapter maps this stable manifest into the current upstream OpenMontage project format.
+The adapter maps this stable manifest into the current upstream Montage project format.

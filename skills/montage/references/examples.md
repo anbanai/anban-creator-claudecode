@@ -1,4 +1,4 @@
-# OpenMontage Examples
+# Montage Examples
 
 ## Source Patterns
 
@@ -7,13 +7,13 @@
 
 ## How To Use These Cases
 
-Use these cases to choose pipeline defaults, asset mapping, and delivery registration shape. Do not copy upstream OpenMontage internals into the Anban stable task schema.
+Use these cases to choose pipeline defaults, asset mapping, and delivery registration shape. Do not copy upstream Montage internals into the Anban stable task schema.
 
 ### Case 1: Social Short From Brand Brief
 
-Input: `openmontage-input.json` contains a launch brief, `pipeline_key="social-short"`, vertical aspect ratio, and several product image assets.
+Input: `montage-input.json` contains a launch brief, `pipeline_key="social-short"`, vertical aspect ratio, and several product image assets.
 
-Process: write `openmontage-project.json` with task/project IDs, normalized assets, selected pipeline, preferences, limits, and `output_dir`. Run OpenMontage through the configured submodule or runner, then register `final_video` and `delivery-manifest.json`.
+Process: write `montage-project.json` with task/project IDs, normalized assets, selected pipeline, preferences, limits, and `output_dir`. Run Montage through the configured submodule or runner, then register `final_video` and `delivery-manifest.json`.
 
 ### Case 2: Local Runner With Existing Media
 
@@ -23,6 +23,6 @@ Process: use Anban MCP workspace and task-file tools to resolve source assets, c
 
 ### Case 3: Pipeline Failure
 
-Input: OpenMontage exits without a renderable final video, or the runner returns partial timeline/subtitle artifacts only.
+Input: Montage exits without a renderable final video, or the runner returns partial timeline/subtitle artifacts only.
 
 Process: write `failure-diagnosis.md`, upload run logs and partial artifacts, register no successful `final_video`, and report failure through `submit_agent_feedback` with the failing stage and next action.

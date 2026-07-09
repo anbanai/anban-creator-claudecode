@@ -1,8 +1,8 @@
 {
   "name": "anban",
   "displayName": "Anban Creator",
-  "description": "Anban Creator plugin for WeChat, Seednote, OpenMontage, videocreator, videoeditor, ecommerce, and agent-assisted publishing workflows",
-  "version": "2.10.52",
+  "description": "Anban Creator plugin for WeChat, Seednote, Montage, videocreator, videoeditor, ecommerce, and agent-assisted publishing workflows",
+  "version": "2.10.53",
   "author": {
     "name": "anbanai",
     "url": "https://github.com/anbanai"
@@ -31,7 +31,7 @@
     "color-consistency",
     "design",
     "designer",
-    "OpenMontage"
+    "Montage"
   ],
   "userConfig": {
     "api_key": {
