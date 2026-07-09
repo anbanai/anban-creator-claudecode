@@ -24,12 +24,17 @@ Use this skill only for Anban `montage` tasks.
 - `$PROJECT_ID`
 - `$ANBAN_MONTAGE_SUBMODULE_PATH` (preferred when set; production images set it to `/app/third_party/OpenMontage`)
 - `montage-input.json`
+- `montage-tool-policy.json`
+- `montage-pipeline-defaults.json`
 - project profile from Anban MCP
-- configured Montage submodule or runner path
+- configured Montage submodule path
+- OpenMontage provider secrets from environment variables only
 
 ## Required Files
 
 - `montage-project.json`: adapter manifest sent to Montage
+- `montage-tool-policy.json`: non-secret capability preferences configured by the server
+- `montage-pipeline-defaults.json`: non-secret pipeline defaults configured by the server
 - `delivery-manifest.json`: normalized Anban delivery manifest
 - `final.mp4`: final video when the pipeline succeeds
 - `failure-diagnosis.md`: required when the pipeline cannot complete
@@ -41,6 +46,9 @@ Use this skill only for Anban `montage` tasks.
 - Do not expose raw Montage pipeline internals as Anban stable schema.
 - Do not modify files under `third_party/OpenMontage`.
 - Resolve the upstream runtime from `$ANBAN_MONTAGE_SUBMODULE_PATH` first, then fall back to the configured/default `third_party/OpenMontage` path.
+- Secrets only arrive through environment variables. Never write provider keys to `montage-project.json`, task files, logs, MCP feedback, or failure diagnosis.
+- Before production, run the OpenMontage registry capability check (`provider_menu_summary()` or the equivalent registry command) and compare the selected pipeline's required/optional tools with the configured provider envelope.
+- Let OpenMontage selectors/registry choose concrete providers from the configured policy and real availability; do not hardcode Anban-side provider routing.
 - Use Anban MCP tools for project profile, workspace preparation, progress, uploads, task files, and feedback.
 
 ## Adapter Manifest
@@ -56,6 +64,9 @@ Write `montage-project.json` with:
   "assets": [],
   "preferences": {},
   "limits": {},
+  "tool_policy": {},
+  "pipeline_defaults": {},
+  "provider_env_keys": {},
   "output_dir": "output/montage/$TASK_ID"
 }
 ```
