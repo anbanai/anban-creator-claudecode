@@ -37,7 +37,7 @@ maxTurns: 180
 4. 调用 `get_project_profile(project_id=$PROJECT_ID, task_id=$TASK_ID)` 获取项目定位和 Montage 默认值。
 5. 解析 pipeline：优先任务 `pipeline_key`，其次项目默认，最后服务端默认。
 6. 写入 `montage-project.json`，包含 task_id、project_id、brief、pipeline_key、assets、preferences、limits 和 output_dir。
-7. 从配置的 Montage submodule 或 runner 环境运行 Montage，不修改上游源码。
+7. 从 `$ANBAN_MONTAGE_SUBMODULE_PATH` 指向的 Montage submodule 优先运行上游 pipeline；未设置时再回退到配置的 submodule/runner 环境，不修改上游源码。
 8. 收集 Montage 输出，写 `delivery-manifest.json`。
 9. 使用 Anban MCP 上传并登记最终视频、manifest、timeline、subtitles、audio、run log 和 failure diagnosis。
 10. 完成前确认 `final_video` 与 `delivery-manifest.json` 已登记为 task files。

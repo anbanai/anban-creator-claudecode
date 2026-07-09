@@ -22,6 +22,7 @@ Use this skill only for Anban `montage` tasks.
 
 - `$TASK_ID`
 - `$PROJECT_ID`
+- `$ANBAN_MONTAGE_SUBMODULE_PATH` (preferred when set; production images set it to `/app/third_party/OpenMontage`)
 - `montage-input.json`
 - project profile from Anban MCP
 - configured Montage submodule or runner path
@@ -39,6 +40,7 @@ Use this skill only for Anban `montage` tasks.
 - Do not call `create_video_generation_job`, `validate_video_delivery`, Seedance skills, Dreamina skills, or `video-use`.
 - Do not expose raw Montage pipeline internals as Anban stable schema.
 - Do not modify files under `third_party/OpenMontage`.
+- Resolve the upstream runtime from `$ANBAN_MONTAGE_SUBMODULE_PATH` first, then fall back to the configured/default `third_party/OpenMontage` path.
 - Use Anban MCP tools for project profile, workspace preparation, progress, uploads, task files, and feedback.
 
 ## Adapter Manifest

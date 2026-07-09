@@ -4,6 +4,12 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.54] - 2026-07-09
+
+### Changed
+
+- Clarified that Montage agents prefer `$ANBAN_MONTAGE_SUBMODULE_PATH` for production runtime resolution.
+
 ## [2.10.53] - 2026-07-09
 
 ### Changed
