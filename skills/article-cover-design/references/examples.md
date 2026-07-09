@@ -65,3 +65,11 @@ Read the closest case before executing the skill when the user input is ambiguou
 - Recommended path: 每篇先写 `cover_hook`、`visual_metaphor`、`thumbnail_strategy` 和 `anti_generic_constraints`，明确禁止上一批失败画面再次出现。
 - Artifacts: cover-prompt.md、cover-review.md、viral-audit.md。
 - Quality gate: `visual_quality_scorecard.specificity_not_generic`、`series_distinctiveness`、`title_cover_digest_alignment` 不低于 medium；否则重写封面概念再生成。
+
+### Case 9: AI 内容方法论封面只剩意境
+
+- Input: 文章标题是「企业做 AI 内容，别从买工具开始」，摘要讲「买了一堆工具年卡，稿量翻倍、阅读对折，真正路径是人写→流程写→Agent 写」，但封面生成成「静水孤舟 / 远山方向」。
+- Failure: 画风统一但内容相关度弱；`静水孤舟` 可替换到任何“先辨方向”的方法论文章，目标读者看不出 AI 工具、选题库、SOP、阅读下滑这些核心冲突。
+- Recommended path: 先写 `cover_strategy`，明确 `target_reader` 是企业主/内容负责人，`reader_pain_or_job` 是“买了 AI 工具但内容不增长”，`article_promise` 是“先建选题库和 SOP，再让 Agent 执行”。三选一概念可以围绕 `散落 AI 工具年卡`、`空白选题库`、`SOP 流程线`、`阅读对折` 这些正文证据展开。
+- Artifacts: cover-prompt.md 记录 `cover_concept_candidates`、`selected_cover_concept`、`cover_effectiveness_scorecard`。
+- Quality gate: `generic_swap_test`、`promise_proof_test`、`audience_motivation_test` 必须全过；仅有旧的 6 维 vision 全 high 不得通过；缺 `viral-audit.md` 不得发布。

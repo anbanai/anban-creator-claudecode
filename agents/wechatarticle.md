@@ -34,7 +34,7 @@ maxTurns: 300 # 公众号 10 步 + 7 图 + HTML + 草稿，实测需 120-175 tur
 | **视觉节奏** | 模板选定后，自动把每个 `##` 映射到 slot（hero / section_opener / inline_detail / footer），写入 `visual-rhythm-plan.md` |
 | **配图内容贴切** | 每张图提取 `visual_brief` + `required_entities` + `must_match_excerpts`，生成后强制 vision 校验，失败锐化 prompt 重试 |
 | **视觉风格** | 由账号定位+内容主题+受众三维分析决定（不使用 writer 的 `cover_style`/`cover_prompt`），封面确立风格基准，配图通过 `ref_image_path` 保持一致 |
-| **封面质量闸门** | 封面生成前提炼 `cover_hook` / `visual_metaphor` / `thumbnail_strategy` / `anti_generic_constraints`，生成后把 `visual_quality_scorecard` 写入 `cover-prompt.md`；`final-review.md` 的 `cover_quality_gate` 与 `viral-audit.md` 必须读取该结果 |
+| **封面质量闸门** | 封面生成前先产出 `cover_strategy`（含 `target_reader` / `reader_pain_or_job` / `article_promise` / `content_proof_points` / `click_trigger` / `cover_concept_candidates` / `selected_cover_concept`），三选一概念评审通过 `generic_swap_test` / `promise_proof_test` / `audience_motivation_test` 后再生成；生成后把 `visual_quality_scorecard` + `cover_effectiveness_scorecard` 写入 `cover-prompt.md`；`final-review.md` 的 `cover_quality_gate` 与 `viral-audit.md` 必须读取该结果 |
 | **HTML 渲染** | 用 `render_template`（带 `layout_plan`）确定性渲染，不再用 `convert_markdown` 自由发挥 |
 | **SEO 优化** | 自动提取关键词，生成标题/摘要/标签，结果用于草稿发布 |
 | **去 AI 味** | 用 `humanizer` skill 扫描 33 类 AI 写作模式并按 draft→audit→final 改写（不改原意） |
@@ -251,15 +251,17 @@ using the article-visual-design skill 完成以下五个子步骤。详细规范
 
 > **封面开关守卫**：当 article_image_mode 为 `content_only` 或 `text_only`（见「图片生成模式」），**整个 6d 跳过**——不调 `generate_image`、不写 `cover.png`/`cover-prompt.md`、不取 `$COVER_MEDIA_ID`/`$COVER_CDN_URL`。6c 三维风格分析与 6b 节奏规划仍执行（hero slot 的 `image_url=null`）。封面关时 `$COVER_MEDIA_ID` 视为不存在，步骤 7/10 不得引用它。
 
-**封面设计已独立成稿——完整方法论（官方比例 900×383/2.35:1、中心安全区、受控文字策略、概念推导、封面质量评分卡、迭代闭环、cover-prompt.md 审计）见 `article-cover-design` skill**。下方为本步骤关键调用要点。
+**封面设计已独立成稿——完整方法论（官方比例 900×383/2.35:1、中心安全区、受控文字策略、`cover_strategy`、三选一概念评审、封面质量评分卡、封面有效性评分卡、迭代闭环、cover-prompt.md 审计）见 `article-cover-design` skill**。下方为本步骤关键调用要点。
 
 基于 6c 的风格分析与文章核心隐喻构建封面 prompt（**主体居中安全区、避开底部 20%、按受控文字策略决定是否带短文字**）：
 
-1. 从 `$DIR/seo-result.md` 读取最终标题和 digest，从 `$DIR/04-article-final.md` 提取核心论点和最强视觉隐喻
-2. 提炼 `cover_hook`、`visual_metaphor`、`thumbnail_strategy`、`anti_generic_constraints`：封面钩子必须与最终标题/digest 前半句协同，缩略图策略必须说明 200px 列表里靠什么被看见，反同质化约束必须禁止通用养生水墨背景/无主体山水/与标题无关的人像等泛化画面
-3. 按 `article-cover-design` skill 的模板构建 prompt（三维风格 × `cover_hook` × 内容隐喻 × 缩略图策略 × 宽银幕安全区构图 × 受控文字策略 × NO watermark/logo）
-4. 构建封面 `required_entities`（必须出现的具体物体）和 `visual_quality_scorecard`（含 `title_cover_digest_alignment`、`thumbnail_readability`、`contrast_focus`、`specificity_not_generic`、`series_distinctiveness`、`safe_zone_centered`、`text_policy_ok`、`hard_no_forbidden_cues`、`overall_pass`；见 article-cover-design skill）
-5. 调用 `generate_image`（**`upload_to_cdn=true` 让生成与上传原子化**：同一调用内完成生成→精确裁剪→校验→压缩→上传微信 CDN，直接返回 `media_id` + `wechat_url`）：
+1. 从 `$DIR/context-brief.md`、`$DIR/seo-result.md` 和 `$DIR/04-article-final.md` 读取目标读者、最终标题、digest、正文核心论点、读者痛点/任务、文章承诺和正文证据
+2. 先写 `cover_strategy`：`target_reader`、`reader_pain_or_job`、`article_promise`、`content_proof_points`、`click_trigger`、至少 3 个 `cover_concept_candidates`、`selected_cover_concept`
+3. 三选一概念评审：每个候选必须说明标题钩子、摘要承诺、正文证据、目标读者点击理由、可视化实体和误导风险；`generic_swap_test`、`promise_proof_test`、`audience_motivation_test` 必须全过后才可进入图像生成
+4. 提炼 `cover_hook`、`visual_metaphor`、`thumbnail_strategy`、`anti_generic_constraints`：封面钩子必须与最终标题/digest 前半句协同，缩略图策略必须说明 200px 列表里靠什么被看见，反同质化约束必须禁止通用养生水墨背景/无主体山水/与标题无关的人像等泛化画面
+5. 按 `article-cover-design` skill 的模板构建 prompt（三维风格 × `selected_cover_concept` × `article_promise` × `click_trigger` × 内容证据 × 缩略图策略 × 宽银幕安全区构图 × 受控文字策略 × NO watermark/logo）
+6. 构建封面 `required_entities`、`visual_quality_scorecard`（含 `title_cover_digest_alignment`、`thumbnail_readability`、`contrast_focus`、`specificity_not_generic`、`series_distinctiveness`、`safe_zone_centered`、`text_policy_ok`、`hard_no_forbidden_cues`、`overall_pass`）和 `cover_effectiveness_scorecard`（含 `information_scent_alignment`、`audience_motivation`、`content_specificity`、`thumbnail_attention`、`truthfulness_not_clickbait`、`brand_style_fit`、`visual_distinctiveness`、`safe_zone_text_policy`、`overall_pass`）
+7. 调用 `generate_image`（**`upload_to_cdn=true` 让生成与上传原子化**：同一调用内完成生成→精确裁剪→校验→压缩→上传微信 CDN，直接返回 `media_id` + `wechat_url`）：
    ```
    generate_image(
      project_id=$PROJECT_ID,
@@ -273,10 +275,10 @@ using the article-visual-design skill 完成以下五个子步骤。详细规范
      upload_to_cdn=true
    )
    ```
-6. 校验失败时重试一次（更换 prompt 措辞，**仍带 `upload_to_cdn=true`**）；若失败原因是标题/封面/digest 不协同、低对比、通用素材或系列辨识度低，必须先改 `cover_hook` / `visual_metaphor` / `thumbnail_strategy`，不能只换风格形容词。仍失败则请求用户协助。**封面必须 vision 校验通过后才可作为 `thumb_media_id`**；未通过 vision 的封面不得用于发布
-7. 从返回值取 `media_id`（发布草稿的 thumb）+ `wechat_url`。**不再单独调用 `upload_image`**。若返回 `upload_error`（生成成功但上传失败），用 `upload_image(file_path="$DIR/cover.png")` 单独重传即可，**无需重新生成**
-8. 记录 `$COVER_PATH="$DIR/cover.png"`、`$COVER_MEDIA_ID`、`$COVER_CDN_URL`（供步骤 7/8/10 使用）
-9. **原子写 `$DIR/cover-prompt.md`**（先写 `$DIR/.cover-prompt.md.tmp` → `fsync` → `rename` 覆盖）：完整记录封面生成决策，内容必须含：公众号比例 `2.35:1`、账号视觉风格来源（`$VISUAL_STYLE`/`$COLOR_PALETTE`/`$MOOD` 及其三维分析依据：账号定位/内容主题/受众）、`final_title`、`digest_hook`、`cover_hook`、`visual_metaphor`、`thumbnail_strategy`、`anti_generic_constraints`、`required_entities`、最终使用的 prompt、`visual_quality_scorecard`、vision 校验 prompt 与结果（passed/score）
+8. 校验失败时重试一次（更换 prompt 措辞，**仍带 `upload_to_cdn=true`**）；若失败原因是标题/封面/digest 不协同、低对比、通用素材、读者动机弱、正文证据不足或系列辨识度低，必须先改 `cover_strategy` / `selected_cover_concept` / `cover_hook` / `visual_metaphor` / `thumbnail_strategy`，不能只换风格形容词。vision JSON 类型不匹配、校验超时、缺 `cover_effectiveness_scorecard`、三个硬测试任一失败、或 `cover_effectiveness_scorecard.overall_pass=false` 时，不得手动 `upload_image` 后继续发布；必须重新校验或重构概念。**封面必须 vision 与有效性校验通过后才可作为 `thumb_media_id`**
+9. 从返回值取 `media_id`（发布草稿的 thumb）+ `wechat_url`。**不再单独调用 `upload_image`**。若返回 `upload_error`（生成成功但上传失败），用 `upload_image(file_path="$DIR/cover.png")` 单独重传即可，**无需重新生成**；但只有校验通过的封面才允许重传
+10. 记录 `$COVER_PATH="$DIR/cover.png"`、`$COVER_MEDIA_ID`、`$COVER_CDN_URL`（供步骤 7/8/10 使用）
+11. **原子写 `$DIR/cover-prompt.md`**（先写 `$DIR/.cover-prompt.md.tmp` → `fsync` → `rename` 覆盖）：完整记录封面生成决策，内容必须含：公众号比例 `2.35:1`、账号视觉风格来源（`$VISUAL_STYLE`/`$COLOR_PALETTE`/`$MOOD` 及其三维分析依据：账号定位/内容主题/受众）、`final_title`、`digest_hook`、`cover_strategy`、`cover_hook`、`visual_metaphor`、`thumbnail_strategy`、`anti_generic_constraints`、`required_entities`、最终使用的 prompt、`visual_quality_scorecard`、`cover_effectiveness_scorecard`、vision 校验 prompt 与结果（passed/score）。仅有旧的 6 维 vision 全 high 不得通过
 
 ##### 6e：创建配图内容规划（升级 schema）
 
@@ -403,7 +405,7 @@ render_template(
 - **导流风险**：无二维码、联系方式、外链 URL、跳小程序、其他公众号/服务号/视频号、进群、加微信、关注/点赞/留言/转发领资料、回复关键词或多重跳转交易；文章在当前页面提供完整信息
 - **模板与节奏**：`visual-rhythm-plan.md` 存在；所选模板的 rhythm 规则被遵守；每个 `##` 章节映射到 slot；封面/配图开启时 `layout_plan` JSON 块的所有 `image_url` 已用 CDN URL 回填（关闭时对应 slot `image_url=null`）
 - **配图内容贴切**（配图开关开启时）：`image-plan.md` 每张图含 `visual_brief` + `required_entities` + `must_match_excerpts`；`images.json` 中至少 80% 的内容图 `verification.passed=true`
-- **封面质量闸门**（封面开关开启时）：`cover-prompt.md` 含 `final_title` / `digest_hook` / `cover_hook` / `visual_metaphor` / `thumbnail_strategy` / `anti_generic_constraints` / `visual_quality_scorecard`，并在 `final-review.md` 写入 `cover_quality_gate`；`visual_quality_scorecard.overall_pass` 不通过时不得发布
+- **封面质量闸门**（封面开关开启时）：`cover-prompt.md` 含 `final_title` / `digest_hook` / `cover_strategy` / `cover_hook` / `visual_metaphor` / `thumbnail_strategy` / `anti_generic_constraints` / `visual_quality_scorecard` / `cover_effectiveness_scorecard`，并在 `final-review.md` 写入 `cover_quality_gate`；`visual_quality_scorecard.overall_pass` 或 `cover_effectiveness_scorecard.overall_pass` 不通过、缺 `cover_strategy`、或仅有旧的 6 维 vision 全 high 不得通过
 - 视觉一致性（封面开关开启时）：封面存在且已上传获得 `media_id`；所有内容图 `ref_image_path="$DIR/cover.png"`（封面关·配图开时改为不传或链首图）
 - SEO：`seo-result.md` 包含优化后的标题和摘要
 - 合规：违禁词和平台合规检查无高风险未处理项
@@ -412,7 +414,7 @@ render_template(
 
 **步骤 9b：爆款审计硬闸门**（using the `article-viral-strategy` skill）
 
-对成品（`04-article-final.md` + `seo-result.md` + 封面 + digest）按 **7 维** 打分，产出 `$DIR/viral-audit.md`：选题社交货币 / 标题 CTR / 开头钩子 / 正文价值密度 / 完读率结构 / 视觉停留 / 互动诱因。每维给证据，不裸打分。视觉停留维度必须读取 `cover-prompt.md` 的 `cover_hook`、`thumbnail_strategy`、`anti_generic_constraints` 和 `visual_quality_scorecard`，不得只凭"风格统一"给高分。
+对成品（`04-article-final.md` + `seo-result.md` + 封面 + digest）按 **7 维** 打分，产出 `$DIR/viral-audit.md`：选题社交货币 / 标题 CTR / 开头钩子 / 正文价值密度 / 完读率结构 / 视觉停留 / 互动诱因。每维给证据，不裸打分。视觉停留维度必须读取 `cover-prompt.md` 的 `cover_strategy`、`cover_hook`、`thumbnail_strategy`、`anti_generic_constraints`、`visual_quality_scorecard` 和 `cover_effectiveness_scorecard`，不得只凭"风格统一"给高分。
 
 - **不做服务端分复核**：`score_article` 基于已发布文章的真实阅读/互动数据算分，草稿零数据无法打分；发布前以 7 维人工审计为唯一闸门，`score_article` 留待发布后复盘
 - **整体阈值**：≥7.0 通过；5.5–6.9 边界（至少补齐标题CTR/开头钩子/价值密度后重审）；<5.5 回步骤 3 重写
@@ -421,7 +423,7 @@ render_template(
 
 审计 rubric、阈值、输出格式详见 `article-viral-strategy` skill 的 `references/viral-audit.md`。
 
-**审阅闭环**：任一项审阅未通过时标记待调整，自动回到对应步骤（正文、标题摘要、互动诱因、视觉 prompt 或 HTML 渲染）修订并重新审阅；不得调用 `publish_draft`。`viral-audit.md` 未通过（整体 <7.0 或任一硬性必过项不通过）同样先调整再复审。
+**审阅闭环**：任一项审阅未通过时标记待调整，自动回到对应步骤（正文、标题摘要、互动诱因、视觉 prompt 或 HTML 渲染）修订并重新审阅；不得调用 `publish_draft`。缺 `viral-audit.md` 不得发布；`viral-audit.md` 未通过（整体 <7.0 或任一硬性必过项不通过）同样先调整再复审。
 
 **产出**：`$DIR/final-review.md`
 
@@ -456,7 +458,7 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 - **模板驱动节奏**（硬性要求）：从 `claudecode/templates/article/*.yaml` 加载模板，不得临时编造节奏
 - **节奏规划完整**（硬性要求）：`visual-rhythm-plan.md` 存在且每个 `##` 都映射到 slot
 - 封面图必须成功生成并上传（硬性要求，**仅封面开关开启时**）
-- **封面质量闸门**（硬性要求，**仅封面开关开启时**）：`cover-prompt.md` 必须含 `final_title`、`digest_hook`、`cover_hook`、`visual_metaphor`、`thumbnail_strategy`、`anti_generic_constraints`、`visual_quality_scorecard`，且 `visual_quality_scorecard.overall_pass=true`
+- **封面质量闸门**（硬性要求，**仅封面开关开启时**）：`cover-prompt.md` 必须含 `final_title`、`digest_hook`、`cover_strategy`、`cover_hook`、`visual_metaphor`、`thumbnail_strategy`、`anti_generic_constraints`、`visual_quality_scorecard`、`cover_effectiveness_scorecard`，且两张评分卡 `overall_pass=true`；仅有旧的 6 维 vision 全 high 不得通过
 - **账号风格匹配**（硬性要求）：图片视觉风格与账号定位匹配，不使用 writer YAML 的 cover_style/cover_prompt（三维分析本身不受开关影响）
 - **配图内容贴切**（硬性要求，**仅配图开关开启时**）：`image-plan.md` 每张图含 `visual_brief` + `required_entities` + `must_match_excerpts`，prompt 必须引用章节具体物体/比喻/案例（非通用描述）
 - **Vision 校验闭环**（硬性要求，**仅配图开关开启时**）：每张内容图经过 `analyze_image`（或 `generate_image` 带 `verify_with_vision`）校验；至少 80% `verification.passed=true`
@@ -517,7 +519,7 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 - [ ] **`visual-rhythm-plan.md` 存在**，记录所选模板、slot 分配表、`layout_plan` JSON
 - [ ] 封面图 `$DIR/cover.png` 存在且可访问，视觉风格与账号定位匹配，**vision 校验通过**
 - [ ] 封面图已上传，获得有效 `media_id`
-- [ ] `$DIR/cover-prompt.md` 存在，含 `2.35:1` 比例、三维风格来源、`final_title`、`digest_hook`、`cover_hook`、`visual_metaphor`、`thumbnail_strategy`、`anti_generic_constraints`、`required_entities`、`visual_quality_scorecard`、vision 校验结果
+- [ ] `$DIR/cover-prompt.md` 存在，含 `2.35:1` 比例、三维风格来源、`final_title`、`digest_hook`、`cover_strategy`（`target_reader` / `reader_pain_or_job` / `article_promise` / `content_proof_points` / `click_trigger` / `cover_concept_candidates` / `selected_cover_concept`）、`cover_hook`、`visual_metaphor`、`thumbnail_strategy`、`anti_generic_constraints`、`required_entities`、`visual_quality_scorecard`、`cover_effectiveness_scorecard`、vision 校验结果
 - [ ] `image-plan.md` 存在，每张图含 `slot_id` + `section_index` + `chapter_title` + `core_point` + `composition_type` + `source_excerpt` + **`visual_brief` + `required_entities` + `must_match_excerpts`** + `prompt_strategy`
 - [ ] `images.json` 每条记录含 `slot_id` + `section_index` + `chapter_title` + `composition_type` + **`visual_brief` + `required_entities` + `must_match_excerpts`** + `prompt` + **`verification`** + `ref_image_path` + `image_type` + `quality_status`
 - [ ] 封面+配图均开启时，所有内容配图使用了 `ref_image_path="$DIR/cover.png"` 生成并记录，且只继承风格语言、不复刻封面主体；封面关·配图开时所有内容图未指向不存在的 `$DIR/cover.png`
@@ -558,14 +560,14 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 - [ ] 章节缺少配图（且模板要求该 slot 必填）→ 需在步骤 7 补充
 - [ ] 封面视觉风格与账号定位不匹配 → 检查三维分析是否正确执行
 - [ ] 封面 prompt 参考了 writer YAML 的 cover_prompt → 应从零构建
-- [ ] **封面质量评分卡未通过**（`visual_quality_scorecard.overall_pass=false`，或低对比、泛水墨模板感、标题/封面/digest 不协同、系列辨识度低）→ 先改 `cover_hook` / `visual_metaphor` / `thumbnail_strategy` 再重试
+- [ ] **封面质量评分卡未通过**（`visual_quality_scorecard.overall_pass=false`、`cover_effectiveness_scorecard.overall_pass=false`，或低对比、泛水墨模板感、标题/封面/digest 不协同、读者动机弱、正文证据不足、系列辨识度低）→ 先改 `cover_strategy` / `selected_cover_concept` / `cover_hook` / `visual_metaphor` / `thumbnail_strategy` 再重试
 - [ ] `image-plan.md` 缺失或字段不完整 → 步骤 6e 必须按新 schema 创建
 - [ ] **`visual_brief` 是抽象描述**（"商务场景"、"科技感"）→ 重写为具体画面
 - [ ] **`required_entities` 是抽象词**（"美感"、"氛围"）→ 重写为可识别的物体
 - [ ] **`must_match_excerpts` 是论点而非原句** → 从章节中摘真实段落
 - [ ] 封面+配图均开启时，内容配图未使用 `ref_image_path="$DIR/cover.png"` → 风格不一致风险；正文图复刻封面主体/构图/核心物件 → 必须重写章节 `visual_brief` / `required_entities`；封面关·配图开时，内容配图指向不存在的 `$DIR/cover.png` → 必须移除或链到首张已生成图
 - [ ] **正文 `<img src>` 出现封面 `$COVER_CDN_URL`，或多张正文图共用同一 `wechat_url`** → 服务端 `publish_draft` 会拒绝发布；回步骤 7 为缺失 slot 独立生成，不得用封面/他图顶替
-- [ ] **`$DIR/cover-prompt.md` 缺失或无 `visual_quality_scorecard`** → 步骤 6d 第 9 步必须原子写入
+- [ ] **`$DIR/cover-prompt.md` 缺失或无 `visual_quality_scorecard` / `cover_effectiveness_scorecard` / `cover_strategy`** → 步骤 6d 第 11 步必须原子写入；仅有旧的 6 维 vision 全 high 不得通过
 - [ ] `images.json` 缺少 `verification` 字段 → vision 校验未执行，回步骤 7b
 - [ ] **Vision 校验通过率 < 80%** → 回到步骤 6e 检查 prompt 构建逻辑
 - [ ] 配图提示词为通用描述（如"美丽风景"、"商务场景"）→ 需重写为章节具体内容
@@ -587,7 +589,7 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 - [ ] **`seo-result.md` 无 3 标题变体打分记录** → 步骤 5b 未执行，回退
 - [ ] **最终标题含极限词**（最/第一/顶级/完美/100%/根治）→ 立即弃用该变体，重选
 - [ ] **标题/封面/digest 三位一体不协同**（各说各话）→ 对齐同一利益点/情绪
-- [ ] **`viral-audit.md` 整体 <7.0 或硬性必过项任一失败** → 不得发布，按回退路径回步骤 3/5
+- [ ] **缺 `viral-audit.md` 不得发布；`viral-audit.md` 整体 <7.0 或硬性必过项任一失败** → 不得发布，按回退路径回步骤 3/5
 
 ---
 

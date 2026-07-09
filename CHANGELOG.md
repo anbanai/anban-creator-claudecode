@@ -4,6 +4,12 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.51] - 2026-07-09
+
+### Changed
+
+- Strengthened WeChat article cover strategy gates around reader relevance, information scent, three-concept review, click promise proof, viral audit enforcement, and anti-generic examples across agent and skill distributions.
+
 ## [2.10.50] - 2026-07-08
 
 ### Changed

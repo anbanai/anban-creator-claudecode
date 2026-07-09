@@ -116,12 +116,12 @@ description: 'Use when 微信公众号爆款互动引擎——为文章注入完
 3. 开头钩子（黄金三秒）
 4. 正文价值密度（每段一个信息点）
 5. 完读率结构（节奏/情绪弧/金句）
-6. 视觉停留（封面 + 配图协同，复用 `article-visual-design` / `article-cover-design` 结论）
+6. 视觉停留（封面 + 配图协同，必须读取 `cover_strategy`、`visual_quality_scorecard` 与 `cover_effectiveness_scorecard`，不得只凭"风格统一"或旧 vision 高分通过）
 7. 互动诱因（转发/收藏/评论）
 
 **不做服务端分复核**：草稿尚未发布、零互动数据，`score_article` 这类基于真实阅读/互动数的工具无法给草稿打分（强行调用会因缺 `read_count` 报错）。因此发布前审计以 **7 维人工评分** 为唯一闸门；`score_article` 留待发布后、积累真实数据时做效果复盘。
 
-**闸门规则**：整体分 < 阈值 → 回步骤 3 重写并重新审计，**不得发布**。允许缺 1–2 个非关键维度（降级说明），但 **标题CTR / 开头钩子 / 合规** 三项为**硬性必过**。
+**闸门规则**：整体分 < 阈值 → 回步骤 3 重写并重新审计，**不得发布**。允许缺 1–2 个非关键维度（降级说明），但 **标题CTR / 开头钩子 / 合规** 三项为**硬性必过**。封面开启时，缺 `viral-audit.md`、缺 `cover_effectiveness_scorecard`、或仅有旧的 6 维 vision 全 high，均不得发布。
 
 审计 rubric、阈值、回退规则见 [viral-audit.md](references/viral-audit.md)。
 

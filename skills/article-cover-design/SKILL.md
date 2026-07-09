@@ -9,6 +9,8 @@ description: 'Use when 微信公众号封面图（公众号头图）专用设计
 
 遇到场景分支、产物格式或质量边界不确定时，先读 [references/examples.md](references/examples.md)。
 
+封面是否真的承担内容相关度和点击率，按 [references/cover-effectiveness.md](references/cover-effectiveness.md) 的方法论执行；主文件只保留流程与硬闸门。
+
 ## 图片比例固定规则
 
 本 Skill 只要涉及生成、选择、裁切、校验或引用图片，必须按以下优先级决定画面比例：
@@ -61,16 +63,19 @@ description: 'Use when 微信公众号封面图（公众号头图）专用设计
 
 ## 封面质量闸门
 
-生成前先从 `$DIR/seo-result.md`、digest 和 `$DIR/04-article-final.md` 提炼并写入 `cover-prompt.md`：
+生成前先从 `$DIR/context-brief.md`、`$DIR/seo-result.md`、digest 和 `$DIR/04-article-final.md` 提炼 `cover_strategy` 并写入 `cover-prompt.md`：
 
 - `final_title`：最终标题
 - `digest_hook`：摘要前半句的利益点/悬念/反差
+- `cover_strategy`：必须含 `target_reader`、`reader_pain_or_job`、`article_promise`、`content_proof_points`、`click_trigger`、`cover_concept_candidates`、`selected_cover_concept`
 - `cover_hook`：封面唯一要放大的点击钩子
 - `visual_metaphor`：能被画出来的核心隐喻
 - `thumbnail_strategy`：缩到 200px 时靠什么被看见（主体大小、对比、色块、短文字）
 - `anti_generic_constraints`：明确禁止的泛化画面，例如"通用养生水墨背景"、无主体山水、只放茶盏/莲花/药材摆拍、与标题无关的人像
+- `cover_effectiveness_scorecard`：必须含 `information_scent_alignment`、`audience_motivation`、`content_specificity`、`thumbnail_attention`、`truthfulness_not_clickbait`、`brand_style_fit`、`visual_distinctiveness`、`safe_zone_text_policy`、`overall_pass`
+- 三个硬测试：`generic_swap_test`、`promise_proof_test`、`audience_motivation_test`
 
-封面必须先服务 `cover_hook`，再服务品牌风格。品牌统一不等于每篇都用同一张浅色水墨背景；同一批文章中，主体、隐喻、构图或色彩重心必须能区分。
+封面必须先服务 `article_promise`、`target_reader` 和 `click_trigger`，再服务品牌风格。品牌统一不等于每篇都用同一张浅色水墨背景；同一批文章中，主体、隐喻、构图或色彩重心必须能区分。**仅有旧的 6 维 vision 全 high 不得通过**：缺 `cover_strategy` 或 `cover_effectiveness_scorecard.overall_pass=false` 时必须重构概念。
 
 ## 受控文字策略
 
@@ -82,24 +87,27 @@ description: 'Use when 微信公众号封面图（公众号头图）专用设计
 - **prompt 要求**：带字时明确写出需要出现的精确文字；无字时写明 `NO text, NO watermark, NO logo`。
 - **vision 校验**：必须检查文字是否短、清晰、准确、无乱码；文字失败时优先改为无字封面或重试。
 - **反导流视觉禁区**：封面不得出现二维码、联系方式、外链 URL、扫码提示、跳转图标、加群、加微信、关注领资料或回复关键词等导流元素；出现即判定不通过并重试。
-## 第一步：推导视觉概念（杜绝通用素材）
+## 第一步：推导封面策略与三选一概念
 
 封面**必须从文章内容推导**，不是随机图：
 
-1. 读 `$DIR/seo-result.md` 和 `$DIR/04-article-final.md`，提取**最终标题**、digest 前半句、**核心论点**与**最强视觉隐喻**（文章已有的比喻/意象/案例/场景）。
+1. 读 `$DIR/context-brief.md`、`$DIR/seo-result.md` 和 `$DIR/04-article-final.md`，提取**最终标题**、digest 前半句、目标读者、读者痛点/任务、文章承诺、正文证据和最强视觉素材（文章已有的比喻/意象/案例/场景）。
 2. 取视觉锚点 `$VISUAL_STYLE`：
    - `get_project_profile` 的 `visual_style` 非空 → 以它为**权威锚点**，三维分析只做**细化**（配色/情绪/构图），不得偏离。
    - 为空 → 按账号定位 + 内容主题 + 受众三维分析兜底（方向见下方「三维方向参考」）。
    - **绝不**从 writer YAML 推视觉（writer 只管文字；切断 dan-koe→维多利亚版画 bug）。
-3. 合成封面概念：`{cover_hook} × {VISUAL_STYLE} × {COLOR_PALETTE} × {内容隐喻具象} × {thumbnail_strategy} × {宽银幕叙事构图 + 主体居中安全区}`。
-4. 提炼 `required_entities`（封面必须出现的具体物体，vision 校验依据）和 `anti_generic_constraints`（必须避免的同质化画面）。
+3. 生成至少 3 个 `cover_concept_candidates`，**先评审，不先画图**。每个候选必须写清：标题钩子、摘要承诺、正文证据、目标读者点击理由、可视化实体、误导风险、可替换性风险。
+4. 对 3 个候选执行 `generic_swap_test`、`promise_proof_test`、`audience_motivation_test`，选择评分最高且三项全过的 `selected_cover_concept`。任何“换到其他方法论文章也成立”的概念必须失败。
+5. 合成封面概念：`{selected_cover_concept} × {VISUAL_STYLE} × {COLOR_PALETTE} × {article_promise} × {click_trigger} × {thumbnail_strategy} × {宽银幕叙事构图 + 主体居中安全区}`。
+6. 提炼 `required_entities`（封面必须出现的具体物体，vision 校验依据）和 `anti_generic_constraints`（必须避免的同质化画面）。
 
 ## 第二步：构建封面 prompt
 
 ```
 A cinematic 2.35:1 wide banner for a WeChat article cover. {VISUAL_STYLE}.
-Cover hook: {COVER_HOOK}. {COLOR_PALETTE}.
-{CONCRETE_METAPHOR_FROM_ARTICLE — 具象化的核心隐喻}.
+Target reader: {TARGET_READER}. Reader pain/job: {READER_PAIN_OR_JOB}.
+Article promise: {ARTICLE_PROMISE}. Click trigger: {CLICK_TRIGGER}. {COLOR_PALETTE}.
+Selected cover concept: {SELECTED_COVER_CONCEPT}. {CONCRETE_PROOF_FROM_ARTICLE — 具象化正文证据}.
 Thumbnail strategy: {THUMBNAIL_STRATEGY}. Avoid generic visuals: {ANTI_GENERIC_CONSTRAINTS}.
 {MOOD_TONE}. Main subject centered within the middle safe zone (works for both
 the 2.35:1 hero and the 1:1 forward-card crop), large and high-contrast for
@@ -122,16 +130,41 @@ NO logo.
 ```
 这是文章《$ARTICLE_TITLE》的公众号封面（将用于订阅号列表 2.35:1 + 转发卡 1:1）。
 digest 钩子：$DIGEST_HOOK；封面钩子：$COVER_HOOK。
+目标读者：$TARGET_READER；读者痛点/任务：$READER_PAIN_OR_JOB；文章承诺：$ARTICLE_PROMISE；点击触发点：$CLICK_TRIGGER。
+正文证据：$CONTENT_PROOF_POINTS；选中封面概念：$SELECTED_COVER_CONCEPT。
 文章核心论点：$CORE_THESIS；核心隐喻：$METAPHOR；账号视觉风格锚点：$VISUAL_STYLE。
 反同质化约束：$ANTI_GENERIC_CONSTRAINTS。
 请按 JSON 评分（软维度 high/medium/low；hard_* 为硬性布尔）：
 {
   "final_title": "$ARTICLE_TITLE",
   "digest_hook": "$DIGEST_HOOK",
+  "cover_strategy": {
+    "target_reader": "$TARGET_READER",
+    "reader_pain_or_job": "$READER_PAIN_OR_JOB",
+    "article_promise": "$ARTICLE_PROMISE",
+    "content_proof_points": ["..."],
+    "click_trigger": "$CLICK_TRIGGER",
+    "cover_concept_candidates": ["candidate A", "candidate B", "candidate C"],
+    "selected_cover_concept": "$SELECTED_COVER_CONCEPT"
+  },
   "cover_hook": "$COVER_HOOK",
   "visual_metaphor": "$METAPHOR",
   "thumbnail_strategy": "$THUMBNAIL_STRATEGY",
   "anti_generic_constraints": "$ANTI_GENERIC_CONSTRAINTS",
+  "cover_effectiveness_scorecard": {
+    "information_scent_alignment": "...", // 标题、摘要、封面是否给出同一个清晰预期？
+    "audience_motivation": "...",         // 目标读者 0.5 秒内是否知道这和自己的问题有关？
+    "content_specificity": "...",         // 主体/冲突/短文字是否来自正文证据而非泛方法论？
+    "thumbnail_attention": "...",         // 缩略图是否有大主体、强冲突或短文字承担打开率？
+    "truthfulness_not_clickbait": "...",  // 是否准确但有吸引力，不夸大正文承诺？
+    "brand_style_fit": "...",             // 风格是否符合账号，不喧宾夺主？
+    "visual_distinctiveness": "...",      // 与同批/历史封面是否能区分？
+    "safe_zone_text_policy": "...",       // 安全区与受控文字策略是否同时成立？
+    "generic_swap_test": true/false,
+    "promise_proof_test": true/false,
+    "audience_motivation_test": true/false,
+    "overall_pass": true/false            // 三个硬测试 true，且前 8 项不低于 medium
+  },
   "visual_quality_scorecard": {
     "title_cover_digest_alignment": "...", // 标题、封面、digest 是否强化同一个利益点/悬念？
     "thumbnail_readability": "...",        // 缩成 200px 时主体是否仍大、清楚、高对比？
@@ -185,9 +218,10 @@ generate_image(
 - `passed=false` → 按 `notes` / `sharper_prompt_hint` 锐化 prompt 重试，**最多 3 次**（共 3 次尝试）。锐化策略：
   - 在 prompt 开头加 `MAIN SUBJECT: <具体物体>`，强化主体权重；
   - 把隐喻改得更具体（材质/颜色/方位/数量）；
-  - 若失败原因是"通用养生水墨背景"、低对比、标题/封面/digest 不协同或系列辨识度低，必须先改 `cover_hook` / `visual_metaphor` / `thumbnail_strategy`，不要只换风格形容词；
+  - 若失败原因是"通用养生水墨背景"、低对比、标题/封面/digest 不协同、读者动机弱、正文证据不足、系列辨识度低，必须先改 `cover_strategy` / `selected_cover_concept` / `cover_hook` / `visual_metaphor` / `thumbnail_strategy`，不要只换风格形容词；
   - 收紧「主体居中安全区 + 避开底部 20%」；
   - 按受控文字策略修正：文字乱码/过密则改为无字或缩短为精确短词；始终强化 `NO watermark, NO logo`。
+- vision JSON 类型不匹配、校验超时、缺 `cover_effectiveness_scorecard`、三个硬测试任一失败、或 `cover_effectiveness_scorecard.overall_pass=false` → 不得手动 `upload_image` 后继续发布；必须重新校验或回到第一步重构概念。
 - 3 次仍不过 → **暂停并请求用户协助**，**不得**用未通过 vision 的封面发布。
 
 ## 第六步：落盘审计（cover-prompt.md，硬性）
@@ -197,11 +231,13 @@ generate_image(
 - **比例**：公众号 2.35:1（900×383px 标准；服务端强制裁剪）。
 - **账号视觉风格来源**：`$VISUAL_STYLE` / `$COLOR_PALETTE` / `$MOOD` + 三维分析依据（账号定位/内容主题/受众），或配置锚点来源（`visual_style_source`）。
 - **标题协同字段**：`final_title`、`digest_hook`、`cover_hook`。
+- **封面策略**：`cover_strategy`，含 `target_reader`、`reader_pain_or_job`、`article_promise`、`content_proof_points`、`click_trigger`、`cover_concept_candidates`、`selected_cover_concept`。
 - **文章核心隐喻**：`visual_metaphor`，即封面要表达的最强视觉隐喻。
 - **缩略图策略与反同质化约束**：`thumbnail_strategy`、`anti_generic_constraints`。
 - **`required_entities`**：封面必须出现的具体物体列表。
 - **最终 prompt**：实际传给 `generate_image` 的完整 prompt。
 - **封面质量评分卡**：`visual_quality_scorecard` + vision prompt + 结果（passed/score/各维度/missing_or_forbidden）。
+- **封面有效性评分卡**：`cover_effectiveness_scorecard` + `generic_swap_test` / `promise_proof_test` / `audience_motivation_test` 结果；仅有旧的 6 维 vision 全 high 不得通过。
 
 **产出**：`$DIR/cover.png`、`media_id`、`$COVER_CDN_URL`、`$DIR/cover-prompt.md`。
 
