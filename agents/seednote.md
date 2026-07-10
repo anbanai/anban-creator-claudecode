@@ -27,13 +27,13 @@ maxTurns: 20
 
 ## 自动决策原则
 
-**默认自动决策，阻塞时再询问。** 所有能从用户输入、账号画像、项目信息、历史选题或评分模型判断的事项，直接选择最优方案；只有多项目无法语义匹配、关键 MCP 工具不可用、封面多次失败等会阻断流程的问题，才向用户请求选择或协助。
+**全程自动决策，不发起中途询问。** 用户只负责第一次输入；项目、研究、参考素材、页面分配、模型回退、核验和重试均由 Agent/Skill 按证据与确定性规则执行。无法可靠继续时记录可恢复失败态并停止，不请求用户替流程做决定。
 
 | 决策点 | 自动策略 |
 |--------|----------|
 | **模式选择** | 用户提供笔记 ID/链接/xsec_token/复刻关键词 → 复刻模式；否则 → 原创模式 |
 | **选题** | 按互动率、时效性和新颖度评分，自动选 Top 1 |
-| **视觉风格** | 账号有参考图 → 用 `--ref`；否则 → 动态设计 `$STYLE`，封面确立基准 |
+| **视觉与参考素材** | 先分析需求，再逐图分析所有可用附件；按每页职责自动选择 0、1 或多张原图，没有相关参考时动态设计 `$STYLE` |
 | **错误处理** | 研究和写作按对应 skill 重试；图片 API 或质量验证失败时记录可恢复失败态并停止在图片阶段，修复后从该阶段重试 |
 
 决策过程和失败原因透明记录在 `$DIR/*.md` 文件中。
@@ -45,6 +45,73 @@ maxTurns: 20
 - **禁止编写 JavaScript/Node.js/Python 脚本或自定义 HTTP 客户端**调用 Anban MCP 或小红书接口
 - **MCP 工具、Agent-Reach、登录态或 Agent-Reach doctor 无可用小红书 backend 时立即停止并报告修复提示**，不要自行探测、绕过或创建替代连接方式，不生成虚构热门数据
 - **`prepare_workspace` / `archive_workspace` 仅返回路径**，目录创建和文件移动由 agent 通过本地 Bash 执行
+
+---
+
+<!-- seednote-reference-contract:start -->
+## 多参考素材自动决策流程
+
+1. 先读取用户统一提示词、项目资料、`.anban-creator/input-attachments/index.json` 和可选的 `errors.json`，写出 `request-analysis.json` 与 `request-analysis.md`。此阶段不得先分析图片。
+2. 遍历 `index.json` 中每张可用图片。针对已完成的需求分析和该图片的可选 `instruction`，动态编写该图片独有的 `analyze_image` prompt；每张可用图片都必须分析，单张最多 3 次理解尝试。`errors.json` 中的条目必须记为 `analysis_failed`；若它是产品身份、Logo、包装、型号或核心结构的唯一证据则停止任务，其他素材能可靠补足时才可继续并记录依据。
+3. 写出 `reference-analysis.json` 与 `reference-analysis.md`，记录可见事实、不确定性、需求支持点、可参考维度、必须保持、必须避免、不可推出结论，并完成同产品/系列/型号、新旧包装、角度、事实图/氛围图、Logo/文字/颜色/结构冲突分析。
+4. 写出 `image-plan.md`。对每张输出图独立决定使用 0、1 或多张附件，记录附件编号、每张用途、保持项、禁止项。不得把所有素材传给所有页面；超过服务端返回的数量上限时按当页相关性排序选择子集。
+5. 写出 `image-prompts.md`。调用 `generate_image` 时只传当前输出图相关的原始路径，数组顺序必须与 prompt 中“参考图 1、参考图 2”一致。不得传分析后的截图、拼图或转码替代原图。
+6. 每张生成图片都使用动态编写的 `analyze_image` prompt 核验产品身份、结构、颜色、Logo、包装、文字、虚构部件、版本融合、禁止内容、页面职责和文字可读性，并写入 `image-review.md`。
+7. 核验不通过时自动调整参考组合/顺序、生成 prompt、保持项/禁止项、构图复杂度或核验 prompt。每张输出图最多 3 次生成尝试，初次生成计入。不得请求用户决定。
+8. 写出 `reference-usage-summary.json`。关键事实无法保证时任务失败；非关键氛围或轻微构图问题可保留并记录 warning。
+<!-- seednote-reference-contract:end -->
+
+## 参考素材追踪产物与失败策略
+
+每次运行都必须归档以下 8 个产物；即使任务失败，也不得删除已经写出的文件：
+
+```text
+request-analysis.json
+request-analysis.md
+reference-analysis.json
+reference-analysis.md
+image-plan.md
+image-prompts.md
+image-review.md
+reference-usage-summary.json
+```
+
+`reference-usage-summary.json` 使用以下结构；`status` 使用 `used`、`excluded` 或 `analysis_failed`，模型字段记录服务端实际返回值：
+
+```json
+{
+  "version": "1.0",
+  "inputs": [
+    {
+      "attachment_index": 1,
+      "file_name": "attachment_01_front.png",
+      "url": "https://example.invalid/front.png",
+      "instruction": "保持包装和 Logo",
+      "status": "used",
+      "decision_summary": "正面图是产品身份和包装文字的主要证据",
+      "analysis_attempts": 1,
+      "warnings": []
+    }
+  ],
+  "outputs": [
+    {
+      "file_name": "cover.png",
+      "references": [{ "attachment_index": 1, "purpose": "保持产品身份、包装和 Logo" }],
+      "generation_attempts": 2,
+      "verification": { "status": "passed", "summary": "产品身份、包装和当页文字核验通过" },
+      "provider": "openai",
+      "model": "gpt-image-2",
+      "selection_reason": "reference_compatible_fallback"
+    }
+  ],
+  "warnings": [],
+  "model_fallback_reason": "首选模型的参考图上限不足，服务端选择了兼容模型"
+}
+```
+
+执行预算固定为：每张输入图最多 3 次理解尝试；每张输出图最多 3 次生成尝试，首次生成计入。不得向用户发起中途确认，也不得把参考素材选择、模型回退或重试决策转交给用户。
+
+关键失败包括：唯一产品身份、Logo、包装、型号或核心结构证据不可用；身份或结构幻觉；冲突版本融合；出现禁止内容；页面无法履行职责。遇到关键失败时停止在当前阶段，但必须保留已生成文件和 trace artifacts，记录失败阶段和下一步建议，后续从失败阶段恢复。非关键氛围或轻微构图问题只记录 warning，不得把它升级成需要用户中途决策的阻塞。
 
 ---
 
@@ -64,7 +131,7 @@ maxTurns: 20
 
 #### 步骤 2：获取项目 ID
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="project", title="项目选择", description="选择目标项目")`。通过 Bash 执行 `echo $ANBAN_DEFAULT_PROJECT` 检查环境变量，若非空则直接使用其值作为 `$PROJECT_ID`。若为空，调用 `list_projects` MCP 工具（参数：`platform="seednote"`）获取项目列表。如果只有一个匹配项目，直接使用其 `project_id`。**如果有多个匹配项目**：根据用户的话题/需求与每个项目的 `name`、`positioning`、`keywords` 进行语义匹配；能明确判断则使用该项目的 `project_id`；否则**向用户展示所有可选项目**让其选择。
+调用 `update_task_progress(task_id=$TASK_ID, stage="project", title="项目选择", description="选择目标项目")`。通过 Bash 执行 `echo $ANBAN_DEFAULT_PROJECT` 检查环境变量，若非空则直接使用其值作为 `$PROJECT_ID`。若为空，调用 `list_projects` MCP 工具（参数：`platform="seednote"`）获取项目列表。如果只有一个匹配项目，直接使用其 `project_id`。如果有多个匹配项目，根据用户需求与项目 `name`、`positioning`、`keywords` 计算语义相关性，并按“相关性降序、`project_id` 升序”稳定排序后自动选择第一名；把候选、分数和选择依据写入 `request-analysis.md`，不得询问用户。
 
 #### 步骤 3：获取账号画像与已有标题
 
@@ -98,7 +165,7 @@ maxTurns: 20
 
 #### 步骤 7：生成图片
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="image_generation", title="图片生成", description="规划并生成封面、内容图和尾图")`。using the `seednote-visual-design` skill，传入 `$DIR/content.md`。账号画像有可用参考图时优先使用参考图；否则动态设计 `$STYLE`，以封面确立基准风格。技能内部按 `seednote_image_mode` 完成图片内容规划（`$DIR/image-plan.md`）和全部图片生成：封面 `$DIR/cover.png`、内容图 `$DIR/image_01.png` ... `$DIR/image_03.png`（仅含内容图的模式）、尾图 `$DIR/tail.png`（仅含尾图的模式）。每张应生成图片都通过 `generate_image` 生成并记录到 `$DIR/image-prompts.md`；若 API 返回 `error`、超时或质量验证重试后仍不合格，在 `$DIR/image-review.md` 记录 `provider`、`model`、`output_path`、`error` 和`下一步建议`，保留已成功产物，任务停止在图片阶段作为可恢复失败态，修复模型、额度、网络或配置后从同一阶段重试并覆盖同名 `output_path`。图片质量和风格一致性由 `seednote-visual-design` skill 内部验证流程保证。
+调用 `update_task_progress(task_id=$TASK_ID, stage="image_generation", title="图片生成", description="规划并生成封面、内容图和尾图")`。using the `seednote-visual-design` skill，传入 `$DIR/content.md`。先完成需求分析和全部可用附件分析，再由技能为每页自动选择 0、1 或多张相关原图；没有相关参考时动态设计 `$STYLE`。技能内部按 `seednote_image_mode` 完成图片内容规划（`$DIR/image-plan.md`）和全部图片生成：封面 `$DIR/cover.png`、内容图 `$DIR/image_01.png` ... `$DIR/image_03.png`（仅含内容图的模式）、尾图 `$DIR/tail.png`（仅含尾图的模式）。每张应生成图片都通过 `generate_image` 生成并记录到 `$DIR/image-prompts.md`；若 API 返回 `error`、超时或质量验证重试后仍不合格，在 `$DIR/image-review.md` 记录 `provider`、`model`、`output_path`、`error` 和`下一步建议`，保留已成功产物，任务停止在图片阶段作为可恢复失败态，修复模型、额度、网络或配置后从同一阶段重试并覆盖同名 `output_path`。图片质量和风格一致性由 `seednote-visual-design` skill 内部验证流程保证。
 
 **产出**：`$DIR/image-plan.md`、`$DIR/cover.png`、内容图（按 `seednote_image_mode`）、尾图（按 `seednote_image_mode`）
 
@@ -177,7 +244,7 @@ maxTurns: 20
 | 风险 | 缓解措施 |
 |------|----------|
 | 选题评分无高分候选 | 自动选择最高分选题，在 `topic-analysis.md` 记录评分分布 |
-| 参考图配置无效 | 降级为动态设计 `$STYLE`，首图确立风格基准 |
+| 参考素材不可用 | 非关键素材记录 warning；唯一产品身份、Logo、包装、型号或核心结构证据不可用时保留产物并进入可恢复失败态 |
 | 图片 API 或质量验证失败 | 记录 provider/model/output_path/error/下一步建议，任务停止在图片阶段作为可恢复失败态，修复后从同一阶段重试 |
 | 源笔记获取失败 | 重新获取 token 后重试一次，仍失败则停止 |
 | 爆款拆解证据不足 | 写入 missing_data，降低 confidence，默认推荐 `style-only` |

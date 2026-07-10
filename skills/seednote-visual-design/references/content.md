@@ -71,6 +71,8 @@
 
 **图片总数**：1~5 张，由 `seednote_image_mode` 决定：`cover_only` 仅封面，`cover_content` 为封面 + 内容图，`cover_tail` 为封面 + 尾图，`full` 为封面 + 内容图 + 尾图。封面始终生成；内容图仅在 `cover_content` / `full` 模式生成，张数按信息点分组自适应（最多 3 张）；尾图仅在 `cover_tail` / `full` 模式生成，不含尾图的模式 `image-plan.md` 不含 `## tail` 节。所有图片逐张调用 `generate_image` 生成。
 
+封面、内容图和尾图均不预设是否使用参考素材。每页根据 `image-plan.md` 独立选择 0、1 或多张原图；没有相关参考时使用纯文生图。项目级品牌参考图仍可作为旧数据来源，但不得覆盖本次输入附件中更具体、更新的产品事实。
+
 **格式模板**：
 
 ```markdown
@@ -161,10 +163,11 @@
 
 **生成方式（逐张调用 generate_image）**：
 
-按 image-plan.md 逐张调用 `generate_image` MCP 工具：
+按 `image-plan.md` 逐张调用 `generate_image`：
 - 每张使用对应 section 的信息点填充 `{page_content}` 和 `{page_type}`
 - `output_path` 设为 `$DIR/image_01.png`、`$DIR/image_02.png` ... `$DIR/image_03.png`
-- `ref_image_path` 留空（纯文生图）；每张使用 image-plan.md 中独立的视觉主体/场景，禁止与其他内容图复用同一场景
-尾图单独生成见 tail.md（仅当 `seednote_image_mode` 包含尾图时）
+- `ref_image_paths` 只包含 `image-plan.md` 为当前页选中的原始路径，顺序与 prompt 的参考图编号一致；当前页没有相关参考时省略该字段并使用纯文生图
+- 每张使用独立视觉主体、场景、构图和参考子集，禁止与其他内容图机械复用
+尾图单独生成见 tail.md（仅当 `seednote_image_mode` 包含尾图时）。
 
-> **关键规则**：每张内容图必须使用对应信息点构造独立 prompt（独立场景/视觉主体），确保内容差异化。通过共享「风格延续：{style}」文本块保持调性统一——不使用参考图，避免 Seedream 图生图把场景钉死导致雷同。
+> **关键规则**：封面、内容图和尾图均不预设是否使用参考素材。每页根据 `image-plan.md` 独立选择 0、1 或多张原图；没有相关参考时使用纯文生图。项目级品牌参考图仍可作为旧数据来源，但不得覆盖本次输入附件中更具体、更新的产品事实。 每张内容图必须使用对应信息点构造独立 prompt；共享“风格延续：{style}”文本块只负责调性一致，不能替代对产品事实和参考素材用途的逐页判断。
