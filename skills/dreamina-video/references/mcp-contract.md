@@ -142,7 +142,7 @@ Returns:
 - `pricing_breakdown`
 - validation errors for unsupported resolved model, parameter, or reference combinations
 
-The server estimates credits dynamically from `model_prices.video_generation`, `billing.credits_per_cny`, membership/user multipliers, the server-resolved model key, output resolution, ratio, duration, whether an input video is present, and server-measured input video duration. Real model cost stays separate from billing multipliers. Do not trust agent-supplied input video duration. Video task/plan creation charges only the base task service fee. The actual video provider cost is deducted later as an independent `video_gen` MCP operation when the provider job is submitted. If the balance cannot cover `video_gen` at execution time, stop and ask the user to recharge.
+The server estimates credits dynamically from `model_prices.video_generation`, `billing.credits_per_cny`, membership/user multipliers, the server-resolved model key, output resolution, ratio, duration, whether an input video is present, and server-measured input video duration. Real model cost stays separate from billing multipliers. Do not trust agent-supplied input video duration. Video task/plan creation charges only the base task service fee. The actual video provider cost is deducted later as an independent `video_gen` MCP operation when the provider job is submitted.
 
 ## build_video_generation_plan
 
