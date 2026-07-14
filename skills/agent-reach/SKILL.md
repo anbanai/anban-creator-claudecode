@@ -25,10 +25,10 @@ Use Agent-Reach as the only boundary for external Xiaohongshu data. This skill d
 
 1. Run `agent-reach doctor --json` before any external research.
 2. Read both `xiaohongshu.status` and `xiaohongshu.active_backend` from the doctor output.
-3. Continue only when `xiaohongshu.status == "ok"` and `active_backend` is non-empty. Agent-Reach may expose a repairable backend while status is `warn`; `active_backend` alone never proves usability.
-4. Treat the exact backend labels as `OpenCLI`, `xiaohongshu-mcp`, and `xhs-cli (xiaohongshu-cli)`. Unknown labels are unsupported and must stop explicitly.
+3. Collect external data only when `xiaohongshu.status == "ok"` and `active_backend` is non-empty. Agent-Reach may expose a repairable backend while status is `warn`; `active_backend` alone never proves usability.
+4. Treat the exact backend labels as `OpenCLI`, `xiaohongshu-mcp`, and `xhs-cli (xiaohongshu-cli)`. Unknown labels are unsupported for external collection and must use the unavailable-backend path.
 5. Use only the command family exposed by the active Agent-Reach backend. Do not call OpenCLI, xiaohongshu-mcp, xhs-cli, browser scrapers, or custom HTTP clients directly unless Agent-Reach selected that backend.
-6. Write provenance into research artifacts: `data_source=agent-reach`, `channel_status`, `active_backend`, `backend_command_family`, `token_source`, `missing_fields`, and `fallback_reason`.
+6. Write provenance into research artifacts: `data_source`, `channel_status`, `active_backend`, `backend_command_family`, `token_source`, `missing_fields`, and `fallback_reason`.
 
 ## Source Notes
 
@@ -36,11 +36,13 @@ Use Agent-Reach as the only boundary for external Xiaohongshu data. This skill d
 - Never construct `xsec_token` by guesswork or template.
 - If a source note cannot be resolved after the Agent-Reach backend's retry path, stop and explain the recoverable step.
 
-## Repair Hint
+## Unavailable Backend
 
-When `agent-reach` is missing inside an Anban-managed task runtime, stop and report a runtime packaging fault. Do not run `pip`, `pipx`, `npm`, `agent-reach install`, or mutate the managed image from a task.
+Agent-Reach is an optional enhancement for original Seednote research. When the CLI is missing or Xiaohongshu has no healthy backend, report the exact availability state to the parent workflow and do not run any backend command. An original task must continue from its explicit topic, topic pool, project profile, and existing-title deduplication; it must not create `failure-state.json` merely because external research is unavailable.
 
-When the CLI exists but `xiaohongshu.status` is not `ok`, report the exact `status`, `active_backend`, and `message` from doctor. Follow only the repair path selected by Agent-Reach.
+When the CLI exists but `xiaohongshu.status` is not `ok`, report the exact `status`, `active_backend`, and `message` from doctor. Do not describe local/project-context fallback as external trending data. When replicate mode depends only on an external note ID or URL and no source content can be resolved, report that recoverable source-input failure to the parent workflow.
+
+Do not run `pip`, `pipx`, `npm`, `agent-reach install`, or mutate a managed task runtime. Only show the installation hint when the user explicitly asks to enable external research.
 
 For an unmanaged local environment where the CLI itself is missing, use the official install flow:
 

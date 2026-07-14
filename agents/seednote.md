@@ -34,7 +34,7 @@ maxTurns: 20
 | **模式选择** | 用户提供笔记 ID/链接/xsec_token/复刻关键词 → 复刻模式；否则 → 原创模式 |
 | **选题** | 按互动率、时效性和新颖度评分，自动选 Top 1 |
 | **视觉与参考素材** | 先分析需求，再逐图分析所有可用附件；按每页职责自动选择 0、1 或多张原图，没有相关参考时动态设计 `$STYLE` |
-| **错误处理** | 研究和写作按对应 skill 重试；图片 API 或质量验证失败时记录可恢复失败态并停止在图片阶段，修复后从该阶段重试 |
+| **错误处理** | 原创模式外部研究不可用时自动降级；复刻源内容、关键事实或图片 API/质量验证不可用时记录可恢复失败态并从对应阶段重试 |
 
 决策过程和失败原因透明记录在 `$DIR/*.md` 文件中。
 
@@ -43,7 +43,7 @@ maxTurns: 20
 - **Anban 产品能力必须使用 Claude Code 内置 MCP 工具**调用服务端接口（如 `list_projects`、`get_project_profile`、`list_project_titles`、`prepare_workspace`、`archive_workspace`、`generate_image`、`save_template` 等）
 - **外部互联网/小红书真实数据研究必须 using the `agent-reach` skill**。Agent-Reach 是唯一外部数据入口；执行 `agent-reach doctor --json` 后，必须同时确认 `xiaohongshu.status == "ok"` 和非空 `active_backend`，backend 顺序和可用性完全由 Agent-Reach 决定。OpenCLI、xiaohongshu-mcp、xhs-cli 只是 Agent-Reach 的 backend，不在本 agent 内自行排序或替代选路
 - **禁止编写 JavaScript/Node.js/Python 脚本或自定义 HTTP 客户端**调用 Anban MCP 或小红书接口
-- **MCP 工具、Agent-Reach、登录态或 Agent-Reach doctor 无可用小红书 backend 时立即停止并报告修复提示**，不要自行探测、绕过或创建替代连接方式，不生成虚构热门数据
+- **Agent-Reach 是原创模式的可选增强能力**。CLI、登录态或小红书 backend 不可用时，原创模式基于用户主题、选题池、账号画像与已有标题继续，明确记录无外部数据且不得生成虚构热门数据；仅当复刻任务只有外部 ID/链接且无法取得源内容时才停止
 - **`prepare_workspace` / `archive_workspace` 仅返回路径**，目录创建和文件移动由 agent 通过本地 Bash 执行
 
 ---
@@ -155,7 +155,7 @@ reference-usage-summary.json
 
 #### 步骤 5：研究选题
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="research", title="选题研究", description="通过 Agent-Reach 采集真实热门笔记数据，评估候选选题")`。先 using the `agent-reach` skill 执行 `agent-reach doctor --json`，确认 `xiaohongshu.status == "ok"` 且 `active_backend` 非空；再 using the `seednote-research` skill 按 Agent-Reach 返回的 backend 命令族采集热门笔记数据。遵守 `seednote-research` skill 的 xsec_token 工作流。对候选选题按互动率、时效性和新颖度评分，自动选 Top 1，将候选列表、评分、避重判断、`data_source=agent-reach`、`channel_status=ok`、`active_backend`、缺失字段和降级原因写入 `$DIR/topic-analysis.md`。Agent-Reach 不可用、未安装、未登录或无健康 backend 时写 `failure-state.json` 并停止；不得生成虚构热门数据。只有 doctor 健康且 backend 至少成功返回过一次真实查询、但结果数量或字段不足时，才属于“热门数据不足”，此时可基于已取得的真实数据、账号画像和用户需求生成保守选题。
+调用 `update_task_progress(task_id=$TASK_ID, stage="research", title="选题研究", description="评估主题并在可用时通过 Agent-Reach 补充真实热门笔记数据")`。先 using the `agent-reach` skill 执行 `agent-reach doctor --json`。若 `xiaohongshu.status == "ok"` 且 `active_backend` 非空，再 using the `seednote-research` skill 按 Agent-Reach 返回的 backend 命令族采集热门笔记数据，并遵守 xsec_token 工作流；只有取得真实互动字段时才按互动率、时效性和新颖度评分。若 Agent-Reach 不可用、未安装、未登录或无健康 backend，跳过外部命令，基于用户明确主题、选题池、账号画像和已有标题完成保守选题。原创模式不得因此写 `failure-state.json` 或停止。将候选列表、外部评分或降级依据、避重判断、`data_source`、`channel_status`、`active_backend`、缺失字段和降级原因写入 `$DIR/topic-analysis.md`，不得把降级结果描述为热门数据。
 
 **产出**：`$DIR/topic-analysis.md`
 
@@ -179,7 +179,7 @@ reference-usage-summary.json
 
 #### 步骤 5：获取源笔记
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="research", title="选题研究", description="通过 Agent-Reach 获取源笔记详情与互动数据")`。先 using the `agent-reach` skill 执行 `agent-reach doctor --json`，再 using the `seednote-research` skill 按 Agent-Reach 的 `active_backend` 获取源笔记真实数据。必须从搜索、feed 或 Agent-Reach backend 返回的完整 URL 中取得 `feed_id` / `xsec_token`，**不得凭空构造 xsec_token**。获取笔记详情、互动数据和评论数据后写入 `$DIR/source-note.md`，并记录 `data_source=agent-reach`、`active_backend`、`backend_command_family`、`token_source`、`missing_fields`、`fallback_reason`。源笔记获取失败时按 Agent-Reach 对应 backend 的重试链重试一次；仍失败则停止并报告。
+调用 `update_task_progress(task_id=$TASK_ID, stage="research", title="选题研究", description="通过 Agent-Reach 获取源笔记详情与互动数据")`。先 using the `agent-reach` skill 执行 `agent-reach doctor --json`，再 using the `seednote-research` skill 按 Agent-Reach 的 `active_backend` 获取源笔记真实数据。必须从搜索、feed 或 Agent-Reach backend 返回的完整 URL 中取得 `feed_id` / `xsec_token`，**不得凭空构造 xsec_token**。获取笔记详情、互动数据和评论数据后写入 `$DIR/source-note.md`，并记录 `data_source=agent-reach`、`active_backend`、`backend_command_family`、`token_source`、`missing_fields`、`fallback_reason`。源笔记获取失败时按 Agent-Reach 对应 backend 的重试链重试一次；若任务只有外部 ID/链接且仍无源内容，写结构化 `failure-state.json` 并从 `research` 恢复。
 
 **产出**：源笔记详情、`$DIR/source-note.md`
 
@@ -250,7 +250,7 @@ reference-usage-summary.json
 | 选题评分无高分候选 | 自动选择最高分选题，在 `topic-analysis.md` 记录评分分布 |
 | 参考素材不可用 | 非关键素材记录 warning；唯一产品身份、Logo、包装、型号或核心结构证据不可用时保留产物并进入可恢复失败态 |
 | 图片 API 或质量验证失败 | 写 image-review.md 与 failure-state.json，任务停止在图片阶段；只有服务端 verification.passed=true 才能继续 |
-| 源笔记获取失败 | 重新获取 token 后重试一次，仍失败则停止 |
+| 源笔记获取失败 | 重新获取 token 后重试一次；仅有外部 ID/链接且仍无源内容时写失败态并停止 |
 | 爆款拆解证据不足 | 写入 missing_data，降低 confidence，默认推荐 `style-only` |
 | 复刻模板置信度低或视觉证据不足 | 记录原因并按 `style-only` 处理 |
 | 违禁词检测误报 | 记录疑似词，标注人工复核，不自动删除核心信息 |

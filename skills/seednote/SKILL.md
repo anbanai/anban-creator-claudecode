@@ -142,13 +142,14 @@ reference-usage-summary.json
 ### 步骤 3：研究选题
 
 原创模式使用 `seednote-research` skill：
-- 通过 Agent-Reach（`agent-reach doctor --json`）采集真实热门笔记数据
-- 自动选 Top 1 选题
-- 评分结果写入 `$DIR/topic-analysis.md`
+- Agent-Reach 健康时采集真实热门笔记数据；不可用时基于用户主题、选题池、账号画像和已有标题继续
+- 自动选 Top 1 选题，不得把降级判断描述成外部热门数据
+- 外部评分或降级依据写入 `$DIR/topic-analysis.md`；原创模式不得因 Agent-Reach 不可用写 `failure-state.json`
 
 复刻模式使用 `seednote-research` skill：
 - 通过 Agent-Reach 获取源笔记详情、互动数据和评论数据
 - 原始详情写入 `$DIR/source-note.md`
+- 仅有外部 ID/链接且仍无法取得源内容时，写结构化失败态并停止
 
 然后使用 `seednote-viral-analysis` skill：
 - 证据驱动拆解源笔记

@@ -4,6 +4,13 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.58] - 2026-07-14
+
+### Changed
+
+- Made Agent-Reach an optional enhancement for original Seednote research: unavailable Xiaohongshu backends now fall back to the task topic, topic pool, project profile, and title deduplication without fabricating external trend evidence.
+- Kept recoverable research failures only for replicate tasks whose required external source content cannot be resolved.
+
 ## [2.10.57] - 2026-07-14
 
 ### Changed
