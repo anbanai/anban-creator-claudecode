@@ -41,7 +41,7 @@ maxTurns: 20
 ## 工具边界
 
 - **Anban 产品能力必须使用 Claude Code 内置 MCP 工具**调用服务端接口（如 `list_projects`、`get_project_profile`、`list_project_titles`、`prepare_workspace`、`archive_workspace`、`generate_image`、`save_template` 等）
-- **外部互联网/小红书真实数据研究必须 using the `agent-reach` skill**。Agent-Reach 是唯一外部数据入口；执行 `agent-reach doctor --json` 后，backend 顺序和可用性完全由 Agent-Reach 决定。OpenCLI、xiaohongshu-mcp、xhs-cli 只是 Agent-Reach 的 backend，不在本 agent 内自行排序或替代选路
+- **外部互联网/小红书真实数据研究必须 using the `agent-reach` skill**。Agent-Reach 是唯一外部数据入口；执行 `agent-reach doctor --json` 后，必须同时确认 `xiaohongshu.status == "ok"` 和非空 `active_backend`，backend 顺序和可用性完全由 Agent-Reach 决定。OpenCLI、xiaohongshu-mcp、xhs-cli 只是 Agent-Reach 的 backend，不在本 agent 内自行排序或替代选路
 - **禁止编写 JavaScript/Node.js/Python 脚本或自定义 HTTP 客户端**调用 Anban MCP 或小红书接口
 - **MCP 工具、Agent-Reach、登录态或 Agent-Reach doctor 无可用小红书 backend 时立即停止并报告修复提示**，不要自行探测、绕过或创建替代连接方式，不生成虚构热门数据
 - **`prepare_workspace` / `archive_workspace` 仅返回路径**，目录创建和文件移动由 agent 通过本地 Bash 执行
@@ -151,7 +151,7 @@ reference-usage-summary.json
 
 #### 步骤 5：研究选题
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="research", title="选题研究", description="通过 Agent-Reach 采集真实热门笔记数据，评估候选选题")`。先 using the `agent-reach` skill 执行 `agent-reach doctor --json`，确认小红书 channel 有可用 `active_backend`；再 using the `seednote-research` skill 按 Agent-Reach 返回的 backend 命令族采集热门笔记数据。遵守 `seednote-research` skill 的 xsec_token 工作流。对候选选题按互动率、时效性和新颖度评分，自动选 Top 1，将候选列表、评分、避重判断、`data_source=agent-reach`、`active_backend`、缺失字段和降级原因写入 `$DIR/topic-analysis.md`。Agent-Reach 不可用、未安装、未登录或无可用 backend 时停止并提示按 Agent-Reach 官方安装/配置流程修复；不得生成虚构热门数据。无高分候选时选择最高分候选并记录原因；热门数据不足时只能基于已取得的真实数据、账号画像和用户需求生成保守选题。
+调用 `update_task_progress(task_id=$TASK_ID, stage="research", title="选题研究", description="通过 Agent-Reach 采集真实热门笔记数据，评估候选选题")`。先 using the `agent-reach` skill 执行 `agent-reach doctor --json`，确认 `xiaohongshu.status == "ok"` 且 `active_backend` 非空；再 using the `seednote-research` skill 按 Agent-Reach 返回的 backend 命令族采集热门笔记数据。遵守 `seednote-research` skill 的 xsec_token 工作流。对候选选题按互动率、时效性和新颖度评分，自动选 Top 1，将候选列表、评分、避重判断、`data_source=agent-reach`、`channel_status=ok`、`active_backend`、缺失字段和降级原因写入 `$DIR/topic-analysis.md`。Agent-Reach 不可用、未安装、未登录或无健康 backend 时停止并报告 doctor 的原始状态；不得生成虚构热门数据。无高分候选时选择最高分候选并记录原因；热门数据不足时只能基于已取得的真实数据、账号画像和用户需求生成保守选题。
 
 **产出**：`$DIR/topic-analysis.md`
 
