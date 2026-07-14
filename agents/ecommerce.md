@@ -114,7 +114,7 @@ maxTurns: 120
 
 调用 `update_task_progress(task_id=$TASK_ID, stage="copywriting", title="卖点与文案", description="FABE 提炼卖点，生成主图/详情/分享文案，并去 AI 味")`。using the `ecommerce-copywriting` skill：基于产品档案 + 用户卖点，提炼 3-5 个排序核心卖点，生成主图 5 张结构文案、详情页 FABE 章节文案、分享文案。
 
-文案定稿后执行该 skill **步骤 4.5 去 AI 味**：**using the `humanizer` skill** 对全部文案（主图/详情/分享）做去 AI 改写——去广告式夸张、rule-of-three、AI 高频词（赋能/打造/彰显）、em dash、空洞升华；**改写而非删除**，保留每个卖点的 FABE 信息点、数字/对比/证据与转化逻辑。**合规红线：去 AI 不得为追求人味而引入《广告法》极限词或无法证明的功效承诺；顺序固定为先去 AI、后由步骤 8 合规扫描兜底**。保存到 `$DIR/copywriting.md`。
+文案定稿后执行该 skill **步骤 4.5 去 AI 味**：**using the `humanizer` skill** 对全部文案（主图/详情/分享）做去 AI 改写——去广告式夸张、rule-of-three、AI 高频词（赋能/打造/彰显）、em dash、空洞升华；**改写而非删除**，保留每个卖点的 FABE 信息点、数字/对比/证据与转化逻辑。这是自动流水线步骤，不得调用 `AskUserQuestion`；没有写作样本时按产品档案、目标平台和当前文案语气直接改写。**合规红线：去 AI 不得为追求人味而引入《广告法》极限词或无法证明的功效承诺；顺序固定为先去 AI、后由步骤 8 合规扫描兜底**。保存到 `$DIR/copywriting.md`。
 
 **产出**：`$DIR/copywriting.md`
 

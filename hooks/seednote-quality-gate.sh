@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# SubagentStop mechanical gate for the seednote agent.
-# Blocks completion when required visual-planning artifacts are missing.
+# Stop/SubagentStop mechanical gate for the seednote agent.
+# Blocks a claimed success when trace, verification, or archival is incomplete.
 
 set -euo pipefail
 
@@ -30,6 +30,30 @@ if payload.get("agent_type") not in ("seednote", "anban:seednote"):
     sys.exit(0)
 
 root = Path(os.environ.get("WORKSPACE_ROOT") or os.getcwd())
+managed_main_session = bool(payload.get("managed_main_session"))
+
+failure_candidates = [root / "output" / "failure-state.json"]
+failure_candidates.extend(root.glob("output/seednote/*/failure-state.json"))
+for failure_path in failure_candidates:
+    if not failure_path.is_file():
+        continue
+    try:
+        failure = json.loads(failure_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        block(f"种子笔记失败态文件无效（{failure_path}）：{exc}")
+        sys.exit(0)
+    required_failure_fields = ("status", "stage", "error_code", "message", "resume_from")
+    missing_failure_fields = [name for name in required_failure_fields if not failure.get(name)]
+    if failure.get("status") != "recoverable_failure" or missing_failure_fields:
+        block(
+            f"种子笔记失败态文件不完整（{failure_path}）：status 必须为 recoverable_failure，"
+            f"缺失字段={missing_failure_fields}"
+        )
+        sys.exit(0)
+    # A structured recoverable failure is an honest terminal outcome. The
+    # server rejects it as business success while preserving uploaded files.
+    sys.exit(0)
+
 candidates: list[Path] = []
 
 archive_dirs = [Path(p) for p in glob.glob(str(root / "output" / "seednote" / "*" / ""))]
@@ -61,12 +85,23 @@ if not candidates:
 seednote_dir = candidates[0]
 missing: list[str] = []
 
-if not (seednote_dir / "image-plan.md").is_file():
-    missing.append("image-plan.md（说明没调用 seednote-visual-design skill 走完整流程）")
-if not (seednote_dir / "image-prompts.md").is_file():
-    missing.append("image-prompts.md（说明 generate_image 调用后没记录 prompt）")
-if not (seednote_dir / "image-review.md").is_file():
-    missing.append("image-review.md（说明没跑 skill Step 6 质量验证）")
+if managed_main_session and seednote_dir == output_dir:
+    missing.append("最终归档目录 output/seednote/{标题}/（主 Agent 会话尚未完成 archive_workspace）")
+
+required_artifacts = {
+    "content.md": "最终正文",
+    "request-analysis.json": "结构化需求分析",
+    "request-analysis.md": "可读需求分析",
+    "reference-analysis.json": "结构化参考素材分析",
+    "reference-analysis.md": "可读参考素材分析",
+    "image-plan.md": "视觉规划",
+    "image-prompts.md": "生成记录",
+    "image-review.md": "视觉核验记录",
+    "reference-usage-summary.json": "参考素材与视觉核验汇总",
+}
+for name, purpose in required_artifacts.items():
+    if not (seednote_dir / name).is_file():
+        missing.append(f"{name}（缺少{purpose}）")
 
 plan_path = seednote_dir / "image-plan.md"
 if plan_path.is_file():
@@ -91,11 +126,29 @@ if plan_path.is_file():
         if content_count > 3:
             missing.append(f"内容图超过 3 张上限（当前 {content_count} 张，应 ≤3）")
 
+summary_path = seednote_dir / "reference-usage-summary.json"
+if summary_path.is_file():
+    try:
+        summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        missing.append(f"reference-usage-summary.json 无法解析：{exc}")
+    else:
+        outputs = summary.get("outputs")
+        if not isinstance(outputs, list) or not outputs:
+            missing.append("reference-usage-summary.json.outputs 为空，未记录逐图核验结果")
+        else:
+            for output in outputs:
+                filename = output.get("file_name") or "<unknown>"
+                verification = output.get("verification") or {}
+                if verification.get("passed") is not True:
+                    missing.append(f"{filename} 视觉核验未通过（passed={verification.get('passed')!r}）")
+
 if missing:
     block(
         f"种子笔记机械闸门未通过（{seednote_dir}），缺失：\n"
         + "".join(f"  - {item}\n" for item in missing)
-        + "\n请按 seednote-visual-design skill 流程补齐：先生成 image-plan.md（含「必须出现文字」字段），再逐张调用 generate_image（每次追加 image-prompts.md），最后跑 Step 6 写 image-review.md。禁止跳过 skill 直接调 generate_image。"
+        + "\n请按 seednote-visual-design skill 补齐规划、generate_image 原子视觉核验和归档。"
+        + "若依赖不可用，写入结构化 failure-state.json 后停止；禁止用 prompt 质量或文件尺寸代替视觉核验。"
     )
 
 sys.exit(0)

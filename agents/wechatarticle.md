@@ -160,7 +160,7 @@ using the content-writing skill 基于账号定位、大纲和 `$DIR/context-bri
 
 Call `update_task_progress(task_id=$TASK_ID, stage="humanize", title="去AI味", description="用 humanizer skill 去 AI 改写并执行违禁词合规检查")`。
 
-先 **using the `humanizer` skill** 对 `$DIR/03-article.md` 全文执行去 AI 改写：扫描 33 类 AI 写作模式（意义拔高、AI 高频词、三段式、否定排比、破折号滥用、空洞结尾等），按 draft → audit → final 流程改写。**改写而非删除**——覆盖原文全部信息点，保持段落数与字数量级，保留人称代入、情绪节奏与具体细节等人味。本步骤不调用任何 MCP 工具、不计费、无强度档位。改写产物保存为 `$DIR/04-article-final.md`。
+先 **using the `humanizer` skill** 对 `$DIR/03-article.md` 全文执行去 AI 改写：扫描 33 类 AI 写作模式（意义拔高、AI 高频词、三段式、否定排比、破折号滥用、空洞结尾等），按 draft → audit → final 流程改写。**改写而非删除**——覆盖原文全部信息点，保持段落数与字数量级，保留人称代入、情绪节奏与具体细节等人味。这是自动流水线步骤，不得调用 `AskUserQuestion`；没有写作样本时按账号定位、上下文锚点和当前稿件语气直接改写。本步骤不调用任何 MCP 工具、不计费、无强度档位，且不得引入新的违禁词或导流风险。改写产物保存为 `$DIR/04-article-final.md`。
 
 再 using the `content-writing` skill 对 `$DIR/04-article-final.md` 执行违禁词合规检查，输出检查报告，并创建 `$DIR/content-quality-report.md`，逐项检查：
   - 用户需求覆盖：文章是否回应用户原始主题、角度和限制

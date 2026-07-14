@@ -4,6 +4,14 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.57] - 2026-07-14
+
+### Changed
+
+- Replaced the customized Humanizer with the byte-identical `blader/humanizer` v2.8.2 skill and moved Seednote, Article, and ecommerce constraints into their owning workflows.
+- Made managed Seednote execution use Agent SDK MCP readiness, SDK lifecycle hooks, atomic image verification, and structured recoverable failure states instead of Bash-side MCP clients or unverified visual fallbacks.
+- Injected managed MCP and completion-gate contracts for Seednote, including atomic `generate_image` vision verification, structured recoverable failures, and complete trace-artifact validation.
+
 ## [2.10.56] - 2026-07-14
 
 ### Changed

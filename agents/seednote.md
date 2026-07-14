@@ -56,7 +56,7 @@ maxTurns: 20
 3. 写出 `reference-analysis.json` 与 `reference-analysis.md`，记录可见事实、不确定性、需求支持点、可参考维度、必须保持、必须避免、不可推出结论，并完成同产品/系列/型号、新旧包装、角度、事实图/氛围图、Logo/文字/颜色/结构冲突分析。
 4. 写出 `image-plan.md`。对每张输出图独立决定使用 0、1 或多张附件，记录附件编号、每张用途、保持项、禁止项。不得把所有素材传给所有页面；超过服务端返回的数量上限时按当页相关性排序选择子集。
 5. 写出 `image-prompts.md`。调用 `generate_image` 时只传当前输出图相关的原始路径，数组顺序必须与 prompt 中“参考图 1、参考图 2”一致。不得传分析后的截图、拼图或转码替代原图。
-6. 每张生成图片都使用动态编写的 `analyze_image` prompt 核验产品身份、结构、颜色、Logo、包装、文字、虚构部件、版本融合、禁止内容、页面职责和文字可读性，并写入 `image-review.md`。
+6. 每张生成图片都在 `generate_image` 调用中传 `verify_with_vision=true` 和动态 `verification_prompt`，以服务端返回的 `verification.passed` 作为唯一通过依据，并写入 `image-review.md`；`analyze_image` 只用于理解输入参考图。
 7. 核验不通过时自动调整参考组合/顺序、生成 prompt、保持项/禁止项、构图复杂度或核验 prompt。每张输出图最多 3 次生成尝试，初次生成计入。不得请求用户决定。
 8. 写出 `reference-usage-summary.json`。关键事实无法保证时任务失败；非关键氛围或轻微构图问题可保留并记录 warning。
 <!-- seednote-reference-contract:end -->
@@ -98,7 +98,7 @@ reference-usage-summary.json
       "file_name": "cover.png",
       "references": [{ "attachment_index": 1, "purpose": "保持产品身份、包装和 Logo" }],
       "generation_attempts": 2,
-      "verification": { "status": "passed", "summary": "产品身份、包装和当页文字核验通过" },
+      "verification": { "passed": true, "score": "high", "missing_entities": [], "notes": "产品身份、包装和当页文字核验通过" },
       "provider": "openai",
       "model": "gpt-image-2",
       "selection_reason": "reference_compatible_fallback"
@@ -112,6 +112,10 @@ reference-usage-summary.json
 执行预算固定为：每张输入图最多 3 次理解尝试；每张输出图最多 3 次生成尝试，首次生成计入。不得向用户发起中途确认，也不得把参考素材选择、模型回退或重试决策转交给用户。
 
 关键失败包括：唯一产品身份、Logo、包装、型号或核心结构证据不可用；身份或结构幻觉；冲突版本融合；出现禁止内容；页面无法履行职责。遇到关键失败时停止在当前阶段，但必须保留已生成文件和 trace artifacts，记录失败阶段和下一步建议，后续从失败阶段恢复。非关键氛围或轻微构图问题只记录 warning，不得把它升级成需要用户中途决策的阻塞。
+
+任何需要停止的运行依赖失败都必须写入 `$DIR/failure-state.json`，字段固定为 `version`、`status=recoverable_failure`、`stage`、`error_code`、`message`、`resume_from`。MCP 在工作目录建立前失败时由托管 Runner 直接终止；不得伪造成功产物。
+
+恢复运行时保留旧失败态，直到 `resume_from` 阶段已成功重做、全部完成条件满足且即将归档；随后删除 `$DIR/failure-state.json` 再调用 `archive_workspace`。不得提前删除，也不得归档仍带失败态的结果。
 
 ---
 
@@ -151,7 +155,7 @@ reference-usage-summary.json
 
 #### 步骤 5：研究选题
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="research", title="选题研究", description="通过 Agent-Reach 采集真实热门笔记数据，评估候选选题")`。先 using the `agent-reach` skill 执行 `agent-reach doctor --json`，确认 `xiaohongshu.status == "ok"` 且 `active_backend` 非空；再 using the `seednote-research` skill 按 Agent-Reach 返回的 backend 命令族采集热门笔记数据。遵守 `seednote-research` skill 的 xsec_token 工作流。对候选选题按互动率、时效性和新颖度评分，自动选 Top 1，将候选列表、评分、避重判断、`data_source=agent-reach`、`channel_status=ok`、`active_backend`、缺失字段和降级原因写入 `$DIR/topic-analysis.md`。Agent-Reach 不可用、未安装、未登录或无健康 backend 时停止并报告 doctor 的原始状态；不得生成虚构热门数据。无高分候选时选择最高分候选并记录原因；热门数据不足时只能基于已取得的真实数据、账号画像和用户需求生成保守选题。
+调用 `update_task_progress(task_id=$TASK_ID, stage="research", title="选题研究", description="通过 Agent-Reach 采集真实热门笔记数据，评估候选选题")`。先 using the `agent-reach` skill 执行 `agent-reach doctor --json`，确认 `xiaohongshu.status == "ok"` 且 `active_backend` 非空；再 using the `seednote-research` skill 按 Agent-Reach 返回的 backend 命令族采集热门笔记数据。遵守 `seednote-research` skill 的 xsec_token 工作流。对候选选题按互动率、时效性和新颖度评分，自动选 Top 1，将候选列表、评分、避重判断、`data_source=agent-reach`、`channel_status=ok`、`active_backend`、缺失字段和降级原因写入 `$DIR/topic-analysis.md`。Agent-Reach 不可用、未安装、未登录或无健康 backend 时写 `failure-state.json` 并停止；不得生成虚构热门数据。只有 doctor 健康且 backend 至少成功返回过一次真实查询、但结果数量或字段不足时，才属于“热门数据不足”，此时可基于已取得的真实数据、账号画像和用户需求生成保守选题。
 
 **产出**：`$DIR/topic-analysis.md`
 
@@ -159,13 +163,13 @@ reference-usage-summary.json
 
 调用 `update_task_progress(task_id=$TASK_ID, stage="writing", title="内容写作", description="生成标题、正文和话题标签并去 AI 味")`。using the `seednote-writing` skill 基于账号画像和 `$DIR/topic-analysis.md` 生成标题、正文和话题标签，保存到 `$DIR/content.md`。标题、正文格式和话题标签规范以 `seednote-writing` skill 为准。
 
-随后 **using the `humanizer` skill** 对 `$DIR/content.md` 的标题+正文做轻量去 AI 改写：重点去掉空洞升华、三段式套话、AI 高频词、过度总结，保留种草笔记的人称代入与情绪节奏（见 `seednote-writing` skill §2.7），改写后复核字数仍 ≤1000 字。直接覆写 `$DIR/content.md`。
+随后 **using the `humanizer` skill** 对 `$DIR/content.md` 的标题+正文做轻量去 AI 改写：重点去掉空洞升华、三段式套话、AI 高频词、过度总结，保留种草笔记的人称代入与情绪节奏（见 `seednote-writing` skill §2.7）。这是自动流水线步骤，不得调用 `AskUserQuestion`；没有写作样本时直接按账号画像和当前稿件语气改写。改写后复核字数仍 ≤1000 字，且不得引入新的违禁词、虚假承诺或诱导互动表达。直接覆写 `$DIR/content.md`。
 
 **产出**：`$DIR/content.md`
 
 #### 步骤 7：生成图片
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="image_generation", title="图片生成", description="规划并生成封面、内容图和尾图")`。using the `seednote-visual-design` skill，传入 `$DIR/content.md`。先完成需求分析和全部可用附件分析，再由技能为每页自动选择 0、1 或多张相关原图；没有相关参考时动态设计 `$STYLE`。技能内部按 `seednote_image_mode` 完成图片内容规划（`$DIR/image-plan.md`）和全部图片生成：封面 `$DIR/cover.png`、内容图 `$DIR/image_01.png` ... `$DIR/image_03.png`（仅含内容图的模式）、尾图 `$DIR/tail.png`（仅含尾图的模式）。每张应生成图片都通过 `generate_image` 生成并记录到 `$DIR/image-prompts.md`；若 API 返回 `error`、超时或质量验证重试后仍不合格，在 `$DIR/image-review.md` 记录 `provider`、`model`、`output_path`、`error` 和`下一步建议`，保留已成功产物，任务停止在图片阶段作为可恢复失败态，修复模型、额度、网络或配置后从同一阶段重试并覆盖同名 `output_path`。图片质量和风格一致性由 `seednote-visual-design` skill 内部验证流程保证。
+调用 `update_task_progress(task_id=$TASK_ID, stage="image_generation", title="图片生成", description="规划并生成封面、内容图和尾图")`。using the `seednote-visual-design` skill，传入 `$DIR/content.md`。先完成需求分析和全部可用附件分析，再由技能为每页自动选择 0、1 或多张相关原图；没有相关参考时动态设计 `$STYLE`。技能内部按 `seednote_image_mode` 完成图片内容规划（`$DIR/image-plan.md`）和全部图片生成。每张图都通过 `generate_image(..., verify_with_vision=true, verification_prompt=<动态核验提示词>)` 原子生成并核验；只有 `verification.passed=true` 才能进入下一张。API、核验依赖或重试预算失败时写 `$DIR/image-review.md` 和 `$DIR/failure-state.json` 后停止，禁止用 prompt 质量、文件尺寸或 MIME 代替视觉核验。
 
 **产出**：`$DIR/image-plan.md`、`$DIR/cover.png`、内容图（按 `seednote_image_mode`）、尾图（按 `seednote_image_mode`）
 
@@ -189,7 +193,7 @@ reference-usage-summary.json
 
 调用 `update_task_progress(task_id=$TASK_ID, stage="writing", title="内容写作", description="基于爆款模板改写标题、正文和话题标签并去 AI 味")`。using the `seednote-writing` skill 读取 `$DIR/viral-template.json`，根据 `recommended_clone_depth`、用户指定模式和账号画像生成标题、正文和话题标签。若用户指定强度高于模板建议，但 `confidence=low` 或 `do_not_copy` 风险高，自动降级并记录原因。内容相似度过高时重新改写角度并记录原因。
 
-随后 **using the `humanizer` skill** 对 `$DIR/content.md` 的标题+正文做轻量去 AI 改写：重点去掉空洞升华、三段式套话、AI 高频词、过度总结，保留种草笔记的人称代入与情绪节奏（见 `seednote-writing` skill §2.7），改写后复核字数仍 ≤1000 字。直接覆写 `$DIR/content.md`。
+随后 **using the `humanizer` skill** 对 `$DIR/content.md` 的标题+正文做轻量去 AI 改写：重点去掉空洞升华、三段式套话、AI 高频词、过度总结，保留种草笔记的人称代入与情绪节奏（见 `seednote-writing` skill §2.7）。这是自动流水线步骤，不得调用 `AskUserQuestion`；没有写作样本时直接按账号画像和当前稿件语气改写。改写后复核字数仍 ≤1000 字，且不得引入新的违禁词、虚假承诺或诱导互动表达。直接覆写 `$DIR/content.md`。
 
 **产出**：`$DIR/content.md`
 
@@ -245,7 +249,7 @@ reference-usage-summary.json
 |------|----------|
 | 选题评分无高分候选 | 自动选择最高分选题，在 `topic-analysis.md` 记录评分分布 |
 | 参考素材不可用 | 非关键素材记录 warning；唯一产品身份、Logo、包装、型号或核心结构证据不可用时保留产物并进入可恢复失败态 |
-| 图片 API 或质量验证失败 | 记录 provider/model/output_path/error/下一步建议，任务停止在图片阶段作为可恢复失败态，修复后从同一阶段重试 |
+| 图片 API 或质量验证失败 | 写 image-review.md 与 failure-state.json，任务停止在图片阶段；只有服务端 verification.passed=true 才能继续 |
 | 源笔记获取失败 | 重新获取 token 后重试一次，仍失败则停止 |
 | 爆款拆解证据不足 | 写入 missing_data，降低 confidence，默认推荐 `style-only` |
 | 复刻模板置信度低或视觉证据不足 | 记录原因并按 `style-only` 处理 |
