@@ -4,6 +4,13 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.59] - 2026-07-14
+
+### Changed
+
+- Preserved exact `generate_image` verification dependency errors instead of relabeling billing or configuration failures as image API timeouts.
+- Stopped Seednote image retries immediately when vision verification is operationally unavailable, and prohibited bypass retries with `verify_with_vision=false`.
+
 ## [2.10.58] - 2026-07-14
 
 ### Changed

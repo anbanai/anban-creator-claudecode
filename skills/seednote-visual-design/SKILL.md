@@ -56,7 +56,7 @@ description: 'Use when creating seednote visual content including covers, conten
 5. **生成记录**：每次调用 `generate_image` 后，把实际 prompt、`provider`、`model`、`output_path`、返回字段和修订信息追加到 `$DIR/image-prompts.md`。
 6. **质量复盘**：逐图写 `$DIR/image-review.md`，检查主题相关度、文字准确性、移动端可读性、风格一致性、文件可访问性和 `seednote_image_mode` 一致性。
 
-如果图片 API 返回 `error`、超时，或服务端视觉核验因配置/网络不可用而返回 `verification.passed=false`，记录 `provider`、`model`、`output_path`、`error` 和`下一步建议` 到 `$DIR/image-review.md`，写入 `$DIR/failure-state.json`，并停止在图片阶段。禁止用 prompt 质量、文件存在、尺寸或 MIME 代替视觉核验。
+如果图片 API 返回 `error`、超时，或服务端视觉核验因配置/网络不可用而返回 `verification.passed=false`，记录 `provider`、`model`、`output_path`、原始 `error`/`verification.notes` 和`下一步建议` 到 `$DIR/image-review.md`，写入 `$DIR/failure-state.json`，并停止在图片阶段。`verification.notes` 包含 `verification call failed:` 表示图片已经生成、但核验运行依赖失败；必须原样记录其后的计费/配置/网络错误，保留返回的图片资产并立即停止，不得误写成图片 API 超时，不得再次调用 `generate_image`。禁止用 prompt 质量、文件存在、尺寸或 MIME 代替视觉核验。
 
 `failure-state.json` 必须是结构化可恢复失败态：
 
@@ -279,7 +279,7 @@ reference-usage-summary.json
 3. **内容图**：使用 [references/content.md](references/content.md) 的 Prompt 模板逐张生成（1~3 张），传入当前页选中的原始路径子集以及对应信息点和布局；没有相关参考时纯文生图；始终保证不同实景背景和构图角度
 4. **尾图（仅当 `seednote_image_mode` 包含尾图时）**：使用 [references/tail.md](references/tail.md) 的 Prompt 模板单独生成，并仅传尾图相关的原始路径子集；不含尾图则跳过
 5. **原子生成与核验**：每次调用 `generate_image` 都传 `verify_with_vision=true` 和当前页面独有的 `verification_prompt`；把实际 prompt、核验 prompt、`image_type`、请求 `size`、实际 `width`/`height`、`output_path`、`ref_image_paths`、返回的 `provider`、`model`、`selection_reason`、`response_type`、`revised_prompt`、`output_mime`、`verification` 追加写入 `$DIR/image-prompts.md`
-6. **失败记录**：如果 `generate_image` 返回 `error`、超时，或 `verification` 缺失/因运行依赖不可用而失败，立即写入 `$DIR/image-review.md` 和 `$DIR/failure-state.json`，保留已有产物并停止；内容质量核验未通过时按下一步重试预算自动修订
+6. **失败记录**：如果 `generate_image` 返回 `error`、超时，或 `verification` 缺失/因运行依赖不可用而失败，立即写入 `$DIR/image-review.md` 和 `$DIR/failure-state.json`，保留已有产物并停止；必须逐字保留工具返回的错误分类，不得把计费或配置错误改写成超时。只有核验服务正常且内容质量未通过时，才按下一步重试预算自动修订
 
 ### 步骤 6：质量验证
 
@@ -291,7 +291,7 @@ reference-usage-summary.json
 - [ ] 茶类/产品/数字参数准确，不出现误导性内容（例如"10 秒出汤"不得写成"焖泡10秒"）
 - [ ] 封面、内容图（、尾图，仅当生成）视觉风格一致，内容图之间有视觉多样性
 
-每张生成图片都要根据当页职责和参考素材用途动态编写 `verification_prompt`，并在同一次 `generate_image` 调用中核验；不得复用固定核验 prompt。只有服务端返回 `verification.passed=true` 才算通过。内容质量未通过时自动调整参考组合/顺序、生成 prompt、保持项/禁止项、构图复杂度或核验 prompt，并覆盖同一个 `output_path` 重试；核验服务不可用属于运行依赖失败，立即写 `failure-state.json` 并停止，不消耗后续图片生成。每张输出图最多 3 次生成尝试，初次生成计入；耗尽后按关键失败与 warning 策略处理，不得请求用户决定。归档前检查目录，仅保留 `image-plan.md` 中列出的 N 张图（cover/image_01..03/tail），删除多余候选或旧版文件。
+每张生成图片都要根据当页职责和参考素材用途动态编写 `verification_prompt`，并在同一次 `generate_image` 调用中核验；不得复用固定核验 prompt。只有服务端返回 `verification.passed=true` 才算通过。内容质量未通过时自动调整参考组合/顺序、生成 prompt、保持项/禁止项、构图复杂度或核验 prompt，并覆盖同一个 `output_path` 重试；核验服务不可用属于运行依赖失败，立即写 `failure-state.json` 并停止，不消耗后续图片生成。任何情况下都不得改用 `verify_with_vision=false` 绕过核验。每张输出图最多 3 次生成尝试，初次生成计入；该预算只用于核验服务正常时的内容质量修订，不适用于计费、配置、网络或其他运行依赖错误。耗尽后按关键失败与 warning 策略处理，不得请求用户决定。归档前检查目录，仅保留 `image-plan.md` 中列出的 N 张图（cover/image_01..03/tail），删除多余候选或旧版文件。
 
 ---
 
