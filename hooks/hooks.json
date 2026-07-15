@@ -17,103 +17,35 @@
     ],
     "SubagentStop": [
       {
-        "matcher": "anban:wechatarticle",
-        "hooks": [
-          {
-            "type": "prompt",
-            "prompt": "wechatarticle agent 已完成执行。请检查 output/ 目录下的产出文件，生成结构化交付摘要：\n\n1. **产出文件**：列出所有生成的文件（HTML、draft.json、图片、visual-rhythm-plan.md、image-plan.md、images.json、content-quality-report.md、final-review.md）及其路径\n2. **文章概要**：标题、字数、章节数、所选模板（long-form-essay / listicle / tutorial / story-narrative）\n3. **视觉节奏检查**：\n   - visual-rhythm-plan.md 是否存在？是否包含 slot 分配表和 layout_plan JSON 块？\n   - 所选模板的 rhythm 规则是否被遵守（如 listicle 的 inline_detail 必须为空、tutorial 的 footer 必填）？\n   - 每个 ## 章节是否都映射到 slot？\n4. **配图贴切度检查**：\n   - image-plan.md 每张图是否含 visual_brief + required_entities + must_match_excerpts？\n   - images.json 每条是否含 verification 字段（schema: passed/score/missing_entities/notes/raw）和 verification_audit 字段（attempt_count/sharper_prompt_history）？\n   - vision 校验通过率（verification.passed=true 的比例）是否 ≥ 80%？\n   - 是否有 quality_status=failed 的图片？\n5. **HTML 渲染检查**：\n   - 05-article.html 是否由 render_template 生成？（通过 final-review.md 的 render_audit 段确认）\n   - 是否仍用 convert_markdown？\n6. **草稿状态**：是否成功创建草稿，draft_url 是什么\n7. **问题检查**：文件是否完整、HTML 是否符合微信规范、是否有视觉节奏违规\n\n如发现问题请明确指出并建议修复方案（如：visual_brief 抽象化请重写、vision 通过率低请回 Phase 3 重做 image-plan）。\n\n最后，调用 submit_agent_feedback(task_id=$TASK_ID, agent_name=\"wechatarticle\", scores={quality:N, completeness:N, efficiency:N}, errors=\"<errors>\", optimizations=\"<optimizations>\", summary=\"<brief summary with template and vision pass rate>\") 提交本次 agent 执行反馈。scores 按 1-10 评分，errors 填写遇到的问题（无则填空字符串），optimizations 填写可改进之处，summary 必须包含所选模板名和 vision 校验通过率。"
-          }
-        ]
-      },
-      {
-        "matcher": "anban:seednote",
+        "matcher": "^anban:seednote$",
         "hooks": [
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/hooks/seednote-quality-gate.sh",
             "args": [],
             "timeout": 30
-          },
-          {
-            "type": "prompt",
-            "prompt": "seednote agent 已完成执行。请先执行标题入库，然后检查产出文件，生成结构化交付摘要：\n\n**步骤 1：标题入库**\n确定笔记最终标题：优先读取 content.md 首行正式标题，或从归档目录名中提取真实发布标题。不得使用「图片内容规划」「标题候选与评分」「选题研究报告」「违禁词合规检查报告」等内部产物标题。调用 finalize_task_title(task_id=$TASK_ID, title=最终标题)。若返回重复标题错误，修改标题（加后缀或调整措辞），更新 content.md 首行后重试，最多 3 次。失败则记录错误并继续后续检查。\n\n**步骤 2：产出文件检查**\n1. **内容文件**：检查 content.md 路径及正文字数。\n2. **图片列表**：列出所有生成的图片文件（封面 + 内容图），共 N 张。\n3. **决策记录**：topic-analysis.md 或 source-analysis.md 是否已生成；复刻模式还要检查 source-note.md、viral-template.json、template-meta.json。\n4. **问题检查**：图片数量是否符合 image-plan.md 声明值、内容图是否 ≤3 张；content.md 是否包含话题标签；复刻模式下 source-analysis.md 是否包含证据驱动拆解。\n\n如发现问题请明确指出并建议修复方案。\n\n最后，调用 submit_agent_feedback(task_id=$TASK_ID, agent_name=\"seednote\", scores={quality:N, completeness:N, efficiency:N}, errors=\"<errors>\", optimizations=\"<optimizations>\", summary=\"<brief summary>\") 提交本次 agent 执行反馈。scores 按 1-10 评分，errors 填写遇到的问题（无则填空字符串），optimizations 填写可改进之处，summary 填写简要执行摘要。"
           }
         ]
       },
       {
-        "matcher": "anban:moments",
-        "hooks": [
-          {
-            "type": "prompt",
-            "prompt": "moments agent 已完成执行。请检查工作目录或归档目录下的朋友圈素材包，生成结构化交付摘要：\n\n1. **必需产物**：确认 material-analysis.md、content.md、quality-review.md 均存在且非空。\n2. **素材分析**：material-analysis.md 是否包含主类型/辅助类型、四层提炼、证据清单和不得编造项。\n3. **正文交付**：content.md 是否包含主版本、备选开头、备选结尾和发布建议；正文是否避免伪造客户案例、成交数据、用户反馈。\n4. **质量复盘**：quality-review.md 是否检查真实感、诱导互动、空泛营销、证据不足、隐私与合规。\n5. **问题检查**：列出缺失文件、证据不足、强营销口号、诱导互动或隐私泄露。\n\n如发现问题请明确指出并建议从哪个步骤继续修复。\n\n最后，调用 submit_agent_feedback(task_id=$TASK_ID, agent_name=\"moments\", scores={quality:N, completeness:N, efficiency:N}, errors=\"<errors>\", optimizations=\"<optimizations>\", summary=\"<brief summary>\") 提交本次 agent 执行反馈。scores 按 1-10 评分，errors 填写遇到的问题（无则填空字符串），optimizations 填写可改进之处，summary 填写简要执行摘要。"
-          }
-        ]
-      },
-      {
-        "matcher": "anban:designer",
-        "hooks": [
-          {
-            "type": "prompt",
-            "prompt": "designer agent 已完成执行。请检查工作目录下的产出文件，生成结构化交付摘要：\n\n1. **上色图列表**：列出所有 colored_NN.png 文件，确认总数与输入线稿数一致\n2. **Color Bible**：检查 color-bible.md 是否包含所有识别到的实体及颜色规格\n3. **一致性报告**：检查 consistency-report.md 是否已生成，逐实体确认状态（PASS/MINOR/FAIL）\n4. **修正记录**：如果进行了收敛修正，报告修正轮次和结果\n5. **人工复核项**：列出所有标记为 needs_manual_review 的项（如有）\n6. **线稿完整性**：抽查 2-3 张上色图，确认线条与原始线稿一致（无修改、模糊、重绘）\n7. **问题检查**：是否存在缺失图片、空文件、颜色明显偏差、线稿被修改等问题\n\n如发现问题请明确指出并建议修复方案。\n\n最后，调用 submit_agent_feedback(task_id=$TASK_ID, agent_name=\"designer\", scores={quality:N, completeness:N, efficiency:N}, errors=\"<errors>\", optimizations=\"<optimizations>\", summary=\"<brief summary>\") 提交本次 agent 执行反馈。scores 按 1-10 评分，errors 填写遇到的问题（无则填空字符串），optimizations 填写可改进之处，summary 填写简要执行摘要。"
-          }
-        ]
-      },
-      {
-        "matcher": "anban:live-slicer",
-        "hooks": [
-          {
-            "type": "prompt",
-            "prompt": "live-slicer agent 已完成执行。请检查 output/live-slice/ 目录下的产出文件，生成结构化交付摘要：\n\n1. **成果目录**：本次任务对应的 output/live-slice/<task>/ 路径\n2. **核心文件**：metadata.json、audio.mp3、cover.jpg、analysis.json、invalid-sentences.json、segments.json、clip-plan.json 或 subject-clip-plan.json、clip_results.json、clip-manifest.json、transcript.md、summary.md 是否存在\n3. **切片结果**：读取 clip-manifest.json，统计成功/失败切片数量，确认每条成功结果包含 actual_duration_seconds，并列出 exports/ 下的视频文件和 exports/*.md\n4. **方案检查**：segments.json 或 subject-clip-plan.json 的句子范围是否能对应 analysis.json 的 sentences；检查 warnings、rejected，并确认 summary.md 是否列出「需人工复核片段」\n5. **问题检查**：是否存在空视频、失败命令、duration mismatch、part_results 缺失、听悟未完成、无效句过滤后素材不足等问题\n\n如发现问题请明确指出并建议从哪个步骤继续修复。\n\n最后，调用 submit_agent_feedback(task_id=$TASK_ID, agent_name=\"live-slicer\", scores={quality:N, completeness:N, efficiency:N}, errors=\"<errors>\", optimizations=\"<optimizations>\", summary=\"<brief summary>\") 提交本次 agent 执行反馈。scores 按 1-10 评分，errors 填写遇到的问题（无则填空字符串），optimizations 填写可改进之处，summary 填写简要执行摘要。"
-          }
-        ]
-      },
-      {
-        "matcher": "anban:videocreator",
+        "matcher": "^anban:videocreator$",
         "hooks": [
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/hooks/videocreator-quality-gate.sh",
             "args": [],
             "timeout": 30
-          },
-          {
-            "type": "prompt",
-            "prompt": "videocreator agent 已完成执行。请检查 input-manifest.md、generation-plan.json、video-task-submit.json、video-task-result.json、delivery-manifest.json、quality-review.md 和已注册 final_video task file。确认未自动进入字幕、剪辑或后期流程。最后调用 submit_agent_feedback(task_id=$TASK_ID, agent_name=\"videocreator\", scores={quality:N, completeness:N, efficiency:N}, errors=\"<errors>\", optimizations=\"<optimizations>\", summary=\"<brief summary>\")。"
           }
         ]
       },
       {
-        "matcher": "anban:videoeditor",
+        "matcher": "^anban:videoeditor$",
         "hooks": [
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/hooks/videoeditor-quality-gate.sh",
             "args": [],
             "timeout": 30
-          },
-          {
-            "type": "prompt",
-            "prompt": "videoeditor agent 已完成执行。请检查 input-manifest.md、edit/media-manifest.json、edit/edl.json + preview.mp4/final.mp4，或包含 draft_info.json 与 draft_meta_info.json 的剪映草稿包，以及 render-report.md 或 quality-review.md；确认未调用视频生成主链路。最后调用 submit_agent_feedback(task_id=$TASK_ID, agent_name=\"videoeditor\", scores={quality:N, completeness:N, efficiency:N}, errors=\"<errors>\", optimizations=\"<optimizations>\", summary=\"<brief summary>\")。"
-          }
-        ]
-      },
-      {
-        "matcher": "anban:ecommerce",
-        "hooks": [
-          {
-            "type": "prompt",
-            "prompt": "ecommerce agent 已完成执行。请检查工作目录（归档后为 $ARCHIVE_DIR，归档前为 $DIR）下的产出文件，生成结构化交付摘要：\n\n1. **产品档案**：product-bible.md 是否存在，是否含品类/品牌/色彩/材质/形状/包装文字/卖点候选 + 锚点 $ANCHOR_REF\n2. **卖点文案**：copywriting.md 是否含 3-5 个排序卖点、主图 5 张文案、详情页 FABE 章节文案\n3. **资产规划**：asset-plan.md 是否仅含已选模块（selected_modules）；计划图片数量是否与实际产物一致\n4. **图片产物**：按模块列出 main_01..05.png、detail_01..NN.png、cover_01..NN.png、share_01..NN.png、sku_<variant>.png，确认文件存在且大小>0；未选模块不得有产物\n5. **一致性自检**：best-refs.md 是否记录逐图 provider/自检结果；一致性关键模块是否 verify_with_vision 通过；needs_reference 项是否已披露\n6. **合规**：compliance-report.md 是否生成；是否有未处理的高风险极限词/违禁词\n7. **清单**：manifest.json 是否生成，是否按模块含文件名/尺寸/provider/自检结果/合规状态\n8. **问题检查**：产品跨图是否一致（logo/主色/形状）、主图①是否有强卖点与钩子、详情是否有叙事逻辑、图内文字是否有乱码/英文（中文场景）、是否多图复用同一参考图导致雷同\n\n如发现问题请明确指出并建议从哪个步骤继续修复（如：产品不一致请回产品档案+锚点参考重生成、极限词请改写重生成）。\n\n最后，调用 submit_agent_feedback(task_id=$TASK_ID, agent_name=\"ecommerce\", scores={quality:N, completeness:N, efficiency:N}, errors=\"<errors>\", optimizations=\"<optimizations>\", summary=\"<brief summary>\") 提交本次 agent 执行反馈。scores 按 1-10 评分，errors 填写遇到的问题（无则填空字符串），optimizations 填写可改进之处，summary 必须包含目标平台、已选模块与视觉自检通过率。"
-          }
-        ]
-      }
-    ],
-    "TaskCompleted": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "prompt",
-            "prompt": "任务已完成。请执行以下验证步骤：\n\n**步骤 1：产出文件收集**\n调用 list_task_files(task_id=$TASK_ID) 获取文件清单。报告文件总数、各角色分类（cover/html/markdown/image）及各文件大小。如未找到任何文件，标记为质量问题并提醒用户。\n\n**步骤 2：质量验证**\n1. 产出文件是否存在且内容完整\n2. 命令执行是否有报错\n3. 格式是否符合目标平台规范（微信 HTML / 种草笔记文案）\n如发现问题请提醒用户并建议修复方案。\n\n**步骤 3：反馈提交**\n调用 submit_agent_feedback(task_id=$TASK_ID, agent_name=\"general\", scores={quality:N, completeness:N, efficiency:N}, errors=\"<errors>\", optimizations=\"<optimizations>\", summary=\"<brief summary>\") 提交任务反馈。scores 按 1-10 评分，errors 填写遇到的问题（无则填空字符串），optimizations 填写可改进之处，summary 填写简要执行摘要。"
           }
         ]
       }
