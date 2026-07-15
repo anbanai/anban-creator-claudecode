@@ -4,6 +4,18 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.61] - 2026-07-15
+
+### Fixed
+
+- Replaced tool-incapable completion prompt hooks with deterministic command gates, removed per-task whole-workflow feedback, and ran Seednote/video gates for managed main agents.
+- Moved valid final feedback and Seednote title finalization into tool-capable Agent stages, made feedback/template writes idempotent, and finalized titles before visuals.
+- Added verified Seednote archive staging with candidate reservations, atomic publication, recoverable failures, and source retention.
+
+### Added
+
+- Added GPT-5.6 prompt guidance, the Agent/Skill optimization audit, and the final Hook lifecycle implementation record.
+
 ## [2.10.60] - 2026-07-14
 
 ### Changed

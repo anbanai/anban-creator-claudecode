@@ -1,106 +1,196 @@
 # Plugin developer notes
 
-This file is development guidance for the Anban Claude Code plugin distribution.
-It intentionally lives under `docs/` because Claude Code does not load a
-plugin-root `CLAUDE.md` as plugin context. Runtime guidance belongs in
-`agents/*.md` or `skills/*/SKILL.md`.
+This file defines development boundaries for the Anban Claude Code plugin. It
+lives under `docs/` because Claude Code does not load a plugin-root `CLAUDE.md`
+as plugin context. Runtime workflow instructions belong in `agents/*.md` or
+`skills/*/SKILL.md`.
 
-## Project Overview
+## Project overview
 
-**anban-creator-claudecode** is a Claude Code plugin for automated Chinese social media content creation. It targets these workflows:
+`anban-creator-claudecode` provides autonomous workflows for WeChat articles,
+Seednote posts, live slicing, line-art coloring, video generation and editing,
+Montage, Moments, and ecommerce assets. An external Anban MCP server provides
+business data and side effects.
 
-- **WeChat Official Account articles** (微信公众号图文)
-- **SeedNote posts** (种草笔记)
-- **Live video slicing** (直播切片)
-- **Line art coloring** (线稿上色)
-- **AI video generation** (视频生成、即梦、Seedance、图生视频、参考图/参考视频生成)
-- **Video editing and post-production** (素材剪辑、字幕、去口癖、调色、剪映草稿、成片交付)
-- **E-commerce product imagery** (电商出图：主图/详情/封面/分享/SKU，多产品图输入保一致)
+## Ownership model (target)
 
-The plugin follows an **Agent + Skill + MCP** architecture: Claude Code agents orchestrate end-to-end pipelines, skills encapsulate domain knowledge, and an external MCP server provides WeChat/Seednote API access.
+The table below is the target ownership model. This release establishes the
+Hook/Agent side-effect boundary: deterministic completion checks belong to
+Hooks, while final reports and tool-capable side effects belong to Agents.
+Existing umbrella Skills and Agent `skills:` preloads still contain orchestration
+overlap; the optimization audit tracks their staged P0-1/P0-2 migration after
+representative baselines and evals.
 
-## Architecture
+| Surface | Owns |
+|---|---|
+| Agent | End-to-end business orchestration, stage routing, recovery, success criteria, final report, and stop behavior |
+| Skill | One domain capability, its input/output contract, decision rules, and supporting knowledge |
+| Hook | Deterministic lifecycle gates or a bounded decision based only on hook input |
+| MCP | Tool schema, validation, persistence, and server-side side effects |
+| Artifact | File-backed state, evidence, failure details, and resume entrypoints across stages |
 
-### Agents (`agents/`)
+Agents must use Claude Code MCP tools for Anban product capabilities. Do not
+replace MCP calls with ad hoc HTTP clients. For new changes, keep handlers and
+Hooks out of business orchestration, and do not copy a full Agent pipeline into
+an umbrella Skill. Do not interpret this rule as claiming the existing overlap
+has already been removed.
 
-Orchestration engines that run fully autonomous, zero-interaction pipelines. Each agent has a frontmatter block with `name`, `skills`, `maxTurns`, and `memory` config. The agent definition is the single source of truth for its pipeline's flow, quality standards, risk mitigation, and success criteria. Do not add a `tools` allowlist to agents that need MCP tools; Claude Code treats `tools` as an allowlist and can hide inherited MCP tools from subagents.
+## Agents
 
-Do not add `mcpServers` to plugin agent frontmatter. Plugin subagents receive MCP servers from the plugin-level `.mcp.json`; Claude Code ignores `mcpServers` inside plugin agent frontmatter.
+Plugin Agent frontmatter may use supported fields such as `name`, `description`,
+`model`, `skills`, `memory`, `tools`, and `maxTurns`. A subagent starts with a
+fresh context. Project memory contributes only its first 200 lines or 25 KB at
+startup, so large workflow state belongs in task artifacts.
 
-| Agent | Trigger | Pipeline |
-|-------|---------|----------|
-| `wechatarticle` | "写文章", "发文章" | Research → Write → De-AI → SEO → Cover → Illustrations → HTML → Draft |
-| `seednote` | "种草笔记", "种草", "复刻" | Research → Viral analysis (replicate) → Content → Image plan → Cover + Content images → Compliance → Archive |
-| `live-slicer` | "直播切片", "剪直播", "听悟" | ffmpeg prep → TingWu transcription → Invalid sentence filter → Segment/subject planning → Batch cuts/concat → CapCut export → Report |
-| `designer` | "上色", "填色", "线稿", "color consistency", "designer" | Init → Progressive coloring (single-candidate by default, optional 2-candidate) → Full audit → Best-effort correction/backtracking → Report with `needs_img2img` where strict line preservation is impossible |
-| `videocreator` | "视频生成", "即梦", "Seedance", "图生视频", "参考图/参考视频生成" | seedance-20 generation planning → MCP video generation → Download/register final video → Quality review |
-| `videoeditor` | "剪视频", "字幕", "剪映草稿", "去口癖", "调色", "成片交付" | video-use media audit → Transcript/EDL → Preview/final render or CapCut draft → Quality review |
-| `ecommerce` | "电商出图", "电商素材", "商品图", "产品图", "主图", "详情页", "商详", "SKU图", "电商封面" | Product Bible (analyze product photos) → Selling points (FABE) → Asset plan → Anchor-first generation with provider-adaptive ref strategy (image_model from task) + vision self-check (max 3 rounds) → Compliance (广告法极限词) → Archive + manifest |
+Treat `maxTurns` as a budget to validate against representative traces. The
+managed SDK runtime may also impose a limit; verify effective behavior in this
+repository before relying on frontmatter alone.
 
-Agents use TaskCreate/TaskUpdate for progress tracking and report progress as `[N/M] step complete → path (detail)`.
+Do not add a `tools` allowlist to agents that need MCP tools; Claude Code treats `tools` as an allowlist and can hide inherited MCP tools from subagents. Omit `tools` unless you intentionally want to restrict an Agent to a narrow allowlist that includes every required MCP tool.
 
-### Skills (`skills/`)
+Do not add `mcpServers` to plugin agent frontmatter. Plugin subagents receive MCP servers from the plugin-level `.mcp.json`; Claude Code ignores `permissionMode`, `mcpServers`, and `hooks` in plugin Agent definitions. Managed lifecycle Hooks are installed by the server SDK path.
 
-Reusable knowledge modules referenced by agents. Each skill has a `SKILL.md` frontmatter file with `name` and `description`, and optional `references/` subdirectory for detailed guides.
+The nine Agent identities accepted by `submit_agent_feedback` are `designer`,
+`ecommerce`, `live-slicer`, `moments`, `montage`, `seednote`, `videocreator`,
+`videoeditor`, and `wechatarticle`. Each Agent owns exactly one final feedback
+call after its delivery report.
 
-Key skill groups:
-- **Content**: `content-writing`, `topic-research`, `seo-optimization`
-- **WeChat article**: `article`, `article-visual-design`, `article-publishing`
-- **SeedNote**: `seednote`, `seednote-research`, `seednote-viral-analysis`, `seednote-writing`, `seednote-visual-design`
-- **Live slicing**: `live-slice`, `capcut-draft`
-- **Design**: `line-art-coloring`
-- **Video**: `seedance-20`, `dreamina-video` (compatibility alias), `video-use`, `short-video-cover`, `portrait-pose-variants`, `capcut-draft`
-- **E-commerce**: `ecommerce`, `ecommerce-product-analysis`, `ecommerce-copywriting`, `ecommerce-visual-design`, `ecommerce-platform-specs` (bespoke to e-commerce — buyer audience, conversion goals; does NOT reuse seednote/designer skill content)
-- **Setup**: `anban-setup` (first-time setup, key configuration, and connectivity verification)
+### Designer runtime contract
 
-### MCP Server (`.mcp.json`)
+The line-art workflow uses single-candidate by default, optional 2-candidate
+generation when comparison is justified. If strict line preservation is not
+possible, the delivery report records `needs_img2img` instead of claiming an
+exact colorization. The current `generate_image` path is best-effort
+reference-image generation, not a guaranteed line-preserving colorize tool.
 
-Connects to the `anban-creator` MCP server at `${user_config.api_url}/mcp` (default `https://api.creator.anbanai.com/mcp`). The `Authorization` header uses the sensitive `${user_config.api_key}` value declared in `.claude-plugin/plugin.json`; agents and docs must never print the key value.
+## Skills
 
-Key MCP tools:
-- `$ANBAN_DEFAULT_PROJECT`: Optional default project ID. When set, agents skip `list_projects` and use this directly.
-- `list_projects`, `get_project_profile`, `list_drafts`, `list_published_articles`, `list_project_titles`
-- `prepare_workspace`, `archive_workspace`
-- `render_template`, `convert_markdown`
-- `image upload`, `draft article`
-- `get_feed_detail` (SeedNote source note fetching)
-- `upload_live_audio`, `create_live_analysis_task`, `query_live_analysis_task`, `recognize_live_invalid_sentences`, `recognize_live_segments`, `build_live_clip_plan`, `build_live_subject_clip_plan`, `build_live_clip_manifest`, `recognize_live_subjects`, `complete_live_subject`
-- `prepare_file_upload`, `create_video_asr_task`, `query_video_asr_task`, `pack_video_transcripts`
+Every `skills/<name>/SKILL.md` has `name` and `description` frontmatter. Claude
+Code keeps each Skill description in discovery context, then loads the Skill
+body when invoked. Supporting files are read only when needed; keep self-authored
+`SKILL.md` entrypoints under 500 lines and link directly to one-level references.
 
-### Themes (Server-managed)
+Agent frontmatter `skills:` is full-text startup injection, not a list of Skills
+that are merely available. Several current Agents still preload phase-specific
+Skills; do not describe that state as already migrated. The target is to retain
+only knowledge required from the first turn, after representative baseline/eval
+coverage proves the removal safe, then invoke each phase-specific Skill on
+demand through Claude Code's official Skill tool. A discoverable Skill need not
+be listed in `skills:` to be invoked.
 
-Themes define visual styling for article排版. Themes are managed server-side via the MCP server's `convert_markdown` tool. Each project has a configured theme that is applied automatically during Markdown-to-WeChat-HTML conversion.
+`context: fork` turns the Skill task into a fresh subagent prompt. Validate its
+routing and plugin Agent naming in the target Claude Code release before using
+it as an entrypoint. Evaluate Skills in fresh sessions with should-trigger,
+should-not-trigger, with-Skill, and without-Skill cases.
 
-### Writers (`writers/`)
+## MCP and artifacts
 
-YAML files defining **writing** styles (the writer dimension only). Each has `name`, `english_name`, `writing_prompt` (required), plus optional `core_beliefs`, `title_formulas`, `quote_templates`. Writers **do not** carry visual identity — image visual style is an orthogonal dimension configured per project/task (see `article-visual-design` skill). Built-in styles: `dan-koe`, `cultural-depth`, `casual-science`.
+`.mcp.json` connects to `${user_config.api_url}/mcp`; its Authorization header
+uses the sensitive `${user_config.api_key}` value. Never print keys, bearer
+tokens, private draft URLs, or authorization headers.
 
-### Hooks (`hooks/hooks.json`)
+MCP owns tool schemas and server-side side effects. In particular:
 
-Lifecycle hooks for quality verification:
-- **SubagentStop**: Agent-specific delivery summaries checking output files, draft status, and completeness
-- **TaskCompleted**: Generic quality verification (file existence, format compliance)
+- `submit_agent_feedback` accepts `task_id`, `agent_name`, `scores` as a JSON
+  string, `errors`, `optimizations`, and `summary`. The server upserts on
+  `(task_id, agent_name)` and enforces the exact unique index.
+- `save_template` accepts its declared visual-template fields only. The server
+  normalizes persisted fields and derives a deterministic fingerprint so
+  repeated, resumed, or concurrent submissions are idempotent.
+- `prepare_workspace` and `archive_workspace` return canonical paths; they do
+  not create directories or move files.
 
-Command hooks that reference plugin paths use exec form (`command` plus `args`) rather than shell-form quoting. The SessionStart bootstrap hook is async so binary preparation does not block Claude Code startup.
+Live slicing keeps planning and completion side effects in MCP: use
+`build_live_clip_plan` for segment-based clip plans,
+`build_live_subject_clip_plan` for subject-based plans,
+`build_live_clip_manifest` for the server-backed delivery manifest,
+`recognize_live_subjects` for subject discovery, and `complete_live_subject` to
+record subject completion. The Agent owns local `ffmpeg` execution and
+file-backed evidence around those tool calls.
 
-Plugin agent hook matchers use Claude Code's plugin-scoped agent type, for example `anban:seednote`, not the bare frontmatter name `seednote`. Hook scripts may accept both forms for local compatibility, but plugin `hooks.json` must use the scoped matcher.
+Task artifacts are the resume contract. Store generated content, manifests,
+quality evidence, and structured `failure-state.json` files in the workspace.
+Do not place transient logs, large payloads, or secrets in project memory.
 
-## Key Conventions
+## Hook lifecycle
 
-- **Zero user interaction**: All agents run autonomously. Decisions are recorded in `$DIR/*.md` files, never by asking the user.
-- **Runtime controls**: The server may append a compact `运行控制：` block to the user message, for example `article_image_mode=cover_only` or `seednote_image_mode=cover_content`. Treat these keys as structured state, not prose. Agents route pipeline steps from the keys, skills define the detailed skip/quality/publishing semantics, and server-side Go code should not embed long workflow instructions that duplicate agent or skill documents.
-- **Workspace isolation**: Each creation task calls `prepare_workspace` MCP tool to obtain the canonical workspace path, then creates the directory locally with `mkdir -p`. The MCP tool only computes and returns the path — it does not create directories or move files.
-- **File naming**: Agents use numbered prefixes (`01-research.md`, `02-outline.md`...) or semantic names (`cover.png`, `content.md`, `image-plan.md`).
-- **Image reference chain**: First image establishes visual style; subsequent images use the first as reference to maintain consistency. For line-art coloring, current `generate_image` is best-effort reference-image generation, not a guaranteed line-preserving colorize tool.
-- **Skill references**: Agents invoke skills via `using the <skill-name> skill` phrasing, not the Skill tool.
-- **Content is Chinese**: All generated content targets Chinese social media platforms. Prohibited words lists (违禁词) are in `references/prohibited-words.md`.
-- **Video media dependency**: `live-slicer`, `live-slice`, and `video-use` require local `ffmpeg` and `ffprobe`; `video-use` uses Aliyun FunASR HTTP MCP tools for word-level ASR.
-- **Secret handling**: Never print API keys, bearer tokens, private draft URLs, or MCP Authorization headers. Diagnostics may state whether a sensitive value is present.
+Use Hooks according to the event they actually observe:
 
-## Modifying This Plugin
+- Plugin `SubagentStop` applies to plugin Agents spawned as subagents. Its
+  matchers use anchored scoped names such as `^anban:seednote$`.
+- Managed main sessions launched with `--agent` are not covered by plugin
+  `SubagentStop`; the server installs equivalent Claude Agent SDK `Stop` Hooks.
+- Command Hooks perform deterministic file, schema, quantity, and consistency
+  checks. Production completion gates should fail closed on script or output
+  errors.
+- Prompt Hooks make one LLM call and return `ok` or `reason` from hook input.
+  They cannot read workspace files or call MCP tools.
+- Agent Hooks can use tools and read files, but this project does not use them
+  for critical production acceptance. Prefer auditable command gates.
+- `TaskCompleted` fires when an individual task item is marked completed and
+  does not support matchers. It is not a whole-workflow completion event.
 
-- **Adding a new agent**: Create `agents/<name>.md` with frontmatter (name, skills, maxTurns) and pipeline definition following existing agent structure. Omit `tools` unless you intentionally want to restrict the agent to a small allowlist that includes every required MCP tool. Omit `mcpServers`; plugin agents inherit the plugin-level `.mcp.json`.
-- **Adding a new skill**: Create `skills/<name>/SKILL.md` with frontmatter name/description. Keep `SKILL.md` concise; move long examples, rubrics, and implementation details into one-level `references/` files.
-- **Adding a new theme**: Themes are managed server-side. Contact the server admin to add new themes.
-- **Adding a new writer style**: Add `writers/<name>.yaml` with required `name`, `english_name`, `writing_prompt`.
-- **Changing distribution assets**: Bump `.claude-plugin/plugin.json` in the same change and update `CHANGELOG.md`. Security-sensitive changes should also review `SECURITY.md`; contributor-facing process changes should update `CONTRIBUTING.md`.
+Final summaries, Seednote title finalization, template eligibility decisions,
+and `submit_agent_feedback` belong to tool-capable Agent stages. Hooks must not
+attempt those side effects.
+
+Command Hooks that reference plugin paths use `command` plus `args`. The
+SessionStart bootstrap remains asynchronous so binary preparation does not block
+Claude Code startup.
+
+## Seednote finalization and archive
+
+Seednote finalizes the accepted title after writing/humanization and before any
+image plan or generation. If final compliance would change that title, it writes
+a recoverable failure and resumes from `title_finalization`; it does not archive
+visuals produced for a different title.
+
+The Agent calls `scripts/archive-seednote-workspace.sh SOURCE_DIR
+PROPOSED_ARCHIVE_DIR`. The script:
+
+- rejects unsafe paths, symlinks, special files, and cross-device publication;
+- copies source, including dotfiles, into an external sibling staging directory;
+- compares sorted relative-path, size, and SHA-256 manifests;
+- reserves each candidate suffix independently and atomically renames verified
+  staging into `title`, `title-2`, and so on;
+- retains source, skips abandoned reservations without TTL takeover, cleans its
+  own temporary resources, and emits one JSON result.
+
+Any nonzero exit, invalid JSON, non-`archived` status, or empty `archive_dir`
+becomes `failure-state.json` with `stage=archive` and `resume_from=archive`.
+Template saving and success feedback must not run after an archive failure.
+
+## Content and runtime conventions
+
+- All workflows are autonomous. Record decisions in artifacts instead of using
+  `AskUserQuestion` from the business Agents.
+- Server-appended `运行控制：` keys are structured state. Agents route stages;
+  Skills own detailed domain behavior.
+- Local live/video processing uses `ffmpeg` and `ffprobe`.
+- WeChat HTML must use inline CSS and avoid unsafe tags.
+- Number or semantically name task files so delivery and recovery are explicit.
+
+## Asset governance
+
+Classify a Skill before editing it:
+
+- Self-authored assets follow this repository's prompt lint, progressive
+  disclosure, eval, ownership, manifest, and changelog rules.
+- Upstream mirrors preserve upstream bytes and are updated through source,
+  version, and parity checks. `humanizer` remains an unchanged upstream mirror;
+  business rules belong in the owning Agent or Skill.
+- Third-party runtime assets use their own update and verification process.
+  `seedance-20` migration is a separate third-party plan and is out of scope for
+  self-authored prompt optimization. `third_party/OpenMontage` remains governed
+  as an external runtime/submodule, not copied into Agent text.
+
+## Modifying the plugin
+
+- Add Agents under `agents/<name>.md`; keep workflow/recovery ownership there.
+- Add Skills under `skills/<name>/SKILL.md`; move long details into direct
+  `references/` files.
+- Keep deterministic validation in scripts or server tests.
+- Bump `.claude-plugin/plugin.json` and the marketplace plugin entry together,
+  and update `CHANGELOG.md` for any distributed runtime or documentation change.
+- Validate metadata, run affected contract tests, run `claude plugin validate`,
+  and check the final diff before release.
