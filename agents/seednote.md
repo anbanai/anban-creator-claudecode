@@ -129,7 +129,7 @@ reference-usage-summary.json
 
 #### 步骤 1：判断模式并创建任务
 
-如果用户提供种草笔记 ID、链接、xsec_token 线索，或明确说复刻、仿写、改写、克隆，则选择复刻模式（8 个任务：公共前置、源笔记获取、爆款拆解、内容改写、图片生成、合规检查、归档与模板保存、最终报告）；否则选择原创模式（6 个任务：公共前置、选题研究、内容写作、图片生成、归档、最终报告）。
+如果用户提供种草笔记 ID、链接、xsec_token 线索，或明确说复刻、仿写、改写、克隆，则选择复刻模式（9 个任务：公共前置、源笔记获取、爆款拆解、内容改写、标题终稿锁定、图片生成、合规检查、归档与模板保存、最终报告）；否则选择原创模式（7 个任务：公共前置、选题研究、内容写作、标题终稿锁定、图片生成、归档、最终报告）。
 
 使用 `TaskCreate` 创建任务列表，设置依赖：每个任务 `blockedBy` 前一个任务。后续每步开始前执行 `TaskUpdate status=in_progress`，完成后执行 `TaskUpdate status=completed`。
 
@@ -167,12 +167,6 @@ reference-usage-summary.json
 
 **产出**：`$DIR/content.md`
 
-#### 步骤 7：生成图片
-
-调用 `update_task_progress(task_id=$TASK_ID, stage="image_generation", title="图片生成", description="规划并生成封面、内容图和尾图")`。using the `seednote-visual-design` skill，传入 `$DIR/content.md`。先完成需求分析和全部可用附件分析，再由技能为每页自动选择 0、1 或多张相关原图；没有相关参考时动态设计 `$STYLE`。技能内部按 `seednote_image_mode` 完成图片内容规划（`$DIR/image-plan.md`）和全部图片生成。每张图都通过 `generate_image(..., verify_with_vision=true, verification_prompt=<动态核验提示词>)` 原子生成并核验；只有 `verification.passed=true` 才能进入下一张。API、核验依赖或重试预算失败时写 `$DIR/image-review.md` 和 `$DIR/failure-state.json` 后停止，禁止用 prompt 质量、文件尺寸或 MIME 代替视觉核验。
-
-**产出**：`$DIR/image-plan.md`、`$DIR/cover.png`、内容图（按 `seednote_image_mode`）、尾图（按 `seednote_image_mode`）
-
 ---
 
 ### 复刻模式
@@ -197,15 +191,35 @@ reference-usage-summary.json
 
 **产出**：`$DIR/content.md`
 
-#### 步骤 8：生成图片
+---
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="image_generation", title="图片生成", description="基于爆款模板规划并生成封面、内容图和尾图")`。using the `seednote-visual-design` skill，传入 `$DIR/content.md`、改写模式和 `$DIR/viral-template.json` 中的 `cover_template` / `do_not_copy` / `recommended_clone_depth`。根据模板自动适配每页主题，但图片数量必须受 `seednote_image_mode` 限制；若已降级为 `medium`，按常规流程规划图片。复刻模式下不得照搬源图构图到不可区分。生成 `$DIR/image-plan.md`、`$DIR/cover.png`、内容图和尾图（均按 `seednote_image_mode`）。
+#### 步骤 7b：标题终稿锁定
+
+原创与复刻模式完成各自的写作和 humanizer 后，调用 `update_task_progress(task_id=$TASK_ID, stage="title_finalization", title="标题终稿锁定", description="在视觉产物生成前完成标题排重与入库")`。从 `$DIR/content.md` 第一行读取可发布标题为 `$FINAL_TITLE`，调用 `finalize_task_title(task_id=$TASK_ID, title=$FINAL_TITLE)`，最多进行 3 次调用尝试（首次计入）：
+
+- 成功后以服务端接受的标题锁定 `$FINAL_TITLE`，并确认 `$DIR/content.md` 第一行完全一致。后续 `image-plan`、`cover`、`prompts`、`review`、`compliance`、`archive` 与最终报告只能读取这个已接受标题，不得静默改名。
+- 返回 `duplicate title` 错误时，改写为新的可发布标题，先把 `$DIR/content.md` 第一行更新为新标题，再重新 using the `humanizer` skill 处理标题并 using the `seednote-writing` skill 执行标题合规检查；两项通过后才用新的 `$FINAL_TITLE` 重试。连续 3 次均返回重复标题时停止。
+- 返回非重复错误，或连续 3 次重复标题均未解决时，写入 `$DIR/failure-state.json`：`{"version":"1.0","status":"recoverable_failure","stage":"title_finalization","error_code":"<stable_code>","message":"<原始错误摘要>","resume_from":"title_finalization"}`。非重复错误使用 `error_code="finalize_title_failed"`，重复耗尽使用 `error_code="duplicate_title_exhausted"`；随后停止，不得进入图片生成、合规、归档或模板保存。
+
+### 图片生成
+
+#### 步骤 8a：原创模式图片生成
+
+原创模式调用 `update_task_progress(task_id=$TASK_ID, stage="image_generation", title="图片生成", description="基于已锁定标题规划并生成封面、内容图和尾图")`。using the `seednote-visual-design` skill，传入含已接受 `$FINAL_TITLE` 的 `$DIR/content.md`。先完成需求分析和全部可用附件分析，再由技能为每页自动选择 0、1 或多张相关原图；没有相关参考时动态设计 `$STYLE`。技能内部按 `seednote_image_mode` 完成图片内容规划（`$DIR/image-plan.md`）和全部图片生成。每张图都通过 `generate_image(..., verify_with_vision=true, verification_prompt=<动态核验提示词>)` 原子生成并核验；只有 `verification.passed=true` 才能进入下一张。API、核验依赖或重试预算失败时写 `$DIR/image-review.md` 和 `$DIR/failure-state.json` 后停止，禁止用 prompt 质量、文件尺寸或 MIME 代替视觉核验。
+
+**产出**：`$DIR/image-plan.md`、`$DIR/cover.png`、内容图（按 `seednote_image_mode`）、尾图（按 `seednote_image_mode`）
+
+#### 步骤 8b：复刻模式图片生成
+
+复刻模式调用 `update_task_progress(task_id=$TASK_ID, stage="image_generation", title="图片生成", description="基于已锁定标题与爆款模板规划并生成封面、内容图和尾图")`。using the `seednote-visual-design` skill，传入含已接受 `$FINAL_TITLE` 的 `$DIR/content.md`、改写模式和 `$DIR/viral-template.json` 中的 `cover_template` / `do_not_copy` / `recommended_clone_depth`。根据模板自动适配每页主题，但图片数量必须受 `seednote_image_mode` 限制；若已降级为 `medium`，按常规流程规划图片。复刻模式下不得照搬源图构图到不可区分。生成 `$DIR/image-plan.md`、`$DIR/cover.png`、内容图和尾图（均按 `seednote_image_mode`）。
 
 **产出**：`$DIR/image-plan.md`、`$DIR/cover.png`、内容图（按 `seednote_image_mode`）、尾图（按 `seednote_image_mode`）
 
 #### 步骤 9：合规检查
 
 调用 `update_task_progress(task_id=$TASK_ID, stage="compliance", title="合规检查", description="扫描违禁词与诱导互动表述")`。using the `seednote-writing` skill 扫描标题与正文，执行违禁词和诱导互动专项检查（§9.5 覆盖 6 种违规模式），生成 `$DIR/compliance-report.md`。高风险诱导互动表述必须删除或改写；疑似误报只记录并标注人工复核，不自动删除核心信息。
+
+合规检查必须确认 `$DIR/content.md` 第一行仍等于服务端接受的 `$FINAL_TITLE`。图片生成后不得静默修改标题；若最终合规要求改标题，写入 `$DIR/failure-state.json`：`{"version":"1.0","status":"recoverable_failure","stage":"compliance","error_code":"title_changed_after_visuals","message":"标题合规变更会使现有视觉产物与标题不一致","resume_from":"title_finalization"}`，停止并从 `title_finalization` 恢复，随后必须重新执行 `image_generation`，不得归档不一致资产。
 
 **产出**：`$DIR/compliance-report.md`
 
@@ -215,17 +229,28 @@ reference-usage-summary.json
 
 #### 步骤 10：归档工作目录
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="archive", title="归档", description="归档工作目录到最终路径")`。确认 AI 最终选定标题 `$FINAL_TITLE`（必须是面向用户发布的笔记标题，不得使用 `图片内容规划`、`标题候选与评分`、`选题研究报告`、`违禁词合规检查报告` 等内部产物标题）。最终标题写入系统排重库由 seednote SubagentStop hook 统一负责，agent 不要自行调用标题上报工具。调用 `archive_workspace`（`content_type="seednote"`, `name="$FINAL_TITLE"`）获取归档路径 `$ARCHIVE_DIR`。通过 Bash 执行 `mkdir -p "$ARCHIVE_DIR" && mv "$DIR"/* "$ARCHIVE_DIR/" 2>/dev/null`。若归档目录已存在，追加序号（如 `标题-2/`），确保不覆盖已有成果。归档失败时保留 `$DIR` 原始成果并报告两个路径。
+调用 `update_task_progress(task_id=$TASK_ID, stage="archive", title="归档", description="校验并原子归档工作目录")`。再次确认 `$DIR/content.md` 第一行等于已接受 `$FINAL_TITLE`，再调用 `archive_workspace`（`content_type="seednote"`, `name="$FINAL_TITLE"`）获取建议归档路径 `$ARCHIVE_DIR`。设置 `ARCHIVE_SUCCEEDED=false`，通过 Bash tool 直接调用插件 runtime；不得使用 command substitution 或 wrapper 吞掉 stdout：
+
+```bash
+"${CLAUDE_PLUGIN_ROOT}/scripts/archive-seednote-workspace.sh" "$DIR" "$ARCHIVE_DIR"
+```
+
+脚本负责 strict mode、外部 sibling staging、dotfiles、archive-root 排除、relative path + size + SHA-256 manifest、跨平台 hash fallback、候选级 reservation、`title`/`title-2` 后缀选择、原子发布和临时资源清理；遗留 reservation 只跳过对应 suffix，不进行 TTL 抢占，成功后保留 source。脚本的 stdout JSON 原样出现在 Bash tool result，退出码也由 Bash tool 保留。下一步必须从该 Bash tool result 解析 JSON，不得依赖跨 Bash tool call 的 shell 变量：
+
+- Bash tool 退出码为 0 时，必须同时满足 `status="archived"` 且 `archive_dir` 非空；用返回的最终 `archive_dir` 覆盖 `$ARCHIVE_DIR`，记录 `code` / `message`，设置 `ARCHIVE_SUCCEEDED=true`。最终报告同时列出保留的 source 与最终 archive 路径。
+- 命令非零、JSON 无效、`status` 非 archived 或 `archive_dir` 为空时，取脚本返回的稳定 `code` / `message`；无法解析时分别使用 `archive_script_failed` 与原始 stderr/退出信息。写 `$DIR/failure-state.json`：`{"version":"1.0","status":"recoverable_failure","stage":"archive","error_code":"<code>","message":"<message>","resume_from":"archive"}`，保留 source 并停止。此路径不得执行步骤 11、不得执行模板保存、不得提交成功反馈。
 
 **产出**：`$ARCHIVE_DIR`
 
 #### 步骤 11：模板保存（仅复刻模式）
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="finalize", title="模板保存", description="保存复刻模板到模板库")`。检查 `$DIR/viral-template.json` 和 `$DIR/template-meta.json`（归档后检查 `$ARCHIVE_DIR/` 下对应文件）是否均存在，且 `template-meta.json` 中 `save_eligible=true`。条件满足时调用 `save_template` MCP 工具，参数为：`type="seednote"`、`name=template-meta.name`、`category=template-meta.category`、`structure=viral-template.json`（文件内容）、`style_prompt=viral-template.cover_template`、`tags=template-meta.tags`。若 `save_template` 失败，记录日志但不阻塞流程。
+仅当 `ARCHIVE_SUCCEEDED=true` 时，调用 `update_task_progress(task_id=$TASK_ID, stage="finalize", title="模板保存", description="保存复刻模板到模板库")`。检查 `$ARCHIVE_DIR/viral-template.json` 和 `$ARCHIVE_DIR/template-meta.json` 是否均存在，且 `template-meta.json` 中 `save_eligible=true`。条件满足时调用 `save_template(type="seednote", name=template-meta.name, category=template-meta.category, style_prompt=viral-template.cover_template, tags=JSON.stringify(template-meta.tags))`；参数只使用真实 schema 的 `type`、`name`、`category`、`style_prompt`、`tags`。服务端按持久字段 fingerprint 幂等保存：重复或 resume 调用同一 payload 必须返回同一 template ID，首次状态为 `created`，后续为 `existing`。若 `save_template` 失败，记录 warning 但不把已校验归档降级为失败；archive 失败时本步骤绝不执行。
 
 #### 步骤 12：最终报告
 
 向用户交付可复核的结果摘要，包含：模式（原创/复刻）、标题、成果目录（`$ARCHIVE_DIR`）、图片数量（封面/内容图/尾图分别统计；尾图按 `seednote_image_mode`，未包含则 0）、合规状态（复刻模式报告 `compliance-report.md`；原创模式说明已按写作规则规避诱导互动）、失败态或需要恢复的步骤。进度报告格式：`[N/M] description → $DIR/ (detail)`。
+
+最终报告完成后调用一次 `submit_agent_feedback(task_id=$TASK_ID, agent_name="seednote", scores='{"quality":8,"completeness":8,"efficiency":8}', errors="", optimizations="<本次可改进项；无则空字符串>", summary="<模式、最终标题、成果目录、图片与合规状态摘要>")`。调用前按实际情况调整 JSON 字符串中的 1-10 分数；无错误时 `errors` 传空字符串。
 
 ---
 

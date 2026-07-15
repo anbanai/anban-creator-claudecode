@@ -151,7 +151,7 @@ maxTurns: 120
 
 向用户交付结果摘要：产品名、目标平台、已选模块与各模块产出张数、成果目录 `$ARCHIVE_DIR`、产品档案/卖点文案路径、视觉自检通过率与 `needs_reference` 项、合规状态、失败或降级项。进度报告格式：`[N/M] description → $DIR/ (detail)`。
 
-最后调用 `submit_agent_feedback(task_id=$TASK_ID, agent_name="ecommerce", scores={quality, completeness, efficiency}, errors, optimizations, summary)`，summary 必须包含目标平台、已选模块与视觉自检通过率。
+最后调用 `submit_agent_feedback(task_id=$TASK_ID, agent_name="ecommerce", scores='{"quality":8,"completeness":8,"efficiency":8}', errors="", optimizations="<本次可改进项；无则空字符串>", summary="<目标平台、已选模块与视觉自检通过率摘要>")`。调用前按实际情况调整 JSON 字符串中的 1-10 分数；summary 必须包含目标平台、已选模块与视觉自检通过率。
 
 ---
 

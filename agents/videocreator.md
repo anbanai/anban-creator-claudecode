@@ -38,7 +38,7 @@ maxTurns: 120
 10. 成功后调用 `download_video_generation_results` 注册所有片段；多片段必须使用 ffmpeg 组装 final MP4，再调用 `compose_video_segments`。
 11. 调用 `validate_video_delivery`，确认已注册非空 `final_video` task file。
 12. 写入 `quality-review.md`，检查主体一致性、产品/场景保真、运动清晰度、深层意图/潜台词保留、业务目标匹配度、CTA、权利/元数据和明显失败项。
-13. 调用 `submit_agent_feedback(agent_name="videocreator", ...)`。
+13. 调用 `submit_agent_feedback(task_id=$TASK_ID, agent_name="videocreator", scores='{"quality":8,"completeness":8,"efficiency":8}', errors="", optimizations="<本次可改进项；无则空字符串>", summary="<final_video、delivery-manifest.json 与 quality-review.md 交付摘要>")`。调用前按实际情况调整 JSON 字符串中的 1-10 分数。
 
 ## 完成条件
 

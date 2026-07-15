@@ -162,6 +162,12 @@ reference-usage-summary.json
 - 复刻模式读取 `$DIR/viral-template.json`，不得重新拆解源笔记
 - 内容保存到 `$DIR/content.md`
 
+### 步骤 4b：标题终稿锁定
+
+- 内容写作与 humanizer 完成后，由 seednote Agent 在任何图片规划/生成前调用 `finalize_task_title`
+- 重复标题先更新 `content.md` 第一行并重跑 humanizer 与标题合规，再重试
+- 服务端接受的标题是后续视觉、合规与归档的唯一 `$FINAL_TITLE`；本 skill 不复制 Agent 的重试与失败算法
+
 ### 步骤 5：生成图片
 
 使用 `seednote-visual-design` skill：
@@ -179,11 +185,11 @@ reference-usage-summary.json
 
 ### 步骤 7：归档
 
-- 确认 AI 最终选定标题 `$FINAL_TITLE`，必须是真实发布标题，不得是 `图片内容规划`、`标题候选与评分`、`选题研究报告`、`违禁词合规检查报告` 等内部产物标题
+- 使用服务端已接受的 `$FINAL_TITLE`，不得在图片生成后静默改名
 - 调用 `archive_workspace(content_type="seednote", name="$FINAL_TITLE")` 获取归档路径 `$ARCHIVE_DIR`
-- 通过 Bash 执行 `mkdir -p "$ARCHIVE_DIR" && mv "$DIR"/* "$ARCHIVE_DIR/" 2>/dev/null` 移动文件
+- 归档搬运与校验由 seednote Agent 调用 `${CLAUDE_PLUGIN_ROOT}/scripts/archive-seednote-workspace.sh` 负责；本 skill 不复制实现
 - 报告成果目录路径 `$ARCHIVE_DIR`
-- 最终标题写入系统排重库由 seednote 完成 hook 统一负责，本 skill 不直接上报标题
+- 最终标题排重与入库由 seednote Agent 的 title_finalization 阶段负责；本专业流程不另建 Hook 副本。
 
 ---
 
@@ -206,7 +212,7 @@ reference-usage-summary.json
 
 ## 任务追踪要求
 
-流程启动时用 `TaskCreate` 创建任务列表，每个步骤对应一个任务。开始前 `TaskUpdate status → in_progress`，完成后 `TaskUpdate status → completed`。报告进度示例：`[3/7] 内容创作完成 → $DIR/content.md`
+流程启动时用 `TaskCreate` 创建任务列表，每个步骤对应一个任务。开始前 `TaskUpdate status → in_progress`，完成后 `TaskUpdate status → completed`。报告进度示例：`[4/8] 标题终稿锁定 → $DIR/content.md`
 
 ---
 
@@ -219,6 +225,7 @@ reference-usage-summary.json
 | 3 | `seednote-research` | `topic-analysis.md`（原创）或 `source-note.md`（复刻） |
 | 3b | `seednote-viral-analysis` | `source-analysis.md`, `viral-template.json`, `template-meta.json`（仅复刻模式） |
 | 4 | `seednote-writing` | `content.md` |
+| 4b | Agent 直接调用 `finalize_task_title` | 服务端接受的 `$FINAL_TITLE` |
 | 5 | `seednote-visual-design` | `cover.png`, `image_0*.png`（按 `seednote_image_mode`）, `tail.png`（按 `seednote_image_mode`）, `image-plan.md` |
 | 6 | `seednote-writing` | `compliance-report.md`（仅复刻模式） |
 | 7 | 直接 MCP 调用 | 归档到 `$ARCHIVE_DIR` |

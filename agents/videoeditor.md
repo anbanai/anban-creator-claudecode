@@ -49,4 +49,4 @@ maxTurns: 160
 9. 运行 `$ANBAN_BIN video verify --edl "$DIR/edit/edl.json"`。
 10. 如果交付成片，按阶段渲染：先 draft，再 preview，最终输出 `final.mp4`；字幕字体默认 Source Han Sans / 思源黑体。如果交付剪映/CapCut 草稿，使用 `capcut-draft` skill 生成可打开的草稿包并保留关键 JSON。
 11. 自检切点、字幕遮挡、overlay timing、音频 pop、display rotation、最终时长和文件大小。
-12. 调用 `submit_agent_feedback(agent_name="videoeditor", ...)`。
+12. 调用 `submit_agent_feedback(task_id=$TASK_ID, agent_name="videoeditor", scores='{"quality":8,"completeness":8,"efficiency":8}', errors="", optimizations="<本次可改进项；无则空字符串>", summary="<成片或草稿、EDL、字幕/音频/画幅与质量审查摘要>")`。调用前按实际情况调整 JSON 字符串中的 1-10 分数。

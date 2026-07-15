@@ -44,4 +44,4 @@ maxTurns: 180
 9. 收集 Montage 输出，写 `delivery-manifest.json`。
 10. 使用 Anban MCP 上传并登记最终视频、manifest、timeline、subtitles、audio、run log 和 failure diagnosis。
 11. 完成前确认 `final_video` 与 `delivery-manifest.json` 已登记为 task files。
-12. 调用 `submit_agent_feedback(agent_name="montage", status="completed", summary="Montage delivery registered")`。
+12. 调用 `submit_agent_feedback(task_id=$TASK_ID, agent_name="montage", scores='{"quality":8,"completeness":8,"efficiency":8}', errors="", optimizations="<本次可改进项；无则空字符串>", summary="Montage delivery registered: final_video and delivery-manifest.json validated")`。调用前按实际情况调整 JSON 字符串中的 1-10 分数。

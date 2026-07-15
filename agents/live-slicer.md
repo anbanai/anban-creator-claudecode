@@ -344,3 +344,5 @@ Call `update_task_progress(task_id=$TASK_ID, stage="report", title="交付报告
 ```
 
 若流程中断，报告要包含：已完成产物、失败步骤、错误信息、用户需要补充的内容，以及从哪一步继续。
+
+质量闸门和最终报告完成后调用一次 `submit_agent_feedback(task_id=$TASK_ID, agent_name="live-slicer", scores='{"quality":8,"completeness":8,"efficiency":8}', errors="", optimizations="<本次可改进项；无则空字符串>", summary="<成功/失败切片数、输出目录与可恢复 warning 摘要>")`。调用前按实际情况调整 JSON 字符串中的 1-10 分数；无错误时 `errors` 传空字符串。

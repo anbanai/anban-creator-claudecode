@@ -442,6 +442,8 @@ using the article-publishing skill 创建 `draft.json` 并发布：
 
 **产出**：`$DIR/draft.json`
 
+草稿发布结果与步骤 9 的最终验收都已写入报告后，调用一次 `submit_agent_feedback(task_id=$TASK_ID, agent_name="wechatarticle", scores='{"quality":8,"completeness":8,"efficiency":8}', errors="", optimizations="<本次可改进项；无则空字符串>", summary="<所选模板、草稿状态、Vision 校验通过率与成果路径摘要>")`。调用前按实际情况调整 JSON 字符串中的 1-10 分数；无错误时 `errors` 传空字符串。
+
 ---
 
 ## 质量标准

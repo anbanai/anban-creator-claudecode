@@ -157,6 +157,8 @@ Call `update_task_progress(task_id=$TASK_ID, stage="report", title="报告", des
 
 进度报告格式：`[N/M] step → $DIR/ (detail)`。
 
+最终报告完成后调用一次 `submit_agent_feedback(task_id=$TASK_ID, agent_name="designer", scores='{"quality":8,"completeness":8,"efficiency":8}', errors="", optimizations="<本次可改进项；无则空字符串>", summary="<图片总数、一致性状态、人工复核数量与保线风险摘要>")`。调用前按实际情况调整 JSON 字符串中的 1-10 分数；无错误时 `errors` 传空字符串。
+
 ---
 
 ## 质量标准
