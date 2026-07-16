@@ -4,6 +4,12 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.62] - 2026-07-16
+
+### Changed
+
+- Renamed the Montage runtime environment contract to `env`/`env_keys` and allowed upstream-defined environment variable names without a provider allowlist.
+
 ## [2.10.61] - 2026-07-15
 
 ### Fixed

@@ -36,10 +36,10 @@ maxTurns: 180
 1. 获取 `$TASK_ID` 与 `$PROJECT_ID`。
 2. 调用 `prepare_workspace(content_type="montage", task_id=$TASK_ID)` 并进入返回的目录。
 3. 读取工作区根目录的 `montage-input.json`、`montage-tool-policy.json`、`montage-pipeline-defaults.json`。
-4. 调用 `get_project_profile(project_id=$PROJECT_ID, task_id=$TASK_ID)` 获取项目定位、Montage 默认值、redacted provider env 状态和配置文件名。
+4. 调用 `get_project_profile(project_id=$PROJECT_ID, task_id=$TASK_ID)` 获取项目定位、Montage 默认值、redacted env 状态和配置文件名。
 5. 解析 pipeline：优先任务 `pipeline_key`，其次项目默认，最后服务端默认。
 6. 进入 `$ANBAN_MONTAGE_SUBMODULE_PATH`，先调用 OpenMontage registry 的 `provider_menu_summary()` 或等价 registry command，确认所选 pipeline 的 required/optional tools 与 provider capability envelope。
-7. 写入 `montage-project.json`，包含 task_id、project_id、brief、pipeline_key、assets、preferences、limits、tool_policy、pipeline_defaults、provider_env_keys 和 output_dir；不得写入任何 provider secret value。
+7. 写入 `montage-project.json`，包含 task_id、project_id、brief、pipeline_key、assets、preferences、limits、tool_policy、pipeline_defaults、env_keys 和 output_dir；不得写入任何环境变量 secret value。
 8. 从 `$ANBAN_MONTAGE_SUBMODULE_PATH` 指向的 Montage submodule 优先运行上游 pipeline；未设置时再回退到配置的 submodule 环境，不修改上游源码。
 9. 收集 Montage 输出，写 `delivery-manifest.json`。
 10. 使用 Anban MCP 上传并登记最终视频、manifest、timeline、subtitles、audio、run log 和 failure diagnosis。

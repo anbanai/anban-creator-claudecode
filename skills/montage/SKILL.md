@@ -66,7 +66,7 @@ Write `montage-project.json` with:
   "limits": {},
   "tool_policy": {},
   "pipeline_defaults": {},
-  "provider_env_keys": {},
+  "env_keys": {},
   "output_dir": "output/montage/$TASK_ID"
 }
 ```
