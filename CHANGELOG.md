@@ -4,6 +4,13 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.64] - 2026-07-17
+
+### Changed
+
+- Removed legacy workspace archive tool and kept managed task deliverables in canonical `output/` for server-side artifact collection.
+- Required `task_id` for workspace preparation and removed standalone local workspace fallback behavior.
+
 ## [2.10.63] - 2026-07-17
 
 ### Changed
