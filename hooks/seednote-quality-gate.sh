@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Stop/SubagentStop mechanical gate for the seednote agent.
-# Blocks a claimed success when trace, verification, or archival is incomplete.
+# Blocks a claimed success when trace or verification is incomplete.
 
 set -euo pipefail
 
@@ -9,7 +9,6 @@ export HOOK_INPUT="$INPUT"
 export WORKSPACE_ROOT="${CLAUDE_PROJECT_DIR:-$PWD}"
 
 python3 - <<'PY'
-import glob
 import json
 import os
 import re
@@ -30,10 +29,8 @@ if payload.get("agent_type") not in ("seednote", "anban:seednote"):
     sys.exit(0)
 
 root = Path(os.environ.get("WORKSPACE_ROOT") or os.getcwd())
-managed_main_session = bool(payload.get("managed_main_session"))
 
 failure_candidates = [root / "output" / "failure-state.json"]
-failure_candidates.extend(root.glob("output/seednote/*/failure-state.json"))
 for failure_path in failure_candidates:
     if not failure_path.is_file():
         continue
@@ -54,39 +51,17 @@ for failure_path in failure_candidates:
     # server rejects it as business success while preserving uploaded files.
     sys.exit(0)
 
-candidates: list[Path] = []
-
-archive_dirs = [Path(p) for p in glob.glob(str(root / "output" / "seednote" / "*" / ""))]
-archive_dirs.sort(key=lambda p: p.stat().st_mtime if p.exists() else 0, reverse=True)
-candidates.extend(archive_dirs)
-
 output_dir = root / "output"
-if any((output_dir / name).exists() for name in ("image-plan.md", "cover.png", "tail.png")):
-    candidates.append(output_dir)
-
-workspace_dir = root / "data" / "workspace"
-if workspace_dir.exists():
-    workspace_candidates = [
-        p
-        for p in workspace_dir.rglob("*")
-        if p.is_dir() and "seednote" in str(p)
-    ]
-    workspace_candidates.sort(key=lambda p: p.stat().st_mtime if p.exists() else 0, reverse=True)
-    candidates.extend(workspace_candidates)
-
-if not candidates:
+if not output_dir.is_dir():
     block(
-        "种子笔记机械闸门：未找到 seednote 工作目录（已扫描 output/、output/seednote/*/、data/workspace/*seednote*）。\n"
-        "这通常意味着 prepare_workspace 未执行，或 agent 在创建工作目录前就退出。\n"
-        "请确认步骤 4 已执行 prepare_workspace + mkdir -p，然后重试。"
+        "种子笔记机械闸门：未找到规范任务输出目录 output/。\n"
+        '请先执行 prepare_workspace(content_type="seednote", task_id=$TASK_ID)，'
+        "并将所有交付物直接留在规范 output/ 目录。"
     )
     sys.exit(0)
 
-seednote_dir = candidates[0]
+seednote_dir = output_dir
 missing: list[str] = []
-
-if managed_main_session and seednote_dir == output_dir:
-    missing.append("最终归档目录 output/seednote/{标题}/（主 Agent 会话尚未完成 archive_workspace）")
 
 required_artifacts = {
     "content.md": "最终正文",
@@ -147,7 +122,7 @@ if missing:
     block(
         f"种子笔记机械闸门未通过（{seednote_dir}），缺失：\n"
         + "".join(f"  - {item}\n" for item in missing)
-        + "\n请按 seednote-visual-design skill 补齐规划、generate_image 原子视觉核验和归档。"
+        + "\n请完成 seednote-visual-design 规划和 generate_image 原子视觉核验，并将全部产物留在 output/。"
         + "若依赖不可用，写入结构化 failure-state.json 后停止；禁止用 prompt 质量或文件尺寸代替视觉核验。"
     )
 
