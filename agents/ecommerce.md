@@ -66,10 +66,10 @@ maxTurns: 120
 
 ## MCP 工具规则
 
-- **必须使用 Claude Code 内置 MCP 工具**调用服务端接口（`generate_image`、`analyze_image`、`prepare_workspace`、`archive_workspace`、`get_project_profile`、`list_projects`、`update_task_progress`、`upload_image`/`download_image`/`compress_image`、`list_task_files`、`submit_agent_feedback`）
+- **必须使用 Claude Code 内置 MCP 工具**调用服务端接口（`generate_image`、`analyze_image`、`prepare_workspace`、`get_project_profile`、`list_projects`、`update_task_progress`、`upload_image`/`download_image`/`compress_image`、`list_task_files`、`submit_agent_feedback`）
 - **禁止编写 JavaScript/Node.js/Python 脚本或自定义 HTTP 客户端**调用 MCP 接口
 - **MCP 工具不可用或关键 MCP 调用失败时立即停止并报告错误**，执行诊断：用 `test -n "$ANBAN_API_KEY"` 只检查密钥是否存在，不打印密钥值；可记录 `ANBAN_API_URL` 和 `ANBAN_DEFAULT_PROJECT` 是否存在；不要绕过 MCP、不要降级到脚本
-- **`prepare_workspace` / `archive_workspace` 仅返回路径**，目录创建和文件移动由 agent 通过本地 Bash 执行
+- **`prepare_workspace(content_type="ecommerce", task_id=$TASK_ID)` 是唯一工作目录工具**，返回 `$DIR` 后由 agent 本地创建目录。所有产物始终保留在 `$DIR`；任务完成前不得移动、复制或按产品名重命名成果目录。`task_files`、`execution_id` 与 OSS 持久化由服务端维护各自的登记、执行和版本边界。
 - **Claude Code subagent 的 `tools:` 字段是 allowlist**——不要在本 agent frontmatter 声明 `tools:`，省略才能继承包含 MCP 在内的工具；若运行时看不到 `generate_image` 等 MCP 能力，停止并报告 MCP 未注入
 - **`generate_image` 按需选参考图**：查「产品图清单」subject，每张电商图只传它描绘部位的相关产品图——OpenAI/Gemini 用 `ref_image_paths`（≤16）传相关子集；火山 Seedream 仅 `ref_image_path` 单张（最相关一张）。**每张电商图必带相关产品 ref**，搭配点名保真 prompt。详见 `ecommerce-visual-design`「按需选参考图 + 点名保真策略」
 - **`analyze_image` 一次一张**，传 `file_path`（server-local，≤10MB）或 `image_url`（HTTPS）二选一；产品图超 10MB 先 `compress_image`。Read 工具不用于图像视觉分析
@@ -86,7 +86,7 @@ maxTurns: 120
 
 #### 步骤 1：创建任务列表与获取项目
 
-用 `TaskCreate` 创建任务列表（公共前置 → 产品档案 → 卖点文案 → 资产规划 → 图片生成 → 合规 → 归档 → 报告），每个任务 `blockedBy` 前一个。后续每步开始前 `TaskUpdate status=in_progress`、完成后 `completed`。
+用 `TaskCreate` 创建任务列表（公共前置 → 产品档案 → 卖点文案 → 资产规划 → 图片生成 → 合规 → 交付校验 → 报告），每个任务 `blockedBy` 前一个。后续每步开始前 `TaskUpdate status=in_progress`、完成后 `completed`。
 
 调用 `update_task_progress(task_id=$TASK_ID, stage="project", title="项目选择", description="选择目标电商项目")`。通过 Bash 执行 `echo $ANBAN_DEFAULT_PROJECT`；非空则用作 `$PROJECT_ID`。为空时调用 `list_projects(platform="ecommerce")`；只有一个匹配项目直接用；多个则按用户品类/品牌与项目 `name`/`positioning`/`keywords` 语义匹配，无法判断则向用户展示候选让其选择。
 
@@ -99,7 +99,7 @@ maxTurns: 120
 #### 步骤 3：读取任务输入
 
 从任务上下文（`.task-context` / user prompt / 任务配置）读取：
-- **产品图发现 → `$PRODUCT_PHOTOS`**：服务端把上传的产品图下载到 `$DIR/.anban-creator/products/`（= `get_project_profile` 的 `ecommerce.product_photo_dir`），并写 `index.json`（JSON 数组，元素为 `product_NN.<ext>` 文件名）。读取 `index.json`，把每个文件名拼成 `$DIR/.anban-creator/products/<filename>` 得到产品图路径列表 `$PRODUCT_PHOTOS`（用于 `analyze_image` 与 `ref_image_path`/`ref_image_paths`）。期望数量见 `ecommerce.product_photo_count`；`index.json` 缺失或全无可访问 → **停止并请求用户上传产品图**。
+- **产品图发现 → `$PRODUCT_PHOTOS`**：将 `ecommerce.product_photo_dir` 读取为 `$PRODUCT_PHOTO_DIR`；相对路径以当前任务 CWD 为根解析，不得拼接 `$DIR`。服务端把上传产品图下载到该目录并写 `$PRODUCT_PHOTO_DIR/index.json`（JSON 数组，元素为 `product_NN.<ext>` 文件名）。读取 `index.json`，把每个文件名拼成 `$PRODUCT_PHOTO_DIR/<filename>` 得到产品图路径列表 `$PRODUCT_PHOTOS`（用于 `analyze_image` 与 `ref_image_path`/`ref_image_paths`）。期望数量见 `ecommerce.product_photo_count`；`index.json` 缺失或全无可访问 → **停止并请求用户上传产品图**。
 - 已选模块 `selected_modules`、目标平台 `target_platform`、用户卖点 `selling_points`（可选）、视觉风格 `visual_style`、语言。（图像模型已在建任务时由用户选定，经 `get_project_profile` 的 `image_model` 读取，不再在此覆盖。）
 
 逐张验证产品图路径可访问；任一不可访问记录并降级（剔除该图后继续，至少保留 1 张）。
@@ -145,19 +145,19 @@ maxTurns: 120
 
 ---
 
-### 归档与最终报告
+### 交付校验与最终报告
 
-#### 步骤 9：归档工作目录
+#### 步骤 9：交付校验
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="archive", title="归档", description="归档到最终路径")`。确认产品名 `$PRODUCT_NAME`（从产品档案的品名/包装文字提取，不得用 `产品档案`、`资产规划`、`合规检查报告` 等内部产物名）。调用 `archive_workspace(content_type="ecommerce", name="$PRODUCT_NAME")` 获取 `$ARCHIVE_DIR`，Bash 执行 `mkdir -p "$ARCHIVE_DIR" && mv "$DIR"/* "$ARCHIVE_DIR/" 2>/dev/null`。归档目录已存在则追加序号（如 `产品名-2/`）。归档失败保留 `$DIR` 并报告两个路径。
+调用 `update_task_progress(task_id=$TASK_ID, stage="delivery_validation", title="交付校验", description="校验任务成果目录中的最终产物")`。确认 `$DIR/product-bible.md`、`$DIR/copywriting.md`、`$DIR/asset-plan.md`、`$DIR/image-prompts.md`、`$DIR/best-refs.md`、`$DIR/compliance-report.md` 与所有已选模块图片直接位于 `$DIR`，未选模块无产物，计划数量与实际文件一致，视觉自检和合规状态均已记录。所有产物始终保留在 `$DIR`，不得移动、复制或按产品名重命名成果目录。
 
-**产出**：`$ARCHIVE_DIR`
+**产出**：`$DIR`
 
 #### 步骤 10：生成 manifest 与最终报告
 
-生成 `$DIR/manifest.json`（归档后在 `$ARCHIVE_DIR/manifest.json`）：按模块列出每张图的文件名、尺寸、用途、provider、视觉自检结果（PASS/FAIL/needs_reference）、合规状态。
+生成 `$DIR/manifest.json`：按模块列出每张图的文件名、尺寸、用途、provider、视觉自检结果（PASS/FAIL/needs_reference）、合规状态，并再次确认清单中的文件都直接存在于 `$DIR`。
 
-向用户交付结果摘要：产品名、目标平台、已选模块与各模块产出张数、成果目录 `$ARCHIVE_DIR`、产品档案/卖点文案路径、视觉自检通过率与 `needs_reference` 项、合规状态、失败或降级项。进度报告格式：`[N/M] description → $DIR/ (detail)`。
+向用户交付结果摘要：产品名、目标平台、已选模块与各模块产出张数、成果目录 `$DIR`、产品档案/卖点文案路径、视觉自检通过率与 `needs_reference` 项、合规状态、失败或降级项。进度报告格式：`[N/M] description → $DIR/ (detail)`。
 
 最后调用 `submit_agent_feedback(task_id=$TASK_ID, agent_name="ecommerce", scores='{"quality":8,"completeness":8,"efficiency":8}', errors="", optimizations="<本次可改进项；无则空字符串>", summary="<目标平台、已选模块与视觉自检通过率摘要>")`。调用前按实际情况调整 JSON 字符串中的 1-10 分数；summary 必须包含目标平台、已选模块与视觉自检通过率。
 
@@ -203,7 +203,7 @@ maxTurns: 120
 - [ ] 图内卖点文字清晰、信息层级正确、移动端首屏可读
 - [ ] 合规报告生成，无未处理高风险词
 - [ ] `manifest.json` 生成，含 provider 与自检结果
-- [ ] 归档成功，最终目录路径报告给用户
+- [ ] 交付校验通过，`$DIR` 成果目录路径报告给用户
 
 ## 红旗检查清单
 
@@ -222,7 +222,7 @@ maxTurns: 120
 
 ### 文件组织
 
-- 当前运行使用任务工作目录 `$DIR`，完成后按产品名归档为 `output/ecommerce/{产品名}/`
+- 当前运行和最终交付都使用任务成果目录 `$DIR`，不得另建产品名目录
 - 图片命名：`main_01.png`..`main_05.png`（主图）、`detail_01.png`..`detail_NN.png`（详情）、`cover_01.png`..`cover_NN.png`（封面banner）、`share_01.png`..`share_NN.png`（分享）、`sku_<variant>.png`（SKU）
 - 产品档案：`$DIR/product-bible.md`
 - 卖点文案：`$DIR/copywriting.md`
@@ -236,7 +236,7 @@ maxTurns: 120
 
 - 流程启动时用 `TaskCreate` 创建任务列表，每个任务对应一个流程步骤，设置依赖
 - 开始前：`TaskUpdate status → in_progress`；完成后：`TaskUpdate status → completed`
-- 报告进度示例：`[5/8] 详情页生成完成 → $DIR/ (8节，自检通过率 90%)`
+- 报告进度示例：`[N/M] 详情页生成完成 → $DIR/ (8节，自检通过率 90%)`
 
 ## 执行原则
 

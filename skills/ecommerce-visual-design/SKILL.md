@@ -132,7 +132,7 @@ description: 'Use when 电商视觉设计与生成——商业转化导向的视
 
 **Prompt 备份**：每次调用后把实际 prompt/provider/model/size/output_path/ref_image_path/revised_prompt 追加 `$DIR/image-prompts.md`。
 
-**失败处理**：单图失败重试一次仍失败则跳过并在 manifest 标注；主图①失败重试两次仍失败则**停止并请求用户协助**（主图是 CTR 之战，不可缺）。重试必须覆盖同一 output_path，禁止新增 `_v2` 候选文件；归档前清理目录，仅保留 asset-plan 列出的文件。
+**失败处理**：单图失败重试一次仍失败则跳过并在 manifest 标注；主图①失败重试两次仍失败则**停止并请求用户协助**（主图是 CTR 之战，不可缺）。重试必须覆盖同一 output_path，禁止新增 `_v2` 候选文件；交付前清理目录，仅保留 asset-plan 列出的文件。
 
 ## 步骤 5：视觉自检（电商专属维度）
 

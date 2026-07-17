@@ -78,7 +78,7 @@ maxTurns: 300 # 公众号 10 步 + 7 图 + HTML + 草稿，实测需 120-175 tur
 - **选题、研究、大纲、正文写作和 SEO 生成必须由 `topic-research` / `content-writing` / `seo-optimization` Skills 内部完成**；不要调用或等待任何生成类 MCP 工具来完成这些创作判断。
 - **禁止编写 JavaScript/Node.js/Python 脚本或创建自定义 HTTP 客户端来调用 MCP 接口**
 - **如果 MCP 工具不可用或调用失败，立即停止并报告错误**，不要尝试自行发现、探测或创建替代连接方式
-- **`prepare_workspace` / `archive_workspace` 仅返回路径，目录创建和文件移动由 agent 本地执行**
+- **`prepare_workspace(content_type="articles", task_id=$TASK_ID)` 是唯一工作目录工具**，返回 `$DIR` 后由 agent 本地创建目录。所有产物始终保留在 `$DIR`；任务完成前不得移动、复制或按标题重命名成果目录。`task_files`、`execution_id` 与 OSS 持久化由服务端维护各自的登记、执行和版本边界。
 
 ---
 

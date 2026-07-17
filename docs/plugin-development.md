@@ -97,8 +97,9 @@ MCP owns tool schemas and server-side side effects. In particular:
 - `save_template` accepts its declared visual-template fields only. The server
   normalizes persisted fields and derives a deterministic fingerprint so
   repeated, resumed, or concurrent submissions are idempotent.
-- `prepare_workspace` and `archive_workspace` return canonical paths; they do
-  not create directories or move files.
+- `prepare_workspace` returns the canonical task output path. Workflows keep
+  every artifact there; server `task_files`, `execution_id`, and OSS storage
+  own their persistence and version boundaries.
 
 Live slicing keeps planning and completion side effects in MCP: use
 `build_live_clip_plan` for segment-based clip plans,
@@ -138,27 +139,19 @@ Command Hooks that reference plugin paths use `command` plus `args`. The
 SessionStart bootstrap remains asynchronous so binary preparation does not block
 Claude Code startup.
 
-## Seednote finalization and archive
+## Seednote finalization and delivery
 
 Seednote finalizes the accepted title after writing/humanization and before any
 image plan or generation. If final compliance would change that title, it writes
-a recoverable failure and resumes from `title_finalization`; it does not archive
+a recoverable failure and resumes from `title_finalization`; it does not deliver
 visuals produced for a different title.
 
-The Agent calls `scripts/archive-seednote-workspace.sh SOURCE_DIR
-PROPOSED_ARCHIVE_DIR`. The script:
-
-- rejects unsafe paths, symlinks, special files, and cross-device publication;
-- copies source, including dotfiles, into an external sibling staging directory;
-- compares sorted relative-path, size, and SHA-256 manifests;
-- reserves each candidate suffix independently and atomically renames verified
-  staging into `title`, `title-2`, and so on;
-- retains source, skips abandoned reservations without TTL takeover, cleans its
-  own temporary resources, and emits one JSON result.
-
-Any nonzero exit, invalid JSON, non-`archived` status, or empty `archive_dir`
-becomes `failure-state.json` with `stage=archive` and `resume_from=archive`.
-Template saving and success feedback must not run after an archive failure.
+The Agent validates content, visual verification evidence, manifests, and all
+planned files directly in `$DIR`. It never moves, copies, or title-renames that
+directory before completion. A recovered `failure-state.json` is removed only
+after delivery validation passes and immediately before reporting success.
+Template saving reads `$DIR/viral-template.json` and `$DIR/template-meta.json`
+after delivery validation; final summaries report `$DIR`.
 
 ## Content and runtime conventions
 

@@ -116,7 +116,7 @@ reference-usage-summary.json
 
 停止时写入 `failure-state.json`：`{"version":"1.0","status":"recoverable_failure","stage":"<stage>","error_code":"<stable_code>","message":"<原始错误摘要>","resume_from":"<stage>"}`。该文件表示任务未成功，供 Stop hook 与服务端完成校验使用。
 
-恢复运行时必须保留旧的 `failure-state.json`，直到 `resume_from` 指向的阶段已成功重做、全部完成条件已满足且即将归档；此时删除旧失败态再调用 `archive_workspace`。不得在恢复开始时提前删除，也不得让已解决的失败态进入成功归档。
+恢复运行时必须保留旧的 `failure-state.json`，直到 `resume_from` 指向的阶段已成功重做且全部交付校验满足；仅在即将报告成功前删除旧失败态。不得在恢复开始时提前删除，也不得交付仍带失败态的结果。
 
 ---
 
@@ -138,6 +138,7 @@ reference-usage-summary.json
 调用 MCP 工具：
 - `prepare_workspace(content_type="seednote", task_id=$TASK_ID)` → 获取工作目录路径，记为 `$DIR`
 - 通过 Bash 执行 `mkdir -p "$DIR"` 创建目录
+- 所有产物始终保留在 `$DIR`；任务完成前不得移动、复制或按标题重命名成果目录。`task_files`、`execution_id` 与 OSS 持久化由服务端维护各自的登记、执行和版本边界
 
 ### 步骤 3：研究选题
 
@@ -166,7 +167,7 @@ reference-usage-summary.json
 
 - 内容写作与 humanizer 完成后，由 seednote Agent 在任何图片规划/生成前调用 `finalize_task_title`
 - 重复标题先更新 `content.md` 第一行并重跑 humanizer 与标题合规，再重试
-- 服务端接受的标题是后续视觉、合规与归档的唯一 `$FINAL_TITLE`；本 skill 不复制 Agent 的重试与失败算法
+- 服务端接受的标题是后续视觉、合规与交付校验的唯一 `$FINAL_TITLE`；本 skill 不复制 Agent 的重试与失败算法
 
 ### 步骤 5：生成图片
 
@@ -183,12 +184,11 @@ reference-usage-summary.json
 - 使用 `seednote-writing` skill 扫描标题与正文
 - 生成 `$DIR/compliance-report.md`
 
-### 步骤 7：归档
+### 步骤 7：交付校验
 
 - 使用服务端已接受的 `$FINAL_TITLE`，不得在图片生成后静默改名
-- 调用 `archive_workspace(content_type="seednote", name="$FINAL_TITLE")` 获取归档路径 `$ARCHIVE_DIR`
-- 归档搬运与校验由 seednote Agent 调用 `${CLAUDE_PLUGIN_ROOT}/scripts/archive-seednote-workspace.sh` 负责；本 skill 不复制实现
-- 报告成果目录路径 `$ARCHIVE_DIR`
+- 直接校验 `content.md`、图片规划、图片核验记录、合规报告和计划中的全部图片都位于 `$DIR`
+- 报告成果目录路径 `$DIR`，不得移动、复制或按标题重命名成果目录
 - 最终标题排重与入库由 seednote Agent 的 title_finalization 阶段负责；本专业流程不另建 Hook 副本。
 
 ---
@@ -212,7 +212,7 @@ reference-usage-summary.json
 
 ## 任务追踪要求
 
-流程启动时用 `TaskCreate` 创建任务列表，每个步骤对应一个任务。开始前 `TaskUpdate status → in_progress`，完成后 `TaskUpdate status → completed`。报告进度示例：`[4/8] 标题终稿锁定 → $DIR/content.md`
+流程启动时用 `TaskCreate` 创建任务列表，每个步骤对应一个任务。开始前 `TaskUpdate status → in_progress`，完成后 `TaskUpdate status → completed`。报告进度示例：`[N/M] 标题终稿锁定 → $DIR/content.md`
 
 ---
 
@@ -228,4 +228,4 @@ reference-usage-summary.json
 | 4b | Agent 直接调用 `finalize_task_title` | 服务端接受的 `$FINAL_TITLE` |
 | 5 | `seednote-visual-design` | `cover.png`, `image_0*.png`（按 `seednote_image_mode`）, `tail.png`（按 `seednote_image_mode`）, `image-plan.md` |
 | 6 | `seednote-writing` | `compliance-report.md`（仅复刻模式） |
-| 7 | 直接 MCP 调用 | 归档到 `$ARCHIVE_DIR` |
+| 7 | Agent 交付校验 | `$DIR` 中的最终成果 |

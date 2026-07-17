@@ -291,7 +291,7 @@ reference-usage-summary.json
 - [ ] 茶类/产品/数字参数准确，不出现误导性内容（例如"10 秒出汤"不得写成"焖泡10秒"）
 - [ ] 封面、内容图（、尾图，仅当生成）视觉风格一致，内容图之间有视觉多样性
 
-每张生成图片都要根据当页职责和参考素材用途动态编写 `verification_prompt`，并在同一次 `generate_image` 调用中核验；不得复用固定核验 prompt。只有服务端返回 `verification.passed=true` 才算通过。内容质量未通过时自动调整参考组合/顺序、生成 prompt、保持项/禁止项、构图复杂度或核验 prompt，并覆盖同一个 `output_path` 重试；核验服务不可用属于运行依赖失败，立即写 `failure-state.json` 并停止，不消耗后续图片生成。任何情况下都不得改用 `verify_with_vision=false` 绕过核验。每张输出图最多 3 次生成尝试，初次生成计入；该预算只用于核验服务正常时的内容质量修订，不适用于计费、配置、网络或其他运行依赖错误。耗尽后按关键失败与 warning 策略处理，不得请求用户决定。归档前检查目录，仅保留 `image-plan.md` 中列出的 N 张图（cover/image_01..03/tail），删除多余候选或旧版文件。
+每张生成图片都要根据当页职责和参考素材用途动态编写 `verification_prompt`，并在同一次 `generate_image` 调用中核验；不得复用固定核验 prompt。只有服务端返回 `verification.passed=true` 才算通过。内容质量未通过时自动调整参考组合/顺序、生成 prompt、保持项/禁止项、构图复杂度或核验 prompt，并覆盖同一个 `output_path` 重试；核验服务不可用属于运行依赖失败，立即写 `failure-state.json` 并停止，不消耗后续图片生成。任何情况下都不得改用 `verify_with_vision=false` 绕过核验。每张输出图最多 3 次生成尝试，初次生成计入；该预算只用于核验服务正常时的内容质量修订，不适用于计费、配置、网络或其他运行依赖错误。耗尽后按关键失败与 warning 策略处理，不得请求用户决定。交付前检查目录，仅保留 `image-plan.md` 中列出的 N 张图（cover/image_01..03/tail），删除多余候选或旧版文件。
 
 ---
 

@@ -13,7 +13,7 @@ Read the closest case before executing the skill when the user input is ambiguou
 ### Case 1: 新主题种草笔记
 
 - Input: 用户输入“通勤保温杯种草”。
-- Recommended path: 走选题、写作、图片规划、生成、归档全链路，TaskCreate 跟踪进度。
+- Recommended path: 走选题、写作、图片规划、生成、交付全链路，TaskCreate 跟踪进度。
 - Artifacts: topic-analysis.md、content.md、image-plan.md、manifest.json。
 - Quality gate: 不得只输出文案；必须生成文件-backed 产物。
 
