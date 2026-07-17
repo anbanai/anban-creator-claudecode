@@ -4,6 +4,13 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.63] - 2026-07-17
+
+### Changed
+
+- Declared official agent-level `permissionMode: dontAsk` and a deterministic zero-interaction fallback contract for every managed Claude Code workflow.
+- Added full-run managed preauthorization for ordinary Montage creative gates while preserving checkpoints, decision logs, and hard operational blockers.
+
 ## [2.10.62] - 2026-07-16
 
 ### Changed

@@ -50,6 +50,9 @@ Use this skill only for Anban `montage` tasks.
 - Before production, run the OpenMontage registry capability check (`provider_menu_summary()` or the equivalent registry command) and compare the selected pipeline's required/optional tools with the configured provider envelope.
 - Let OpenMontage selectors/registry choose concrete providers from the configured policy and real availability; do not hardcode Anban-side provider routing.
 - Use Anban MCP tools for project profile, workspace preparation, progress, uploads, task files, and feedback.
+- 托管任务自动批准常规 creative gate，但不得跳过 checkpoint；每个 checkpoint 仍执行，并在 Montage decision log 中记录 `anban_managed_task` 预授权来源、自动选择和结果。
+- Authentication, required capability, hard budget, safety, source corruption, or impossible-delivery blockers must write `failure-diagnosis.md` and terminate. Full-run preauthorization never overrides these blockers.
+- Do not expose the Backlot page directly. Retain only stable delivery files and structured checkpoint, timeline, and run-log artifacts required by Anban.
 
 ## Adapter Manifest
 
@@ -67,8 +70,13 @@ Write `montage-project.json` with:
   "tool_policy": {},
   "pipeline_defaults": {},
   "env_keys": {},
+  "approval_policy": {
+    "mode": "auto",
+    "source": "anban_managed_task",
+    "scope": "full_run"
+  },
   "output_dir": "output/montage/$TASK_ID"
 }
 ```
 
-The adapter maps this stable manifest into the current upstream Montage project format.
+The adapter maps this stable manifest into the current upstream Montage project format. Keep every upstream checkpoint and decision log, while using `approval_policy` as full-run authorization for ordinary creative choices.
