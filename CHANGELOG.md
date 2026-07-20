@@ -4,6 +4,12 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.63] - 2026-07-20
+
+### Fixed
+
+- Made Seednote archive copying compatible with Bash 3.2 when no tar exclusions are required.
+
 ## [2.10.62] - 2026-07-16
 
 ### Changed

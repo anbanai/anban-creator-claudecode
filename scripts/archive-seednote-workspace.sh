@@ -223,7 +223,11 @@ CURRENT_CODE="archive_manifest_failed"
 build_manifest "$SOURCE_DIR" "$SOURCE_MANIFEST" "$SOURCE_FILES" "$SOURCE_EXCLUDE"
 
 CURRENT_CODE="archive_copy_failed"
-"$TAR_BIN" -C "$SOURCE_DIR" "${TAR_EXCLUDES[@]}" -cf - . | "$TAR_BIN" -C "$STAGING_DIR" -xf -
+if [[ ${#TAR_EXCLUDES[@]} -gt 0 ]]; then
+  "$TAR_BIN" -C "$SOURCE_DIR" "${TAR_EXCLUDES[@]}" -cf - . | "$TAR_BIN" -C "$STAGING_DIR" -xf -
+else
+  "$TAR_BIN" -C "$SOURCE_DIR" -cf - . | "$TAR_BIN" -C "$STAGING_DIR" -xf -
+fi
 
 CURRENT_CODE="archive_manifest_failed"
 build_manifest "$STAGING_DIR" "$STAGING_MANIFEST" "$STAGING_FILES"
