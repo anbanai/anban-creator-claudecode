@@ -33,10 +33,12 @@ Returns:
 - `videocreator.input`: user-authored `video_creator_input` intake (`brief`, `references`, `hard_constraints`) when `task_id` is supplied
 - `videocreator.references`: convenience alias for `videocreator.input.references`
 - `videocreator.visual_anchor_generation`: capability hints for generated visual anchors, including `available`, `default_image_type`, `max_auto_anchors`, `verify_with_vision`, `register_tool`, and fallback guidance
-- `videocreator.pricing.credits_per_cny`: billing conversion from real CNY model cost to base credits
-- `videocreator.pricing.tier_multiplier`: current membership multiplier applied after base cost
-- `videocreator.pricing.base_task_fee_rule`: videocreator task/plan creation charges only `credits.task_costs.videocreator` as the base service fee
-- `videocreator.pricing.operation_billing_rule`: `create_video_generation_job` and `create_video_generation_task` deduct `video_gen` operation credits independently when the provider job is submitted
+- `videocreator.pricing.retail_model`: `fixed_sku`
+- `videocreator.pricing.sku_selectors`: `model_key`, `resolution`, `duration_tier`, and `input_mode`
+- `videocreator.pricing.base_task_fee_rule`: task admission uses the fixed videocreator task SKU
+- `videocreator.pricing.operation_billing_rule`: each segment pins its fixed SKU before provider dispatch and enqueues the accepted-task charge only after its provider output is durably persisted as a task file
+- `videocreator.pricing.operation_debt_rule`: accepted-task charges may create debt and never invalidate a durable successful result
+- `videocreator.pricing.provider_cost_separation`: provider usage is internal cost evidence and never determines retail credits
 
 Do not hardcode a default model, resolution, duration, watermark, or fixed credit number in the skill. Project profile is the source of truth; plan/task overrides are snapshots and must not rewrite project defaults unless the user explicitly asks to save them.
 
@@ -99,8 +101,7 @@ Returns:
 - `analysis_mode`: always `native_video` on success
 - `video_understanding.metadata`
 - `video_understanding.model`
-- `video_understanding.usage`: token counts from the native video-understanding model
-- `video_understanding.credits_charged`: final charged credits after tier/user multipliers
+- `video_understanding.usage`: token counts from the native video-understanding model, recorded as internal cost evidence only and never used to deduct user credits
 - `video_understanding.visual_summary`
 - `video_understanding.surface_facts`: people, visuals, actions, expressions, scenes, camera, and rhythm observed across the whole video
 - `video_understanding.deep_intent`: creator intent, latent subtext, emotional arc, audience expectation, joke/twist mechanism, metaphor or social context
@@ -138,19 +139,15 @@ Use before create, and usually before writing the final submission note.
 Returns:
 - `valid`
 - `resolved_params`
-- `estimated_credits`
-- `pricing_breakdown`
 - validation errors for unsupported resolved model, parameter, or reference combinations
 
-The server estimates credits dynamically from `model_prices.video_generation`, `billing.credits_per_cny`, membership/user multipliers, the server-resolved model key, output resolution, ratio, duration, whether an input video is present, and server-measured input video duration. Real model cost stays separate from billing multipliers. Do not trust agent-supplied input video duration. Video task/plan creation charges only the base task service fee. The actual video provider cost is deducted later as an independent `video_gen` MCP operation when the provider job is submitted.
+Retail pricing is selected only from the immutable fixed-SKU catalog. Provider usage and provider cost are internal evidence and never determine user credits. Do not trust agent-supplied input video duration; the server validates references and pins each segment SKU before dispatch. No operation charge occurs at provider submission.
 
 ## build_video_generation_plan
 
 Use before submitting. It validates the request and returns:
 - `generation_plan`
 - `sdk_payload_preview`
-- `estimated_credits`
-- `pricing_breakdown`
 - required artifact names, including `reference-anchors.md`, `script.md`, `shot-plan.md`, `generation-plan.json`, `quality-review.md`
 
 Important inputs:
@@ -174,15 +171,15 @@ Do not pass a model key. The server resolves the generation model from task/proj
 Use only after artifacts and plan are written. The server:
 - resolves target deliverable duration and duration source
 - splits the job into legal provider-bounded `segments`
-- deducts total dynamic credits once, or reuses the existing video task deduction when `task_id` was already charged
+- pins an immutable fixed retail SKU for every segment before provider dispatch; no operation charge occurs at submission
 - calls Volcengine Ark `CreateContentGenerationTask` once per segment
-- records `video_generation_id`, segment provider task IDs, segment duration, and segment credits
+- records `video_generation_id`, segment provider task IDs, segment duration, and pinned retail SKU
 
 Save response to `video-task-submit.json`.
 
 ## query_video_generation_job
 
-Poll until all segments reach a terminal status.
+Poll until all segments reach a terminal status. The returned persisted provider URLs are authoritative; pass those exact URLs to `download_video_generation_results`.
 
 Input:
 - `project_id`
@@ -205,7 +202,7 @@ Use after segment success. Input:
 - `video_generation_id`
 - `segments[]` with `index` and `video_url` or `file_url`
 
-The server downloads each provider segment URL to a temporary area, uploads each MP4 to OSS, and registers segment task files. A single-segment job is marked as `final_video`; multi-segment jobs are not complete until composed.
+Each URL must exactly match the persisted provider output returned by `query_video_generation_job`. The server downloads each segment, then atomically persists the execution-scoped task file and fixed-SKU settlement outbox. Retries replay the durable result without another provider download or charge. Settlement failure never invalidates the successful video; accepted-task charges may create debt. A single-segment job is marked as `final_video`; multi-segment jobs are not complete until composed.
 
 ## compose_video_segments
 

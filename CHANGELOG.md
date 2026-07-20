@@ -4,6 +4,12 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.64] - 2026-07-20
+
+### Changed
+
+- Replaced dynamic video credit estimates with immutable fixed-SKU selection and durable-output settlement contracts for the Seedance and Dreamina workflows.
+
 ## [2.10.63] - 2026-07-17
 
 ### Changed
