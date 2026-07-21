@@ -4,6 +4,12 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.66] - 2026-07-21
+
+### Changed
+
+- Moved internal Agent, prompt, and Hook engineering documents to the parent repository so the distributed plugin contains only plugin-owned development documentation.
+
 ## [2.10.65] - 2026-07-21
 
 ### Changed
