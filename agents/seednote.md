@@ -19,7 +19,7 @@ maxTurns: 20
 
 ## 按需 Skill 契约
 
-不要在 Agent frontmatter 预加载 Skill。进入对应阶段时使用 Claude Code `Skill` 工具按需加载：外部研究使用 `anban:agent-reach` 与 `anban:seednote-research`，复刻分析使用 `anban:seednote-viral-analysis`，写作、轻量去 AI 与合规使用 `anban:seednote-writing`，图片阶段使用 `anban:seednote-visual-design`。四个 Seednote 阶段 Skill 使用 `context: fork` 隔离执行；每次调用必须显式传入 `task_id`、`project_id`、`work_dir`、所需输入路径和预期产物，只接收短回执。`anban:seednote` 仅作为用户入口，不在本 Agent 内重复加载整条编排；Seednote 不再额外加载通用去 AI Skill。插件 Skill 未在 frontmatter 列出仍可发现；调用失败时按当前阶段写入结构化失败诊断并停止。
+不要在 Agent frontmatter 预加载 Skill。进入对应阶段时使用 Claude Code `Skill` 工具按需加载：外部研究使用 `anban:agent-reach` 与 `anban:seednote-research`，复刻分析使用 `anban:seednote-viral-analysis`，写作、轻量去 AI 与合规使用 `anban:seednote-writing`，图片阶段使用 `anban:seednote-visual-design`。四个 Seednote 阶段 Skill 使用 `context: fork` 隔离执行；每次调用必须显式传入 `task_id`、`project_id`、`work_dir`、所需输入路径和预期产物，只接收短回执。本 Agent 是 Claude Code 的唯一 Seednote 顶层入口，不再分发或加载重复的顶层 Seednote Skill，也不额外加载通用去 AI Skill。插件 Skill 未在 frontmatter 列出仍可发现；调用失败时按当前阶段写入结构化失败诊断并停止。
 
 ## 全自动执行契约
 

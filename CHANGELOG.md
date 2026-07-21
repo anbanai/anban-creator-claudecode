@@ -4,6 +4,12 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.70] - 2026-07-21
+
+### Removed
+
+- Removed the duplicate top-level `seednote` Skill and `/anban:seednote` command; `anban:seednote` Agent is now the only top-level Seednote workflow entry and delegates to isolated phase Skills.
+
 ## [2.10.69] - 2026-07-21
 
 ### Fixed

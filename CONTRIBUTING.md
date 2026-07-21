@@ -26,7 +26,7 @@ go build -o /tmp/anban ./agent
 ## Plugin Rules
 
 - Keep Claude Code plugin runtime content in `claudecode/`.
-- Keep mirrored skill content in `openclaw/skills/` and `codex/skills/` synchronized when tests assert parity.
+- Keep mirrored skill content in `claudecode/skills/` and `codex/skills/` synchronized when tests assert parity.
 - Do not add `tools` or `mcpServers` to plugin agent frontmatter unless a contract test and developer note explain why.
 - Do not print API keys or authorization headers. Check only whether a sensitive value exists.
 - Keep `SKILL.md` files concise; move long references, examples, and rubrics into `references/`.

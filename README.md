@@ -116,8 +116,6 @@ claude --verbose --agent anban:live-slicer ./live.mp4
   查看插件是否已安装成功
 - `/anban:article`
   公众号图文创作
-- `/anban:seednote`
-  种草笔记创作
 - `/anban:live-slicer`
   直播视频切片，需要本机可用 `ffmpeg` 和 `ffprobe`
 
@@ -157,18 +155,18 @@ claude --verbose --agent anban:live-slicer ./live.mp4
 
 | 本地 skill | 上游/参考 | 本地改造 | 批量更新提示 |
 |------------|-----------|----------|--------------|
-| `agent-reach` | 边界封装 [Panniantong/agent-reach](https://github.com/Panniantong/agent-reach) CLI 与安装文档 | 只记录 Seednote/Xiaohongshu 外部真实数据采集的 doctor、active backend、证据归档和失败停机规则，不复制上游代码 | 更新 Agent-Reach CLI/安装流程时同步 `claudecode/skills/agent-reach`、`codex/skills/agent-reach`、`openclaw/skills/agent-reach`；保留“不伪造数据、不绕过 Agent-Reach”的边界 |
-| `humanizer` | [blader/humanizer](https://github.com/blader/humanizer) v2.8.2（MIT），固定来源为根仓库 `third_party/Humanizer` | 不做 Anban 改编；三套发行版的 `SKILL.md` 必须与固定上游逐字一致，Seednote/Article/电商约束归各业务 workflow | 运行 `make humanizer-update` 拉取上游并同步三套副本；审阅上游 diff、跑契约测试并分别升级插件版本 |
+| `agent-reach` | 边界封装 [Panniantong/agent-reach](https://github.com/Panniantong/agent-reach) CLI 与安装文档 | 只记录 Seednote/Xiaohongshu 外部真实数据采集的 doctor、active backend、证据归档和失败停机规则，不复制上游代码 | 更新 Agent-Reach CLI/安装流程时同步 `claudecode/skills/agent-reach`、`codex/skills/agent-reach`；保留“不伪造数据、不绕过 Agent-Reach”的边界 |
+| `humanizer` | [blader/humanizer](https://github.com/blader/humanizer) v2.8.2（MIT），固定来源为根仓库 `third_party/Humanizer` | 不做 Anban 改编；Claude/Codex 两套发行版的 `SKILL.md` 必须与固定上游逐字一致，Seednote/Article/电商约束归各业务 workflow | 运行 `make humanizer-update` 拉取上游并同步两套副本；审阅上游 diff、跑契约测试并分别升级插件版本 |
 | `moments` | 内容拆解方法参考 [Caihui0127/caihui-moments-skill](https://github.com/Caihui0127/caihui-moments-skill) 的公开框架 | 产出 Anban 朋友圈素材包；不默认使用“彩卉”人设，不复制私有素材，不把参考 repo 作为运行时依赖 | 更新时只同步公开方法层；保持 `material-analysis.md`、`content.md`、`quality-review.md` 三件套和不伪造案例/数据红线 |
 | `seedance-20`、`seedance-20/skills/*` | 内置/改编自 [Emily2040/seedance-2.0](https://github.com/Emily2040/seedance-2.0)（MIT Skill OS） | 加入 Anban MCP 边界、`videocreator` 生成主链路、商业 playbook、交付 QC、任务文件契约 | 更新根 skill、嵌套 `skills/*`、`references/` 与迁移材料；重新校验平台/API/价格类信息，不要绕过 Anban MCP |
 | `seedance-20` 的业务模式参考 | [songguoxs/seedance-prompt-skill](https://github.com/songguoxs/seedance-prompt-skill)、[ZeroLu/awesome-seedance](https://github.com/ZeroLu/awesome-seedance) | 只吸收模式路由、参考素材、修复循环等结构经验，不作为逐字复制来源 | 更新时当作 playbook 参考，不直接覆盖 Anban prompt、MCP 工具调用或交付文件格式 |
-| `article*`、`seednote*`、`ecommerce*`、`live-slice`、`capcut-draft`、`video-use`、`*-video-overlays`、`line-art-coloring`、`portrait-pose-variants`、`anban-setup`、`config`、`writers`、`topic-research`、`seo-optimization`、`content-writing`、`short-video-cover` | Anban 原创业务 workflow；结构模式参考 [anthropics/skills](https://github.com/anthropics/skills)、[anthropics/claude-plugins-official](https://github.com/anthropics/claude-plugins-official)、[OthmanAdi/planning-with-files](https://github.com/OthmanAdi/planning-with-files)、[hesreallyhim/awesome-claude-code](https://github.com/hesreallyhim/awesome-claude-code)、[alirezarezvani/claude-skills](https://github.com/alirezarezvani/claude-skills) | 使用轻量 `SKILL.md` + 一层 `references/examples.md` 渐进披露；案例是 Anban 场景原创，不复制外部措辞或业务流程 | 从 Anban 产品、MCP、server contract 更新；如果改了共用 examples 或镜像 skill，同步 `claudecode` / `codex` / `openclaw`，除非测试明确记录发行差异 |
+| `article*`、`seednote*`、`ecommerce*`、`live-slice`、`capcut-draft`、`video-use`、`*-video-overlays`、`line-art-coloring`、`portrait-pose-variants`、`anban-setup`、`config`、`writers`、`topic-research`、`seo-optimization`、`content-writing`、`short-video-cover` | Anban 原创业务 workflow；结构模式参考 [anthropics/skills](https://github.com/anthropics/skills)、[anthropics/claude-plugins-official](https://github.com/anthropics/claude-plugins-official)、[OthmanAdi/planning-with-files](https://github.com/OthmanAdi/planning-with-files)、[hesreallyhim/awesome-claude-code](https://github.com/hesreallyhim/awesome-claude-code) 和 [alirezarezvani/claude-skills](https://github.com/alirezarezvani/claude-skills) | 使用轻量 `SKILL.md` + 一层 `references/examples.md` 渐进披露；案例是 Anban 场景原创，不复制外部措辞或业务流程 | 从 Anban 产品、MCP、server contract 更新；如果改了共用 examples 或镜像 skill，同步 `claudecode` / `codex`，除非测试明确记录发行差异 |
 
 批量更新规则：
 
 1. 先判断是“直接内置/改编上游”还是“结构参考”。直接内置必须保留许可证、署名和来源版本；结构参考不得把第三方提示词或业务流程原样复制进来。
-2. 同名 skill 同时存在于 `claudecode/skills`、`codex/skills`、`openclaw/skills` 时，默认三处分发同步更新；确实需要差异时，用测试或文档说明原因。
-3. 修改 `claudecode/`、`codex/`、`openclaw/` 下的 agents、skills、hooks、themes、writers、manifest、安装脚本或运行时文档时，同步 bump 对应插件 manifest patch version，并记录 changelog。
+2. 同名 skill 同时存在于 `claudecode/skills`、`codex/skills` 时，默认两处分发同步更新；确实需要差异时，用测试或文档说明原因。
+3. 修改 `claudecode/`、`codex/` 下的 agents、skills、hooks、themes、writers、manifest、安装脚本或运行时文档时，同步 bump 对应插件 manifest patch version，并记录 changelog。
 4. 变更后至少跑相关契约测试：`go test ./server/agent ./server/mcp -count=1`；Claude Code 分发还要运行 `claude plugin validate ./claudecode/.claude-plugin/plugin.json --strict` 和 `claude plugin validate ./claudecode/.claude-plugin/marketplace.json --strict`。
 
 ## 开发与安全
@@ -181,7 +179,6 @@ claude --verbose --agent anban:live-slicer ./live.mp4
 
 ## 其他版本
 
-- [OpenClaw 插件](https://github.com/anbanai/anban-creator-openclaw) — OpenClaw 平台原生插件版本
 - [Web 管理端](https://creator.anbanai.com) — 在线管理后台，支持任务管理、积分充值等
 
 ## 加入社群
