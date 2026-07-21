@@ -1,9 +1,14 @@
 ---
 name: seednote-writing
 description: 'Use when writing Seednote content, optimizing seednote titles, or rewriting viral notes. Also use when user mentions ''写种草笔记'', ''笔记文案'', ''种草文案'', ''标题优化'', ''改写笔记'', ''爆款改写'', ''复刻文案'', ''合规检查'', or when the seednote pipeline calls for content creation or text optimization. Writes and optimizes Seednote (种草笔记) content including titles, body text, hashtags, and viral note rewrites.'
+context: fork
 ---
 
 # 种草笔记内容写作知识库
+
+## 隔离执行契约
+
+这是一个可执行阶段 Skill。以调用参数 `$ARGUMENTS` 为本次任务的唯一运行输入；参数必须包含动作、`task_id`、`project_id`、`work_dir`、可读取的输入文件和预期产物。只读取完成本阶段所需的文件，把标题、正文、去 AI 改写和合规结果写入指定产物，最后仅返回不超过 10 行的状态、最终标题、字数、产物路径和失败码摘要。不要在回复中重复正文或报告全文。
 
 ## 案例库
 
@@ -146,9 +151,9 @@ Lightroom ✅ 专业全面 / 适合 raw 格式 / 稍重
 
 ---
 
-## 2.7 去 AI 味（humanizer skill）
+## 2.7 内置去 AI 味
 
-正文（含标题）定稿后，**using the `humanizer` skill** 对全文做轻量去 AI 改写，再接合规检查。种草笔记偏口语化与沉浸感，本步骤重点针对：
+正文（含标题）定稿后，本 Skill 直接做轻量去 AI 改写，再接合规检查。不要再调用 `humanizer` Skill；Seednote 只需要下面这些业务相关规则，额外加载通用 33 类规则会浪费上下文。重点针对：
 
 - 空洞升华 / 过度总结（"让我们拥抱美好的一天"、"开启全新体验"）
 - 三段式套话与"不仅…而且"式否定排比
@@ -157,7 +162,7 @@ Lightroom ✅ 专业全面 / 适合 raw 格式 / 稍重
 
 **改写而非删除**——保留种草笔记的人称代入（"我/集美/姐妹"）、情绪节奏、具体场景细节与原生口语表达（"针不戳"、"绝了"）。这是自动流水线步骤：不得调用 `AskUserQuestion`；没有写作样本时直接按账号画像和当前稿件语气改写。本步骤不调用任何 MCP 工具、不计费、无强度档位，且不得在改写中引入新的违禁词、虚假承诺或诱导互动表达。
 
-AI 写作模式、误报边界和改写方法以`humanizer` skill 为准；本节只定义 Seednote 业务约束。
+只在多个迹象成簇出现时改写，不把单个 emoji、口语词、短句或自然情绪当作 AI 痕迹。改写应具体、克制且保留原有信息点。
 
 > 注意：去 AI 改写可能改变字数，改写后须复核是否仍 ≤1000 字（超出则回到 §2.6 压缩）。
 

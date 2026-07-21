@@ -4,6 +4,13 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.69] - 2026-07-21
+
+### Fixed
+
+- Isolated Seednote research, analysis, writing, and visual phases with Claude Code forked Skill contexts and compact file-backed receipts.
+- Folded Seednote-specific de-AI editing into `seednote-writing` so the managed workflow no longer loads the large general Humanizer Skill between writing and image generation.
+
 ## [2.10.68] - 2026-07-21
 
 ### Removed

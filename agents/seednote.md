@@ -19,7 +19,7 @@ maxTurns: 20
 
 ## 按需 Skill 契约
 
-不要在 Agent frontmatter 预加载 Skill。进入对应阶段时使用 Claude Code `Skill` 工具按需加载：外部研究使用 `anban:agent-reach` 与 `anban:seednote-research`，复刻分析使用 `anban:seednote-viral-analysis`，写作与合规使用 `anban:seednote-writing`，定稿去 AI 味使用 `anban:humanizer`，图片阶段使用 `anban:seednote-visual-design`。`anban:seednote` 仅作为用户入口，不在本 Agent 内重复加载整条编排。插件 Skill 未在 frontmatter 列出仍可发现；调用失败时按当前阶段写入结构化失败诊断并停止。
+不要在 Agent frontmatter 预加载 Skill。进入对应阶段时使用 Claude Code `Skill` 工具按需加载：外部研究使用 `anban:agent-reach` 与 `anban:seednote-research`，复刻分析使用 `anban:seednote-viral-analysis`，写作、轻量去 AI 与合规使用 `anban:seednote-writing`，图片阶段使用 `anban:seednote-visual-design`。四个 Seednote 阶段 Skill 使用 `context: fork` 隔离执行；每次调用必须显式传入 `task_id`、`project_id`、`work_dir`、所需输入路径和预期产物，只接收短回执。`anban:seednote` 仅作为用户入口，不在本 Agent 内重复加载整条编排；Seednote 不再额外加载通用去 AI Skill。插件 Skill 未在 frontmatter 列出仍可发现；调用失败时按当前阶段写入结构化失败诊断并停止。
 
 ## 全自动执行契约
 
@@ -158,15 +158,13 @@ reference-usage-summary.json
 
 #### 步骤 5：研究选题
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="research", title="选题研究", description="评估主题并在可用时通过 Agent-Reach 补充真实热门笔记数据")`。先 using the `agent-reach` skill 执行 `agent-reach doctor --json`。若 `xiaohongshu.status == "ok"` 且 `active_backend` 非空，再 using the `seednote-research` skill 按 Agent-Reach 返回的 backend 命令族采集热门笔记数据，并遵守 xsec_token 工作流；只有取得真实互动字段时才按互动率、时效性和新颖度评分。若 Agent-Reach 不可用、未安装、未登录或无健康 backend，跳过外部命令，基于用户明确主题、选题池、账号画像和已有标题完成保守选题。原创模式不得因此写 `failure-state.json` 或停止。将候选列表、外部评分或降级依据、避重判断、`data_source`、`channel_status`、`active_backend`、缺失字段和降级原因写入 `$DIR/topic-analysis.md`，不得把降级结果描述为热门数据。
+调用 `update_task_progress(task_id=$TASK_ID, stage="research", title="选题研究", description="评估主题并在可用时通过 Agent-Reach 补充真实热门笔记数据")`。先 using the `agent-reach` skill 执行 `agent-reach doctor --json`。若 `xiaohongshu.status == "ok"` 且 `active_backend` 非空，再 using the `seednote-research` skill，并显式传 `mode=original task_id=$TASK_ID project_id=$PROJECT_ID work_dir=$DIR inputs=<任务输入、账号画像、已有标题、Agent-Reach doctor 结果> outputs=$DIR/topic-analysis.md`，按 Agent-Reach 返回的 backend 命令族采集热门笔记数据，并遵守 xsec_token 工作流；只有取得真实互动字段时才按互动率、时效性和新颖度评分。若 Agent-Reach 不可用、未安装、未登录或无健康 backend，跳过外部命令，基于用户明确主题、选题池、账号画像和已有标题完成保守选题。原创模式不得因此写 `failure-state.json` 或停止。将候选列表、外部评分或降级依据、避重判断、`data_source`、`channel_status`、`active_backend`、缺失字段和降级原因写入 `$DIR/topic-analysis.md`，不得把降级结果描述为热门数据。
 
 **产出**：`$DIR/topic-analysis.md`
 
 #### 步骤 6：创作内容
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="writing", title="内容写作", description="生成标题、正文和话题标签并去 AI 味")`。using the `seednote-writing` skill 基于账号画像和 `$DIR/topic-analysis.md` 生成标题、正文和话题标签，保存到 `$DIR/content.md`。标题、正文格式和话题标签规范以 `seednote-writing` skill 为准。
-
-随后 **using the `humanizer` skill** 对 `$DIR/content.md` 的标题+正文做轻量去 AI 改写：重点去掉空洞升华、三段式套话、AI 高频词、过度总结，保留种草笔记的人称代入与情绪节奏（见 `seednote-writing` skill §2.7）。这是自动流水线步骤，不得调用 `AskUserQuestion`；没有写作样本时直接按账号画像和当前稿件语气改写。改写后复核字数仍 ≤1000 字，且不得引入新的违禁词、虚假承诺或诱导互动表达。直接覆写 `$DIR/content.md`。
+调用 `update_task_progress(task_id=$TASK_ID, stage="writing", title="内容写作", description="生成标题、正文和话题标签并去 AI 味")`。using the `seednote-writing` skill，并显式传 `action=write_and_humanize mode=original task_id=$TASK_ID project_id=$PROJECT_ID work_dir=$DIR inputs=<账号画像>,$DIR/topic-analysis.md outputs=$DIR/content.md`。该 Skill 在同一个隔离阶段内生成标题、正文和话题标签，完成轻量去 AI 改写并复核字数仍 ≤1000 字，不得引入新的违禁词、虚假承诺或诱导互动表达。标题、正文格式和话题标签规范以 `seednote-writing` skill 为准。
 
 **产出**：`$DIR/content.md`
 
@@ -176,21 +174,19 @@ reference-usage-summary.json
 
 #### 步骤 5：获取源笔记
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="research", title="选题研究", description="通过 Agent-Reach 获取源笔记详情与互动数据")`。先 using the `agent-reach` skill 执行 `agent-reach doctor --json`，再 using the `seednote-research` skill 按 Agent-Reach 的 `active_backend` 获取源笔记真实数据。必须从搜索、feed 或 Agent-Reach backend 返回的完整 URL 中取得 `feed_id` / `xsec_token`，**不得凭空构造 xsec_token**。获取笔记详情、互动数据和评论数据后写入 `$DIR/source-note.md`，并记录 `data_source=agent-reach`、`active_backend`、`backend_command_family`、`token_source`、`missing_fields`、`fallback_reason`。源笔记获取失败时按 Agent-Reach 对应 backend 的重试链重试一次；若任务只有外部 ID/链接且仍无源内容，写结构化 `failure-state.json` 并从 `research` 恢复。
+调用 `update_task_progress(task_id=$TASK_ID, stage="research", title="选题研究", description="通过 Agent-Reach 获取源笔记详情与互动数据")`。先 using the `agent-reach` skill 执行 `agent-reach doctor --json`，再 using the `seednote-research` skill，并显式传 `mode=replicate task_id=$TASK_ID project_id=$PROJECT_ID work_dir=$DIR inputs=<源笔记 ID/URL、账号画像、Agent-Reach doctor 结果> outputs=$DIR/source-note.md`，按 Agent-Reach 的 `active_backend` 获取源笔记真实数据。必须从搜索、feed 或 Agent-Reach backend 返回的完整 URL 中取得 `feed_id` / `xsec_token`，**不得凭空构造 xsec_token**。获取笔记详情、互动数据和评论数据后写入 `$DIR/source-note.md`，并记录 `data_source=agent-reach`、`active_backend`、`backend_command_family`、`token_source`、`missing_fields`、`fallback_reason`。源笔记获取失败时按 Agent-Reach 对应 backend 的重试链重试一次；若任务只有外部 ID/链接且仍无源内容，写结构化 `failure-state.json` 并从 `research` 恢复。
 
 **产出**：源笔记详情、`$DIR/source-note.md`
 
 #### 步骤 6：证据驱动拆解爆款
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="viral_analysis", title="爆款拆解", description="证据驱动拆解源笔记爆款结构")`。using the `seednote-viral-analysis` skill 读取 `$DIR/source-note.md`、账号画像和已有标题，按证据驱动方法拆解源笔记。每个核心结论必须绑定源内容、封面、互动数据或评论证据；缺失数据写入 `missing_data` 并降低 `confidence`。生成 `$DIR/source-analysis.md`、`$DIR/viral-template.json`、`$DIR/template-meta.json`。不得调用 `save_template`。
+调用 `update_task_progress(task_id=$TASK_ID, stage="viral_analysis", title="爆款拆解", description="证据驱动拆解源笔记爆款结构")`。using the `seednote-viral-analysis` skill，并显式传 `task_id=$TASK_ID project_id=$PROJECT_ID work_dir=$DIR inputs=$DIR/source-note.md,<账号画像、已有标题> outputs=$DIR/source-analysis.md,$DIR/viral-template.json,$DIR/template-meta.json`。每个核心结论必须绑定源内容、封面、互动数据或评论证据；缺失数据写入 `missing_data` 并降低 `confidence`。不得调用 `save_template`。
 
 **产出**：`$DIR/source-analysis.md`、`$DIR/viral-template.json`、`$DIR/template-meta.json`
 
 #### 步骤 7：改写内容
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="writing", title="内容写作", description="基于爆款模板改写标题、正文和话题标签并去 AI 味")`。using the `seednote-writing` skill 读取 `$DIR/viral-template.json`，根据 `recommended_clone_depth`、用户指定模式和账号画像生成标题、正文和话题标签。若用户指定强度高于模板建议，但 `confidence=low` 或 `do_not_copy` 风险高，自动降级并记录原因。内容相似度过高时重新改写角度并记录原因。
-
-随后 **using the `humanizer` skill** 对 `$DIR/content.md` 的标题+正文做轻量去 AI 改写：重点去掉空洞升华、三段式套话、AI 高频词、过度总结，保留种草笔记的人称代入与情绪节奏（见 `seednote-writing` skill §2.7）。这是自动流水线步骤，不得调用 `AskUserQuestion`；没有写作样本时直接按账号画像和当前稿件语气改写。改写后复核字数仍 ≤1000 字，且不得引入新的违禁词、虚假承诺或诱导互动表达。直接覆写 `$DIR/content.md`。
+调用 `update_task_progress(task_id=$TASK_ID, stage="writing", title="内容写作", description="基于爆款模板改写标题、正文和话题标签并去 AI 味")`。using the `seednote-writing` skill，并显式传 `action=write_and_humanize mode=replicate task_id=$TASK_ID project_id=$PROJECT_ID work_dir=$DIR inputs=$DIR/viral-template.json,$DIR/source-analysis.md,<账号画像、用户指定模式> outputs=$DIR/content.md`。该 Skill 根据 `recommended_clone_depth`、用户指定模式和账号画像生成标题、正文和话题标签，并在同一隔离阶段完成轻量去 AI 改写。若用户指定强度高于模板建议，但 `confidence=low` 或 `do_not_copy` 风险高，自动降级并记录原因。内容相似度过高时重新改写角度并记录原因；改写后复核字数仍 ≤1000 字，且不得引入新的违禁词、虚假承诺或诱导互动表达。
 
 **产出**：`$DIR/content.md`
 
@@ -198,29 +194,29 @@ reference-usage-summary.json
 
 #### 步骤 7b：标题终稿锁定
 
-原创与复刻模式完成各自的写作和 humanizer 后，调用 `update_task_progress(task_id=$TASK_ID, stage="title_finalization", title="标题终稿锁定", description="在视觉产物生成前完成标题排重与入库")`。从 `$DIR/content.md` 第一行读取可发布标题为 `$FINAL_TITLE`，调用 `finalize_task_title(task_id=$TASK_ID, title=$FINAL_TITLE)`，最多进行 3 次调用尝试（首次计入）：
+原创与复刻模式完成各自的写作与内置去 AI 后，调用 `update_task_progress(task_id=$TASK_ID, stage="title_finalization", title="标题终稿锁定", description="在视觉产物生成前完成标题排重与入库")`。从 `$DIR/content.md` 第一行读取可发布标题为 `$FINAL_TITLE`，调用 `finalize_task_title(task_id=$TASK_ID, title=$FINAL_TITLE)`，最多进行 3 次调用尝试（首次计入）：
 
 - 成功后以服务端接受的标题锁定 `$FINAL_TITLE`，并确认 `$DIR/content.md` 第一行完全一致。后续 `image-plan`、`cover`、`prompts`、`review`、`compliance`、交付校验与最终报告只能读取这个已接受标题，不得静默改名。
-- 返回 `duplicate title` 错误时，改写为新的可发布标题，先把 `$DIR/content.md` 第一行更新为新标题，再重新 using the `humanizer` skill 处理标题并 using the `seednote-writing` skill 执行标题合规检查；两项通过后才用新的 `$FINAL_TITLE` 重试。连续 3 次均返回重复标题时停止。
+- 返回 `duplicate title` 错误时，using the `seednote-writing` skill，并显式传 `action=rewrite_title_and_check task_id=$TASK_ID project_id=$PROJECT_ID work_dir=$DIR inputs=$DIR/content.md outputs=$DIR/content.md`；由该隔离阶段把 `$DIR/content.md` 第一行更新为新标题、执行轻量去 AI 与标题合规检查，通过后才用新的 `$FINAL_TITLE` 重试。连续 3 次均返回重复标题时停止。
 - 返回非重复错误，或连续 3 次重复标题均未解决时，写入 `$DIR/failure-state.json`：`{"version":"1.0","status":"recoverable_failure","stage":"title_finalization","error_code":"<stable_code>","message":"<原始错误摘要>","resume_from":"title_finalization"}`。非重复错误使用 `error_code="finalize_title_failed"`，重复耗尽使用 `error_code="duplicate_title_exhausted"`；随后停止，不得进入图片生成、合规、交付校验或模板保存。
 
 ### 图片生成
 
 #### 步骤 8a：原创模式图片生成
 
-原创模式调用 `update_task_progress(task_id=$TASK_ID, stage="image_generation", title="图片生成", description="基于已锁定标题规划并生成封面、内容图和尾图")`。using the `seednote-visual-design` skill，传入含已接受 `$FINAL_TITLE` 的 `$DIR/content.md`。先完成需求分析和全部可用附件分析，再由技能为每页自动选择 0、1 或多张相关原图；没有相关参考时动态设计 `$STYLE`。技能内部按 `seednote_image_mode` 完成图片内容规划（`$DIR/image-plan.md`）和全部图片生成。每张图都通过 `generate_image(..., verify_with_vision=true, verification_prompt=<动态核验提示词>)` 原子生成并核验；只有 `verification.passed=true` 才能进入下一张。API、核验依赖或重试预算失败时写 `$DIR/image-review.md` 和 `$DIR/failure-state.json` 后停止，禁止用 prompt 质量、文件尺寸或 MIME 代替视觉核验。
+原创模式调用 `update_task_progress(task_id=$TASK_ID, stage="image_generation", title="图片生成", description="基于已锁定标题规划并生成封面、内容图和尾图")`。using the `seednote-visual-design` skill，并显式传 `mode=original task_id=$TASK_ID project_id=$PROJECT_ID work_dir=$DIR content_file=$DIR/content.md seednote_image_mode=$SEEDNOTE_IMAGE_MODE attachments_index=.anban-creator/input-attachments/index.json outputs=$DIR/image-plan.md,$DIR/image-prompts.md,$DIR/image-review.md,$DIR/reference-usage-summary.json,<计划内图片>`。先完成需求分析和全部可用附件分析，再由技能为每页自动选择 0、1 或多张相关原图；没有相关参考时动态设计 `$STYLE`。技能内部完成图片内容规划和全部图片生成。每张图都通过 `generate_image(..., verify_with_vision=true, verification_prompt=<动态核验提示词>)` 原子生成并核验；只有 `verification.passed=true` 才能进入下一张。API、核验依赖或重试预算失败时写 `$DIR/image-review.md` 和 `$DIR/failure-state.json` 后停止，禁止用 prompt 质量、文件尺寸或 MIME 代替视觉核验。
 
 **产出**：`$DIR/image-plan.md`、`$DIR/cover.png`、内容图（按 `seednote_image_mode`）、尾图（按 `seednote_image_mode`）
 
 #### 步骤 8b：复刻模式图片生成
 
-复刻模式调用 `update_task_progress(task_id=$TASK_ID, stage="image_generation", title="图片生成", description="基于已锁定标题与爆款模板规划并生成封面、内容图和尾图")`。using the `seednote-visual-design` skill，传入含已接受 `$FINAL_TITLE` 的 `$DIR/content.md`、改写模式和 `$DIR/viral-template.json` 中的 `cover_template` / `do_not_copy` / `recommended_clone_depth`。根据模板自动适配每页主题，但图片数量必须受 `seednote_image_mode` 限制；若已降级为 `medium`，按常规流程规划图片。复刻模式下不得照搬源图构图到不可区分。生成 `$DIR/image-plan.md`、`$DIR/cover.png`、内容图和尾图（均按 `seednote_image_mode`）。
+复刻模式调用 `update_task_progress(task_id=$TASK_ID, stage="image_generation", title="图片生成", description="基于已锁定标题与爆款模板规划并生成封面、内容图和尾图")`。using the `seednote-visual-design` skill，并显式传 `mode=replicate task_id=$TASK_ID project_id=$PROJECT_ID work_dir=$DIR content_file=$DIR/content.md template_file=$DIR/viral-template.json seednote_image_mode=$SEEDNOTE_IMAGE_MODE attachments_index=.anban-creator/input-attachments/index.json outputs=$DIR/image-plan.md,$DIR/image-prompts.md,$DIR/image-review.md,$DIR/reference-usage-summary.json,<计划内图片>`。根据模板自动适配每页主题，但图片数量必须受 `seednote_image_mode` 限制；若已降级为 `medium`，按常规流程规划图片。复刻模式下不得照搬源图构图到不可区分。
 
 **产出**：`$DIR/image-plan.md`、`$DIR/cover.png`、内容图（按 `seednote_image_mode`）、尾图（按 `seednote_image_mode`）
 
 #### 步骤 9：合规检查
 
-调用 `update_task_progress(task_id=$TASK_ID, stage="compliance", title="合规检查", description="扫描违禁词与诱导互动表述")`。using the `seednote-writing` skill 扫描标题与正文，执行违禁词和诱导互动专项检查（§9.5 覆盖 6 种违规模式），生成 `$DIR/compliance-report.md`。高风险诱导互动表述必须删除或改写；疑似误报只记录并标注人工复核，不自动删除核心信息。
+调用 `update_task_progress(task_id=$TASK_ID, stage="compliance", title="合规检查", description="扫描违禁词与诱导互动表述")`。using the `seednote-writing` skill，并显式传 `action=compliance_check task_id=$TASK_ID project_id=$PROJECT_ID work_dir=$DIR inputs=$DIR/content.md outputs=$DIR/content.md,$DIR/compliance-report.md`，扫描标题与正文并执行违禁词和诱导互动专项检查（§9.5 覆盖 6 种违规模式）。高风险诱导互动表述必须删除或改写；疑似误报只记录并标注人工复核，不自动删除核心信息。
 
 合规检查必须确认 `$DIR/content.md` 第一行仍等于服务端接受的 `$FINAL_TITLE`。图片生成后不得静默修改标题；若最终合规要求改标题，写入 `$DIR/failure-state.json`：`{"version":"1.0","status":"recoverable_failure","stage":"compliance","error_code":"title_changed_after_visuals","message":"标题合规变更会使现有视觉产物与标题不一致","resume_from":"title_finalization"}`，停止并从 `title_finalization` 恢复，随后必须重新执行 `image_generation`，不得交付不一致资产。
 

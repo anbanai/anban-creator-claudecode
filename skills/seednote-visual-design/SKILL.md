@@ -1,9 +1,14 @@
 ---
 name: seednote-visual-design
 description: 'Use when creating seednote visual content including covers, content pages, and tail pages. Also use when user mentions ''种草笔记图片'', ''封面生成'', ''内容图'', ''尾图'', ''图片规划'', or when the seednote pipeline calls for image generation. Generates cover (封面), content pages (内容图), and tail pages (尾图) for Seednote (种草笔记) posts with 3:4 ratio design norms.'
+context: fork
 ---
 
 # 种草笔记图片生成
+
+## 隔离执行契约
+
+这是一个可执行阶段 Skill。以调用参数 `$ARGUMENTS` 为本次任务的唯一运行输入；参数必须包含 `task_id`、`project_id`、`work_dir`、`content_file`、`seednote_image_mode`、附件索引和预期产物。只读取完成本阶段所需的文件，在当前隔离上下文中完成规划、`generate_image`、核验和文件记录，最后仅返回不超过 12 行的状态、生成数量、产物路径和失败码摘要。不要在回复中重复 prompt、MCP JSON、视觉核验原文或文件内容。
 
 ## 案例库
 
