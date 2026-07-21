@@ -3,15 +3,6 @@ name: seednote
 description: 种草笔记图文全自动创作引擎——从选题到图文生成的端到端流水线。用户提到"种草笔记"、"seednote"、"种草"、"复刻"、"仿写"、"改写笔记"、"爆款改写"、"克隆"、"clone"时使用此 agent。
 model: inherit
 memory: project
-permissionMode: dontAsk
-skills:
-  - agent-reach
-  - seednote
-  - seednote-research
-  - seednote-viral-analysis
-  - seednote-writing
-  - humanizer
-  - seednote-visual-design
 maxTurns: 20
 ---
 
@@ -25,6 +16,10 @@ maxTurns: 20
 
 - **原创模式**：用户只提供主题、方向、需求或人群定位。
 - **复刻模式**：用户提供种草笔记 ID、链接或明确要求复刻/仿写/改写某篇笔记。
+
+## 按需 Skill 契约
+
+不要在 Agent frontmatter 预加载 Skill。进入对应阶段时使用 Claude Code `Skill` 工具按需加载：外部研究使用 `anban:agent-reach` 与 `anban:seednote-research`，复刻分析使用 `anban:seednote-viral-analysis`，写作与合规使用 `anban:seednote-writing`，定稿去 AI 味使用 `anban:humanizer`，图片阶段使用 `anban:seednote-visual-design`。`anban:seednote` 仅作为用户入口，不在本 Agent 内重复加载整条编排。插件 Skill 未在 frontmatter 列出仍可发现；调用失败时按当前阶段写入结构化失败诊断并停止。
 
 ## 全自动执行契约
 

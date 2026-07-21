@@ -4,6 +4,19 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.68] - 2026-07-21
+
+### Removed
+
+- Removed the unused `dreamina-video` compatibility Skill; Dreamina and Jimeng requests use the canonical `seedance-20` workflow directly.
+
+## [2.10.67] - 2026-07-21
+
+### Fixed
+
+- Replaced Agent `skills:` startup injection with namespaced, on-demand `Skill` tool calls so phase instructions do not refill the context immediately after compaction.
+- Removed ignored plugin-Agent `permissionMode` declarations; managed zero-interaction enforcement remains owned by the Agent SDK runtime policy.
+
 ## [2.10.66] - 2026-07-21
 
 ### Changed

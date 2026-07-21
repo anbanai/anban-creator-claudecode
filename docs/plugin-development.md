@@ -12,14 +12,12 @@ Seednote posts, live slicing, line-art coloring, video generation and editing,
 Montage, Moments, and ecommerce assets. An external Anban MCP server provides
 business data and side effects.
 
-## Ownership model (target)
+## Ownership model
 
-The table below is the target ownership model. This release establishes the
-Hook/Agent side-effect boundary: deterministic completion checks belong to
-Hooks, while final reports and tool-capable side effects belong to Agents.
-Existing umbrella Skills and Agent `skills:` preloads still contain orchestration
-overlap; the optimization audit tracks their staged P0-1/P0-2 migration after
-representative baselines and evals.
+The table below is the implemented ownership model. Deterministic completion
+checks belong to Hooks, final reports and tool-capable side effects belong to
+Agents, and phase-specific knowledge is loaded through the `Skill` tool only
+when that phase begins.
 
 | Surface | Owns |
 |---|---|
@@ -32,13 +30,12 @@ representative baselines and evals.
 Agents must use Claude Code MCP tools for Anban product capabilities. Do not
 replace MCP calls with ad hoc HTTP clients. For new changes, keep handlers and
 Hooks out of business orchestration, and do not copy a full Agent pipeline into
-an umbrella Skill. Do not interpret this rule as claiming the existing overlap
-has already been removed.
+an umbrella Skill.
 
 ## Agents
 
 Plugin Agent frontmatter may use supported fields such as `name`, `description`,
-`model`, `skills`, `memory`, `tools`, and `maxTurns`. A subagent starts with a
+`model`, `memory`, `tools`, and `maxTurns`. A subagent starts with a
 fresh context. Project memory contributes only its first 200 lines or 25 KB at
 startup, so large workflow state belongs in task artifacts.
 
@@ -71,12 +68,15 @@ body when invoked. Supporting files are read only when needed; keep self-authore
 `SKILL.md` entrypoints under 500 lines and link directly to one-level references.
 
 Agent frontmatter `skills:` is full-text startup injection, not a list of Skills
-that are merely available. Several current Agents still preload phase-specific
-Skills; do not describe that state as already migrated. The target is to retain
-only knowledge required from the first turn, after representative baseline/eval
-coverage proves the removal safe, then invoke each phase-specific Skill on
-demand through Claude Code's official Skill tool. A discoverable Skill need not
-be listed in `skills:` to be invoked.
+that are merely available. Anban Agents therefore do not declare it. They invoke
+phase-specific Skills on demand through Claude Code's official `Skill` tool,
+using plugin-qualified names such as `anban:humanizer`. A discoverable Skill
+need not be listed in `skills:` to be invoked. This keeps startup context bounded
+and prevents every phase's complete instructions from being compacted together.
+
+Every distributed top-level Skill must have an Agent owner or be an explicit
+user entrypoint. Delete obsolete aliases and orphan Skills instead of retaining
+them for compatibility; contract tests enforce this reachability boundary.
 
 `context: fork` turns the Skill task into a fresh subagent prompt. Validate its
 routing and plugin Agent naming in the target Claude Code release before using

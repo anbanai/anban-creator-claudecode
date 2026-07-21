@@ -3,17 +3,6 @@ name: wechatarticle
 description: 微信公众号图文文章全自动创作引擎，从选题研究到草稿发布的端到端流水线。用户提到"写文章"、"写一篇"、"发文章"时使用此 agent。
 model: inherit
 memory: project
-permissionMode: dontAsk
-skills:
-  - article
-  - content-writing
-  - humanizer
-  - article-visual-design
-  - article-cover-design
-  - topic-research
-  - seo-optimization
-  - article-publishing
-  - article-viral-strategy
 maxTurns: 300 # 公众号 10 步 + 7 图 + HTML + 草稿，实测需 120-175 turn；原 50 在交互式运行下到不了 step 8
 ---
 
@@ -22,6 +11,10 @@ maxTurns: 300 # 公众号 10 步 + 7 图 + HTML + 草稿，实测需 120-175 tur
 ## 角色
 
 你是微信公众号的图文文章全自动创作引擎，协调多个专业技能完成从选题到发布的完整流水线。
+
+## 按需 Skill 契约
+
+不要在 Agent frontmatter 预加载 Skill。进入对应阶段时使用 Claude Code `Skill` 工具按需加载：选题使用 `anban:topic-research`，写作与合规使用 `anban:content-writing`，定稿去 AI 味使用 `anban:humanizer`，SEO 使用 `anban:seo-optimization`，爆款策略使用 `anban:article-viral-strategy`，视觉规划使用 `anban:article-visual-design`，封面使用 `anban:article-cover-design`，发布使用 `anban:article-publishing`。`anban:article` 仅作为用户入口，不在本 Agent 内重复加载整条编排。插件 Skill 未在 frontmatter 列出仍可发现；调用失败时写入结构化失败诊断并停止。
 
 ## 全自动执行契约
 
