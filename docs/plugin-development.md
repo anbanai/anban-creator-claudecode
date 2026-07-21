@@ -62,26 +62,22 @@ reference-image generation, not a guaranteed line-preserving colorize tool.
 
 ## Skills
 
-Every `skills/<name>/SKILL.md` has `name` and `description` frontmatter. Claude
-Code keeps each Skill description in discovery context, then loads the Skill
-body when invoked. Supporting files are read only when needed; keep self-authored
-`SKILL.md` entrypoints under 500 lines and link directly to one-level references.
+Every `skills/<name>/SKILL.md` has `name` and `description` frontmatter. Plugin
+Skills are discovered automatically. Supporting files are read only when needed;
+keep self-authored `SKILL.md` entrypoints under 500 lines and link directly to
+one-level references.
 
-Agent frontmatter `skills:` is full-text startup injection, not a list of Skills
-that are merely available. Anban Agents therefore do not declare it. They invoke
-phase-specific Skills on demand through Claude Code's official `Skill` tool,
-using plugin-qualified names such as `anban:humanizer`. A discoverable Skill
-need not be listed in `skills:` to be invoked. This keeps startup context bounded
-and prevents every phase's complete instructions from being compacted together.
+Agent frontmatter `skills:` injects the complete declared Skill content when the
+Agent starts. Declare only specialized capabilities that the Agent actually uses.
+Do not preload an umbrella Skill that duplicates the Agent's end-to-end workflow,
+and do not repeat Skill-loading instructions in the Agent body.
 
 Every distributed top-level Skill must have an Agent owner or be an explicit
 user entrypoint. Delete obsolete aliases and orphan Skills instead of retaining
 them for compatibility; contract tests enforce this reachability boundary.
 
-`context: fork` turns the Skill task into a fresh subagent prompt. Validate its
-routing and plugin Agent naming in the target Claude Code release before using
-it as an entrypoint. Evaluate Skills in fresh sessions with should-trigger,
-should-not-trigger, with-Skill, and without-Skill cases.
+Evaluate Skills in fresh sessions with should-trigger, should-not-trigger,
+with-Skill, and without-Skill cases.
 
 ## MCP and artifacts
 
@@ -173,8 +169,7 @@ Classify a Skill before editing it:
   version, and parity checks. `humanizer` remains an unchanged upstream mirror;
   business rules belong in the owning Agent or Skill.
 - Third-party runtime assets use their own update and verification process.
-  `seedance-20` migration is a separate third-party plan and is out of scope for
-  self-authored prompt optimization. `third_party/OpenMontage` remains governed
+  `third_party/OpenMontage` remains governed
   as an external runtime/submodule, not copied into Agent text.
 
 ## Modifying the plugin

@@ -1,14 +1,9 @@
 ---
 name: seednote-writing
 description: 'Use when writing Seednote content, optimizing seednote titles, or rewriting viral notes. Also use when user mentions ''写种草笔记'', ''笔记文案'', ''种草文案'', ''标题优化'', ''改写笔记'', ''爆款改写'', ''复刻文案'', ''合规检查'', or when the seednote pipeline calls for content creation or text optimization. Writes and optimizes Seednote (种草笔记) content including titles, body text, hashtags, and viral note rewrites.'
-context: fork
 ---
 
 # 种草笔记内容写作知识库
-
-## 隔离执行契约
-
-这是一个可执行阶段 Skill。以调用参数 `$ARGUMENTS` 为本次任务的唯一运行输入；参数必须包含动作、`task_id`、`project_id`、`work_dir`、可读取的输入文件和预期产物。只读取完成本阶段所需的文件，把标题、正文、去 AI 改写和合规结果写入指定产物，最后仅返回不超过 10 行的状态、最终标题、字数、产物路径和失败码摘要。不要在回复中重复正文或报告全文。
 
 ## 案例库
 

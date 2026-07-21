@@ -2,14 +2,9 @@
 name: seednote-research
 description: 'Use when analyzing Seednote topics, scoring engagement, researching trending seednote content, or fetching source note details for replicate mode. Also use when user mentions ''种草笔记选题'', ''热门笔记'', ''竞品分析'', ''笔记分析'', or when the seednote pipeline calls for topic discovery or source note fetching. Analyzes Seednote (种草笔记) topics, trending notes (热门笔记), and scores engagement potential (互动率评分).'
 user-invocable: false
-context: fork
 ---
 
 # 种草笔记选题研究
-
-## 隔离执行契约
-
-这是一个可执行阶段 Skill。以调用参数 `$ARGUMENTS` 为本次任务的唯一运行输入；参数必须包含模式、`task_id`、`project_id`、`work_dir`、可读取的输入文件和预期产物。只读取完成本阶段所需的文件，把完整结果写入指定产物，最后仅返回不超过 10 行的状态、产物路径、数据来源和失败码摘要，不在回复中展开正文、外部原始响应或文件内容。
 
 ## 案例库
 

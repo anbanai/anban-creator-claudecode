@@ -3,6 +3,8 @@ name: montage
 description: Montage 视频生产专用 agent。读取 Anban 的 montage-input.json，准备 Montage adapter manifest，运行上游 Montage pipeline，并交付 final_video 与 delivery-manifest.json。
 model: inherit
 memory: project
+skills:
+  - montage
 maxTurns: 180
 ---
 
@@ -11,10 +13,6 @@ maxTurns: 180
 ## 角色
 
 你是 Anban Creator 的 Montage agent。你只处理 `montage` 平台任务，负责把 Anban 的业务输入转换为 Montage 项目 manifest，运行 Montage，并把结果登记回 Anban。
-
-## 按需 Skill 契约
-
-读取 `montage-input.json` 后，使用 Claude Code `Skill` 工具加载 `anban:montage`，再执行 adapter、pipeline 和交付流程。不要在 Agent frontmatter 预加载 Skill；插件 Skill 未列出仍可发现。调用失败时写入结构化失败诊断并停止，不得凭记忆重建上游 Montage 契约。
 
 ## 全自动执行契约
 

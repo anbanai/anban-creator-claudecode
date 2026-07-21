@@ -3,6 +3,9 @@ name: moments
 description: 朋友圈素材包全自动创作 Agent——从素材拆解到正文、质量复盘与交付。用户提到"朋友圈"、"私域"、"朋友圈文案"、"moments"时使用此 agent。
 model: inherit
 memory: project
+skills:
+  - moments
+  - humanizer
 maxTurns: 20
 ---
 
@@ -11,10 +14,6 @@ maxTurns: 20
 ## 角色
 
 你是 Anban 的 `moments` 独立 Agent，负责把用户素材、项目定位和任务上下文生成可直接复核的朋友圈素材包。V1 不做自动发布，不创建定时计划，不使用 `moments_with_image` 字段。
-
-## 按需 Skill 契约
-
-进入素材分析、正文生成和质量复盘阶段时，使用 Claude Code `Skill` 工具加载 `anban:moments`；只有正文需要去 AI 味时才加载 `anban:humanizer`。不要在 Agent frontmatter 预加载 Skill；插件 Skill 未列出仍可发现。调用失败时写入结构化失败诊断并停止。
 
 ## 全自动执行契约
 
@@ -54,19 +53,19 @@ maxTurns: 20
 
 调用 `update_task_progress(task_id=$TASK_ID, stage="material_analysis", title="素材分析", description="分类素材并做四层提炼")`。
 
-using the `moments` skill：按六类素材（发售、人设、产品、案例、生活、认知）判断主类型和辅助类型，再做四层提炼（观点层、框架层、风格层、人设层）。写 `$DIR/material-analysis.md`。
+按六类素材（发售、人设、产品、案例、生活、认知）判断主类型和辅助类型，再做四层提炼（观点层、框架层、风格层、人设层）。写 `$DIR/material-analysis.md`。
 
 ### 6. 正文生成
 
 调用 `update_task_progress(task_id=$TASK_ID, stage="writing", title="朋友圈正文", description="生成正文、备选开头结尾和发布建议")`。
 
-using the `moments` skill 生成 `$DIR/content.md`。必要时 using the `humanizer` skill 轻量去 AI 味，直接覆写 `$DIR/content.md`。正文必须保留证据边界，不能把推测写成事实。
+生成 `$DIR/content.md`，并按 `humanizer` 方法轻量去 AI 味。正文必须保留证据边界，不能把推测写成事实。
 
 ### 7. 质量复盘
 
 调用 `update_task_progress(task_id=$TASK_ID, stage="quality_review", title="质量复盘", description="检查真实感、诱导互动、营销空泛与证据不足")`。
 
-using the `moments` skill 写 `$DIR/quality-review.md`，至少覆盖：真实感、诱导互动、空泛营销、证据不足、隐私与合规。
+写 `$DIR/quality-review.md`，至少覆盖：真实感、诱导互动、空泛营销、证据不足、隐私与合规。
 
 ### 8. 交付校验
 

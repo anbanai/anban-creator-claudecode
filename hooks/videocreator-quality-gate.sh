@@ -88,7 +88,7 @@ if [[ ${#MISSING[@]} -gt 0 ]]; then
   json_block "videocreator 机械闸门未通过（${VIDEO_DIR}），缺失：
 $(printf '  - %s\n' "${MISSING[@]}")
 
-请回到当前 videocreator agent 上下文继续执行 seedance-20 工作流；禁止只报告后台运行。"
+请回到当前 videocreator agent 上下文继续执行视频生成工作流；禁止只报告后台运行。"
 fi
 
 exit 0

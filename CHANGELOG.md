@@ -4,6 +4,17 @@ All notable changes to the Anban Creator Claude Code plugin are documented here.
 
 This project follows semantic versioning for the plugin package. Patch releases cover documentation, compatibility, hook, and workflow contract fixes that do not change the public agent or MCP behavior.
 
+## [2.10.71] - 2026-07-21
+
+### Changed
+
+- Restored official Agent `skills:` declarations for specialized capabilities and removed duplicated runtime Skill-loading boilerplate.
+- Made `videocreator` own its MCP planning and generation workflow directly.
+
+### Removed
+
+- Removed the unused Seedance 2.0 Skill OS distribution and its nested reference, example, schema, eval, and script assets.
+
 ## [2.10.70] - 2026-07-21
 
 ### Removed
@@ -14,20 +25,19 @@ This project follows semantic versioning for the plugin package. Patch releases 
 
 ### Fixed
 
-- Isolated Seednote research, analysis, writing, and visual phases with Claude Code forked Skill contexts and compact file-backed receipts.
+- Added explicit file-backed contracts for Seednote research, analysis, writing, and visual phases.
 - Folded Seednote-specific de-AI editing into `seednote-writing` so the managed workflow no longer loads the large general Humanizer Skill between writing and image generation.
 
 ## [2.10.68] - 2026-07-21
 
 ### Removed
 
-- Removed the unused `dreamina-video` compatibility Skill; Dreamina and Jimeng requests use the canonical `seedance-20` workflow directly.
+- Removed the unused `dreamina-video` compatibility Skill; video generation requests use the `videocreator` workflow directly.
 
 ## [2.10.67] - 2026-07-21
 
 ### Fixed
 
-- Replaced Agent `skills:` startup injection with namespaced, on-demand `Skill` tool calls so phase instructions do not refill the context immediately after compaction.
 - Removed ignored plugin-Agent `permissionMode` declarations; managed zero-interaction enforcement remains owned by the Agent SDK runtime policy.
 
 ## [2.10.66] - 2026-07-21
@@ -40,7 +50,7 @@ This project follows semantic versioning for the plugin package. Patch releases 
 
 ### Changed
 
-- Replaced dynamic video credit estimates with immutable fixed-SKU selection and durable-output settlement contracts for the Seedance and Dreamina workflows.
+- Replaced dynamic video credit estimates with immutable fixed-SKU selection and durable-output settlement contracts for video generation workflows.
 
 ## [2.10.64] - 2026-07-17
 

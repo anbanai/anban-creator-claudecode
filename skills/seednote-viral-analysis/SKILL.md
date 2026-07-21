@@ -1,14 +1,9 @@
 ---
 name: seednote-viral-analysis
 description: Use when analyzing or decomposing a Seednote (种草笔记) viral note, extracting reusable templates from a source note, or preparing evidence-backed clone guidance. Also use when the user mentions "拆解爆款", "爆款拆解", "分析爆款笔记", "提取爆款模板", "source note analysis", or when the seednote replicate pipeline needs source-note analysis.
-context: fork
 ---
 
 # 种草笔记爆款拆解
-
-## 隔离执行契约
-
-这是一个可执行阶段 Skill。以调用参数 `$ARGUMENTS` 为本次任务的唯一运行输入；参数必须包含 `task_id`、`project_id`、`work_dir`、源笔记文件、账号画像文件和预期产物。只读取列出的输入，把完整拆解写入指定文件，最后仅返回不超过 10 行的状态、置信度、产物路径和失败码摘要，不在回复中重复源笔记、证据表或模板 JSON。
 
 ## 案例库
 
